@@ -22,6 +22,14 @@ Workera is an AI-powered recruitment platform that automates end-to-end hiring w
 - **Bulk Operations** - Import/export candidates, interviews, applications at scale
 - **Analytics Dashboard** - Advanced insights on hiring pipeline performance
 
+### Advanced NLP & AI Features
+- **Transformer-Based NLP** - Advanced text analysis with Google Generative AI (Gemini Pro)
+- **Semantic Search** - RAG pipeline for context-aware candidate/job matching
+- **Vector Embeddings** - In-memory FAISS-like vector store for similarity search
+- **Intent Recognition** - Natural language query understanding and entity extraction
+- **Explainable AI** - Match explanations with strengths/weaknesses analysis
+- **Batch Indexing** - Automatic vector indexing for candidates and jobs
+
 ## 🏗️ Architecture
 
 This is a monorepo containing:
@@ -181,6 +189,95 @@ GET /audit?tenantId=xxx&entityType=candidate&limit=100
 GET /audit/entity/:entityType/:entityId?tenantId=xxx
 ```
 
+### NLP & Semantic Search API
+Advanced NLP and RAG-powered search:
+
+```bash
+# Analyze text with NLP
+POST /nlp/analyze
+{
+  "text": "Senior Software Engineer with 5+ years experience in React..."
+}
+
+# Generate embeddings
+POST /nlp/embed
+{
+  "text": "Python developer with machine learning expertise"
+}
+
+# Extract skills from text
+POST /nlp/skills
+{
+  "text": "Experience with JavaScript, React, Node.js, AWS, Docker..."
+}
+
+# Calculate semantic similarity
+POST /nlp/similarity
+{
+  "text1": "Candidate profile...",
+  "text2": "Job description..."
+}
+
+# Semantic search with RAG
+POST /semantic-search
+{
+  "query": "Find senior React developers in San Francisco",
+  "tenantId": "xxx",
+  "entityType": "candidate",
+  "topK": 20,
+  "useRAG": true
+}
+
+# Find best candidates for job (RAG-powered)
+POST /semantic-search/candidates-for-job
+{
+  "jobDescription": "Senior Full Stack Engineer...",
+  "tenantId": "xxx",
+  "topK": 20
+}
+
+# Answer questions using RAG
+POST /semantic-search/answer
+{
+  "question": "Who are the top Python developers?",
+  "context": "candidates",
+  "tenantId": "xxx"
+}
+
+# Explain match between candidate and job
+POST /semantic-search/explain-match
+{
+  "candidateText": "Candidate profile...",
+  "jobText": "Job description..."
+}
+
+# Batch index candidates/jobs for semantic search
+POST /semantic-search/batch-index
+{
+  "entityType": "candidate",
+  "tenantId": "xxx"
+}
+
+# Vector embeddings operations
+POST /embeddings/add
+{
+  "id": "candidate-123",
+  "text": "Candidate profile...",
+  "entityType": "candidate",
+  "metadata": {"name": "John Doe"}
+}
+
+POST /embeddings/search
+{
+  "query": "React developer",
+  "entityType": "candidate",
+  "topK": 10
+}
+
+GET /embeddings/stats
+# Returns vector store statistics
+```
+
 ## 🏗️ Implementation Roadmap
 
 ### Phase 1-3: Foundation ✅
@@ -213,13 +310,21 @@ GET /audit/entity/:entityType/:entityId?tenantId=xxx
 - **Content Personalization** - Template system with {{firstName}}, {{lastName}}, {{email}}
 - **Advanced Filtering** - Recipient targeting by skills, location, application status, job IDs
 
-### Phase 8: Advanced NLP (Planned)
-- Transformer models with spaCy and Hugging Face
-- RAG pipeline for semantic search
-- FAISS vector embeddings
-- Advanced candidate matching
+### Phase 8: Advanced NLP & RAG ✅
+- **Transformer-Based NLP** - Google Generative AI (Gemini Pro & embedding-001)
+- **RAG Pipeline** - Retrieval-Augmented Generation for context-aware search
+- **Vector Embeddings** - In-memory FAISS-like vector store with cosine similarity
+- **Semantic Search** - Natural language query understanding and matching
+- **Explainable AI** - Match reasoning with strengths/weaknesses analysis
+- **Batch Indexing** - Automatic vector indexing for candidates and jobs
 
-### Phase 9: Mobile Platform (Planned)
+### Phase 9: Mobile-Friendly UI ✅
+- **Responsive Design** - Mobile-first approach with Tailwind breakpoints
+- **Mobile Navigation** - Hamburger menu and touch-friendly UI
+- **Adaptive Layouts** - Responsive grids and typography across all screen sizes
+- **Dashboard Optimization** - Mobile-optimized KPIs, charts, and activity feeds
+
+### Phase 10: Mobile Platform (Planned)
 - React Native mobile app
 - iOS and Android support
 - Push notifications

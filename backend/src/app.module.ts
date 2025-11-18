@@ -11,6 +11,9 @@ import { GDPRModule } from './gdpr/gdpr.module';
 import { AuditModule } from './audit/audit.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { ActivityFeedModule } from './activity-feed/activity-feed.module';
+import { NLPModule } from './nlp/nlp.module';
+import { EmbeddingsModule } from './embeddings/embeddings.module';
+import { SemanticSearchModule } from './semantic-search/semantic-search.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { ActivityFeedModule } from './activity-feed/activity-feed.module';
     AuditModule,
     CampaignsModule,
     ActivityFeedModule,
+    NLPModule,
+    EmbeddingsModule,
+    SemanticSearchModule,
   ],
 })
 export class AppModule {}
