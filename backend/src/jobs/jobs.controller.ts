@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { AiService } from '../ai/ai.service';
 
@@ -7,10 +7,13 @@ export class CreateJobDto {
   description?: string;
   company?: string;
   generateWithAI?: boolean;
+  tenantId?: string; // In production, from auth context
+  requirements?: string[];
 }
 
 export class PostJobDto {
   channels: string[];
+  tenantId?: string; // In production, from auth context
 }
 
 @Controller('jobs')
@@ -21,16 +24,20 @@ export class JobsController {
   ) {}
 
   @Get()
-  getAllJobs() {
+  async getAllJobs(@Query('tenantId') tenantId?: string) {
+    const jobs = await this.jobsService.getAllJobs(tenantId || 'default-tenant');
     return {
       success: true,
-      data: this.jobsService.getAllJobs(),
+      data: jobs,
     };
   }
 
   @Get(':id')
-  getJob(@Param('id') id: string) {
-    const job = this.jobsService.getJobById(id);
+  async getJob(
+    @Param('id') id: string,
+    @Query('tenantId') tenantId?: string
+  ) {
+    const job = await this.jobsService.getJobById(id, tenantId || 'default-tenant');
     return {
       success: !!job,
       data: job,
@@ -45,13 +52,16 @@ export class JobsController {
       description = await this.aiService.generateJobDescription(
         dto.title,
         dto.company,
+        dto.requirements,
       );
     }
 
-    const job = this.jobsService.createJob(
+    const job = await this.jobsService.createJob(
       dto.title,
       description || '',
+      dto.tenantId || 'default-tenant',
       dto.company,
+      dto.requirements,
     );
 
     return {
@@ -61,8 +71,12 @@ export class JobsController {
   }
 
   @Put(':id/post')
-  postJob(@Param('id') id: string, @Body() dto: PostJobDto) {
-    const job = this.jobsService.postJob(id, dto.channels);
+  async postJob(@Param('id') id: string, @Body() dto: PostJobDto) {
+    const job = await this.jobsService.postJob(
+      id,
+      dto.tenantId || 'default-tenant',
+      dto.channels
+    );
 
     return {
       success: !!job,
