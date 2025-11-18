@@ -1,7 +1,7 @@
 # Workera
 
 <div align="center">
-  <img src="frontend/public/images/brand/Workera_Text_logo.png" alt="Workera Logo" width="300"/>
+  <img src="frontend/public/images/brand/Workera_Full_logo.png" alt="Workera Logo" width="300"/>
 
   <p><strong>Enterprise-Grade AI-Powered Recruitment Automation Platform</strong></p>
 
