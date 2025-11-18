@@ -41,13 +41,13 @@ export default function Features() {
   ]
 
   return (
-    <section className="py-24 bg-[var(--gray-50)]">
+    <section className="py-12 sm:py-16 lg:py-24 bg-[var(--gray-50)]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-[var(--gray-900)] mb-4">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--gray-900)] mb-3 sm:mb-4">
             Powerful Features for Modern Recruiting
           </h2>
-          <p className="text-xl text-[var(--gray-600)] max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-[var(--gray-600)] max-w-2xl mx-auto">
             Everything you need to streamline your hiring process from job posting to candidate selection
           </p>
         </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -81,62 +82,90 @@ const navigation = [
   }
 ]
 
-export default function Sidebar() {
+export default function MobileNav() {
+  const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-[var(--gray-900)] text-white flex-col shadow-lg z-50">
-      {/* Logo */}
-      <div className="p-6 border-b border-[var(--gray-800)]">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <Image 
+    <>
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-[var(--gray-900)] text-white p-4 flex items-center justify-between z-50 shadow-lg">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Image
             src="/images/brand/Workera_logo_icon.png"
             alt="Workera"
-            width={40}
-            height={40}
+            width={32}
+            height={32}
             className="rounded-lg"
           />
-          <span className="text-xl font-bold">Workera</span>
+          <span className="text-lg font-bold">Workera</span>
         </Link>
+
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 rounded-lg hover:bg-[var(--gray-800)] transition-colors"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-2">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
-                    isActive
-                      ? "bg-[var(--emerald)] text-white shadow-md"
-                      : "text-[var(--gray-400)] hover:bg-[var(--gray-800)] hover:text-white"
-                  )}
-                >
-                  {item.icon}
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+      {/* Mobile Menu Overlay */}
+      {isOpen && (
+        <>
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <nav className="lg:hidden fixed top-16 left-0 right-0 bottom-0 bg-[var(--gray-900)] text-white z-40 overflow-y-auto">
+            <div className="p-4">
+              <ul className="space-y-2">
+                {navigation.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
+                          isActive
+                            ? "bg-[var(--emerald)] text-white shadow-md"
+                            : "text-[var(--gray-400)] hover:bg-[var(--gray-800)] hover:text-white"
+                        )}
+                      >
+                        {item.icon}
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
 
-      {/* User Info */}
-      <div className="p-4 border-t border-[var(--gray-800)]">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--gray-800)]">
-          <div className="w-10 h-10 rounded-full bg-[var(--emerald)] flex items-center justify-center font-bold">
-            U
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">User Name</p>
-            <p className="text-xs text-[var(--gray-400)]">user@company.com</p>
-          </div>
-        </div>
-      </div>
-    </aside>
+              {/* User Info in Mobile Menu */}
+              <div className="mt-6 p-3 rounded-lg bg-[var(--gray-800)]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[var(--emerald)] flex items-center justify-center font-bold">
+                    U
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">User Name</p>
+                    <p className="text-xs text-[var(--gray-400)]">user@company.com</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </>
+      )}
+    </>
   )
 }
