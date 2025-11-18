@@ -99,8 +99,39 @@ NestJS-based backend API for the Workera recruitment automation platform with Po
 - `GET /candidates/:id` - Get candidate by ID
 - `POST /candidates` - Create new candidate
 - `POST /candidates/:id/resume` - Upload and parse resume
-- `POST /candidates/search` - Search candidates by skills/location
+- `POST /candidates/search` - Advanced search with pagination, filters, sorting
 - `POST /candidates/:id/analyze` - AI analysis against job
+
+### Applications
+- `POST /candidates/applications` - Create new application
+- `PUT /candidates/applications/:id/status` - Update application status (sends notification)
+
+### Bulk Operations
+- `POST /candidates/bulk/import` - Bulk import candidates from JSON
+- `PUT /candidates/bulk/applications/status` - Bulk update application statuses
+- `POST /candidates/bulk/tag` - Bulk tag candidates
+- `POST /candidates/bulk/email` - Bulk send emails
+- `POST /candidates/bulk/export` - Bulk export candidates to JSON
+- `POST /candidates/bulk/delete` - Bulk delete candidates
+
+### Interviews
+- `POST /interviews` - Schedule new interview (sends invitation)
+- `GET /interviews/:id` - Get interview by ID
+- `GET /interviews/application/:applicationId` - Get all interviews for application
+- `GET /interviews/upcoming` - Get upcoming interviews
+- `PUT /interviews/:id/status` - Update interview status
+- `PUT /interviews/:id/reschedule` - Reschedule interview (sends notification)
+- `PUT /interviews/:id/feedback` - Submit interview feedback
+
+### Analytics
+- `GET /analytics/dashboard` - Dashboard overview metrics
+- `GET /analytics/application-status` - Application status distribution
+- `GET /analytics/hiring-funnel` - Hiring funnel metrics (optional jobId filter)
+- `GET /analytics/top-skills` - Top candidate skills analysis
+- `GET /analytics/interview-metrics` - Interview statistics
+- `GET /analytics/job-performance` - Job performance metrics
+- `GET /analytics/time-to-hire` - Average and median time-to-hire
+- `GET /analytics/application-trends` - Application trends over time (default 30 days)
 
 ## Installation
 
@@ -211,16 +242,64 @@ All endpoints support `tenantId` parameter for data isolation:
 - In production: extracted from authenticated user context
 - In development: passed as parameter (defaults to 'default-tenant')
 
-## Future Enhancements (Phase 4)
+## Phase 4 Features (✅ Completed)
+
+### Email Notifications
+- Application status update emails
+- Interview invitation emails
+- Resume processed confirmations
+- Job posted confirmations
+- Bulk email notifications
+- HTML email templates with brand design
+- Development mode logging (production ready for SendGrid/SES integration)
+
+### Interview Scheduling
+- Schedule interviews with multiple types (phone, video, in-person, technical, HR, final)
+- Interview status tracking (scheduled, confirmed, completed, cancelled, rescheduled)
+- Meeting link and location support
+- Interviewer assignment
+- Interview feedback submission with ratings
+- Reschedule functionality with notifications
+- Upcoming interviews dashboard
+
+### Analytics & Reporting
+- Dashboard metrics (jobs, candidates, applications, interviews)
+- Application status distribution
+- Hiring funnel metrics
+- Top skills analysis
+- Interview metrics with average ratings
+- Job performance tracking
+- Time-to-hire analytics
+- Application trends over time
+- Exportable data for reporting
+
+### Bulk Operations
+- Bulk import candidates from JSON/CSV
+- Bulk update application status (with notifications)
+- Bulk tagging/categorization
+- Bulk email sending
+- Bulk export to JSON
+- Bulk delete with validation
+
+### Advanced Search & Pagination
+- Full-text search across name, email
+- Skills-based filtering
+- Location fuzzy matching
+- Date range filters (createdAfter, createdBefore)
+- Sorting by multiple fields
+- Pagination with metadata (page, limit, total, hasNext, hasPrev)
+- Default 20 results per page
+
+## Future Enhancements (Phase 5)
 
 - SSO authentication (SAML 2.0, OIDC)
 - Advanced NLP with transformer models (spaCy, Hugging Face)
 - RAG pipeline for semantic search (FAISS + embeddings)
-- Vector database for resume embeddings
-- Bulk operations and batch processing
-- Email notifications
-- Interview scheduling
-- Analytics and reporting
+- Vector database for resume embeddings (Pinecone, Weaviate)
+- Real-time notifications with WebSocket
+- Video interview integration (Zoom, Google Meet API)
+- Automated candidate ranking with ML models
+- GDPR compliance tools (data export, right to be forgotten)
 
 ## API runs on
 
@@ -233,11 +312,15 @@ http://localhost:3001
 ```
 backend/
 ├── src/
-│   ├── ai/              # Google AI integration
-│   ├── candidates/      # Candidate & resume management
+│   ├── ai/              # Google AI integration (Gemini Pro)
+│   ├── analytics/       # Analytics & reporting service
+│   ├── candidates/      # Candidate & resume management + bulk ops
 │   ├── database/        # TypeORM entities & config
-│   │   └── entities/    # Database models
-│   ├── jobs/            # Job management
+│   │   └── entities/    # 7 database models (Tenant, User, Job, Candidate, Resume, Application, Interview)
+│   ├── interviews/      # Interview scheduling & management
+│   ├── jobs/            # Job posting management
+│   ├── notifications/   # Email notification service
+│   ├── app.module.ts    # Root module
 │   └── main.ts          # App entry point
 ├── .env                 # Environment variables
 └── tsconfig.json        # TypeScript config

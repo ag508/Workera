@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { CandidatesService } from './candidates.service';
 
 export class CreateCandidateDto {
@@ -19,6 +19,65 @@ export class SearchCandidatesDto {
   skills?: string[];
   location?: string;
   tenantId: string; // In production, this would come from auth context
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+  searchTerm?: string;
+  createdAfter?: string; // ISO date string
+  createdBefore?: string; // ISO date string
+}
+
+export class CreateApplicationDto {
+  candidateId: string;
+  jobId: string;
+  tenantId: string;
+}
+
+export class UpdateApplicationStatusDto {
+  status: string;
+  tenantId: string;
+}
+
+export class BulkImportCandidatesDto {
+  candidates: Array<{
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    location?: string;
+    skills?: string[];
+  }>;
+  tenantId: string;
+}
+
+export class BulkUpdateApplicationStatusDto {
+  applicationIds: string[];
+  status: string;
+  tenantId: string;
+}
+
+export class BulkTagCandidatesDto {
+  candidateIds: string[];
+  tags: string[];
+  tenantId: string;
+}
+
+export class BulkSendEmailDto {
+  candidateIds: string[];
+  subject: string;
+  message: string;
+  tenantId: string;
+}
+
+export class BulkExportCandidatesDto {
+  candidateIds: string[];
+  tenantId: string;
+}
+
+export class BulkDeleteCandidatesDto {
+  candidateIds: string[];
+  tenantId: string;
 }
 
 @Controller('candidates')
@@ -74,13 +133,21 @@ export class CandidatesController {
 
   @Post('search')
   async searchCandidates(@Body() dto: SearchCandidatesDto) {
-    const candidates = await this.candidatesService.searchCandidates({
-      ...dto,
+    const result = await this.candidatesService.searchCandidates({
+      skills: dto.skills,
+      location: dto.location,
       tenantId: dto.tenantId || 'default-tenant',
+      page: dto.page,
+      limit: dto.limit,
+      sortBy: dto.sortBy,
+      sortOrder: dto.sortOrder,
+      searchTerm: dto.searchTerm,
+      createdAfter: dto.createdAfter ? new Date(dto.createdAfter) : undefined,
+      createdBefore: dto.createdBefore ? new Date(dto.createdBefore) : undefined,
     });
     return {
       success: true,
-      data: candidates,
+      ...result,
     };
   }
 
@@ -93,6 +160,109 @@ export class CandidatesController {
       id,
       body.jobDescription,
       body.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('applications')
+  async createApplication(@Body() dto: CreateApplicationDto) {
+    const application = await this.candidatesService.createApplication(dto);
+    return {
+      success: true,
+      data: application,
+    };
+  }
+
+  @Put('applications/:id/status')
+  async updateApplicationStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateApplicationStatusDto
+  ) {
+    const application = await this.candidatesService.updateApplicationStatus(
+      id,
+      dto.status,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: application,
+    };
+  }
+
+  // Bulk Operations
+
+  @Post('bulk/import')
+  async bulkImportCandidates(@Body() dto: BulkImportCandidatesDto) {
+    const result = await this.candidatesService.bulkImportCandidates(
+      dto.candidates,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Put('bulk/applications/status')
+  async bulkUpdateApplicationStatus(@Body() dto: BulkUpdateApplicationStatusDto) {
+    const result = await this.candidatesService.bulkUpdateApplicationStatus(
+      dto.applicationIds,
+      dto.status,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('bulk/tag')
+  async bulkTagCandidates(@Body() dto: BulkTagCandidatesDto) {
+    const result = await this.candidatesService.bulkTagCandidates(
+      dto.candidateIds,
+      dto.tags,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('bulk/email')
+  async bulkSendEmail(@Body() dto: BulkSendEmailDto) {
+    const result = await this.candidatesService.bulkSendEmail(
+      dto.candidateIds,
+      dto.subject,
+      dto.message,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post('bulk/export')
+  async bulkExportCandidates(@Body() dto: BulkExportCandidatesDto) {
+    const candidates = await this.candidatesService.bulkExportCandidates(
+      dto.candidateIds,
+      dto.tenantId || 'default-tenant'
+    );
+    return {
+      success: true,
+      data: candidates,
+    };
+  }
+
+  @Post('bulk/delete')
+  async bulkDeleteCandidates(@Body() dto: BulkDeleteCandidatesDto) {
+    const result = await this.candidatesService.bulkDeleteCandidates(
+      dto.candidateIds,
+      dto.tenantId || 'default-tenant'
     );
     return {
       success: true,

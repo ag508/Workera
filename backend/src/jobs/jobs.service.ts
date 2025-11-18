@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '../database/entities';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class JobsService {
   constructor(
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
+    private notificationsService: NotificationsService,
   ) {}
 
   async createJob(
@@ -53,7 +55,12 @@ export class JobsService {
     return await this.jobRepository.save(job);
   }
 
-  async postJob(id: string, tenantId: string, channels: string[]): Promise<Job | null> {
+  async postJob(
+    id: string,
+    tenantId: string,
+    channels: string[],
+    recruiterEmail?: string
+  ): Promise<Job | null> {
     const job = await this.getJobById(id, tenantId);
     if (!job) {
       return null;
@@ -61,6 +68,19 @@ export class JobsService {
 
     job.status = JobStatus.POSTED;
     job.channels = channels;
-    return await this.jobRepository.save(job);
+    const savedJob = await this.jobRepository.save(job);
+
+    // Send notification to recruiter if email provided
+    if (recruiterEmail) {
+      await this.notificationsService.sendJobPostedConfirmation({
+        to: recruiterEmail,
+        candidateName: 'Recruiter', // In production, use actual user name from auth context
+        jobTitle: job.title,
+        companyName: job.company || 'your company',
+        additionalInfo: { channels },
+      });
+    }
+
+    return savedJob;
   }
 }
