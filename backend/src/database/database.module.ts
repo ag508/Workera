@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign } from './entities';
+import { Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign, ActivityFeed } from './entities';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
         username: configService.get<string>('DB_USERNAME') || 'postgres',
         password: configService.get<string>('DB_PASSWORD') || 'postgres',
         database: configService.get<string>('DB_NAME') || 'workera',
-        entities: [Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign],
+        entities: [Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign, ActivityFeed],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),

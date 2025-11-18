@@ -7,3 +7,4 @@ export { Application, ApplicationStatus } from './application.entity';
 export { Interview, InterviewStatus, InterviewType } from './interview.entity';
 export { AuditLog, AuditAction, AuditEntityType } from './audit-log.entity';
 export { EmailCampaign, CampaignStatus, CampaignType } from './email-campaign.entity';
+export { ActivityFeed, ActivityType } from './activity-feed.entity';

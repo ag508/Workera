@@ -6,10 +6,21 @@ Workera is an AI-powered recruitment platform that automates end-to-end hiring w
 
 ## 🚀 Features
 
+### Core Recruitment Features
 - **AI Job Description Generator** - Generate polished JDs with AI; post across LinkedIn, Workday, Indeed
 - **Smart Resume Parser** - Auto-extract skills, experience, education into structured profiles
 - **Fine-Tune Candidate Search** - Chat-based filtering by skill, experience, location (LLM-driven)
 - **Top Candidate Selection** - Shortlist top matches, send interviews, auto-score candidates
+
+### Advanced Features
+- **Email Campaigns** - Send targeted campaigns with rate limiting (10 emails/sec) and personalization
+- **Activity Feed** - Real-time timeline tracking all platform activities with WebSocket support
+- **Real-time Notifications** - WebSocket-based live updates for applications, interviews, and more
+- **GDPR Compliance** - Right of Access (Article 15) and Right to Erasure (Article 17)
+- **AI-Powered Ranking** - Intelligent candidate ranking using Google Gemini Pro
+- **Comprehensive Audit Logs** - Immutable audit trail with before/after snapshots
+- **Bulk Operations** - Import/export candidates, interviews, applications at scale
+- **Analytics Dashboard** - Advanced insights on hiring pipeline performance
 
 ## 🏗️ Architecture
 
@@ -69,3 +80,203 @@ Proprietary - Powered by Kauzway
 - SSO support (SAML, OIDC)
 - End-to-end encryption
 - RBAC (Role-Based Access Control)
+- Comprehensive audit logging
+- GDPR compliance tools
+
+## 📚 API Documentation
+
+### Email Campaigns API
+Campaign management with rate limiting and recipient targeting:
+
+```bash
+# Create campaign
+POST /campaigns
+{
+  "name": "Senior Developer Outreach",
+  "type": "one_time",
+  "subject": "Exciting opportunity at {{company}}",
+  "htmlContent": "<p>Hi {{firstName}},...</p>",
+  "recipientCriteria": {
+    "skills": ["JavaScript", "React"],
+    "location": "San Francisco"
+  }
+}
+
+# Send campaign
+POST /campaigns/:id/send
+
+# Get campaign stats
+GET /campaigns/stats?tenantId=xxx
+```
+
+### Activity Feed API
+Real-time activity tracking and timeline:
+
+```bash
+# Get activity feed
+GET /activity-feed?tenantId=xxx&limit=50&offset=0
+
+# Get entity timeline
+GET /activity-feed/entity/:entityType/:entityId?tenantId=xxx
+
+# Get important activities
+GET /activity-feed/important?tenantId=xxx&limit=10
+
+# Search activities
+GET /activity-feed/search?tenantId=xxx&q=candidate
+
+# Get activity statistics
+GET /activity-feed/stats?tenantId=xxx
+```
+
+### Real-time WebSocket Events
+Connect to receive live updates:
+
+```javascript
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3001');
+
+// Authenticate
+socket.emit('authenticate', { tenantId: 'your-tenant-id' });
+
+// Listen for events
+socket.on('event', (event) => {
+  console.log(event.type); // 'activity_created', 'application_created', etc.
+  console.log(event.data);
+});
+
+// Join specific room
+socket.emit('join_room', { room: 'tenant:your-tenant-id' });
+```
+
+### GDPR Compliance API
+Data access and deletion:
+
+```bash
+# Export all user data (Article 15)
+POST /gdpr/export-data
+{
+  "tenantId": "xxx",
+  "email": "user@example.com"
+}
+
+# Delete user data (Article 17)
+POST /gdpr/delete-user
+{
+  "tenantId": "xxx",
+  "email": "user@example.com",
+  "hardDelete": true  // or false for anonymization
+}
+```
+
+### Audit Logs API
+Immutable audit trail:
+
+```bash
+# Get audit logs
+GET /audit?tenantId=xxx&entityType=candidate&limit=100
+
+# Get logs for specific entity
+GET /audit/entity/:entityType/:entityId?tenantId=xxx
+```
+
+## 🏗️ Implementation Roadmap
+
+### Phase 1-3: Foundation ✅
+- Frontend with Next.js 14, landing page, dashboard
+- Backend API with NestJS, PostgreSQL
+- Google AI integration (Gemini Pro)
+- Multi-tenant database architecture
+
+### Phase 4: Core Features ✅
+- Job management with AI-powered JD generation
+- Candidate management with resume parsing
+- Application tracking system
+- Interview scheduling and management
+
+### Phase 5: Advanced AI & Compliance ✅
+- Real-time notifications (WebSocket with Socket.IO)
+- GDPR compliance tools (Articles 15 & 17)
+- AI-powered candidate ranking
+- Analytics and reporting
+
+### Phase 6: Enterprise Features ✅
+- Comprehensive audit logging system
+- Email campaign infrastructure
+- Bulk import/export operations
+- Data retention policies
+
+### Phase 7: Campaign & Activity Systems ✅
+- **Campaign Sending Engine** - Rate-limited email campaigns (10/sec) with batch processing
+- **Activity Feed** - Real-time timeline with 17+ activity types
+- **Content Personalization** - Template system with {{firstName}}, {{lastName}}, {{email}}
+- **Advanced Filtering** - Recipient targeting by skills, location, application status, job IDs
+
+### Phase 8: Advanced NLP (Planned)
+- Transformer models with spaCy and Hugging Face
+- RAG pipeline for semantic search
+- FAISS vector embeddings
+- Advanced candidate matching
+
+### Phase 9: Mobile Platform (Planned)
+- React Native mobile app
+- iOS and Android support
+- Push notifications
+- Offline-first architecture
+
+## 🔧 Environment Variables
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=workera
+
+# Google AI
+GOOGLE_AI_API_KEY=your-api-key-here
+
+# Server
+PORT=3001
+NODE_ENV=development
+```
+
+## 🚦 Getting Started
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd Workera
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Set up PostgreSQL database**
+```bash
+createdb workera
+```
+
+4. **Configure environment variables**
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your settings
+```
+
+5. **Run the application**
+```bash
+# Start backend (port 3001)
+npm run dev:backend
+
+# Start frontend (port 3000)
+npm run dev:frontend
+```
+
+6. **Access the application**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- API Health: http://localhost:3001/health

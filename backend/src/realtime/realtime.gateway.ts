@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 
 export interface RealtimeEvent {
-  type: 'application_created' | 'application_updated' | 'interview_scheduled' | 'resume_parsed' | 'job_posted' | 'candidate_created';
+  type: 'application_created' | 'application_updated' | 'interview_scheduled' | 'resume_parsed' | 'job_posted' | 'candidate_created' | 'activity_created';
   data: any;
   tenantId: string;
   timestamp: Date;

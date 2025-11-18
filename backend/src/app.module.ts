@@ -9,6 +9,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { GDPRModule } from './gdpr/gdpr.module';
 import { AuditModule } from './audit/audit.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { ActivityFeedModule } from './activity-feed/activity-feed.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { AuditModule } from './audit/audit.module';
     RealtimeModule,
     GDPRModule,
     AuditModule,
+    CampaignsModule,
+    ActivityFeedModule,
   ],
 })
 export class AppModule {}
