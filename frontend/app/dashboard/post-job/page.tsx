@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import ChannelIcon from "@/components/dashboard/ChannelIcon"
+import { api } from "@/lib/api"
 
 export default function PostJobPage() {
   const [jobTitle, setJobTitle] = useState("")
@@ -25,46 +26,9 @@ export default function PostJobPage() {
     }
 
     setIsGenerating(true)
-    
+
     try {
-      // Simulate AI generation (will be replaced with actual Google AI API call)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const generatedJD = `# ${jobTitle}
-
-## About the Role
-We are seeking a talented ${jobTitle} to join our dynamic team. This role offers an exciting opportunity to work on cutting-edge projects and make a significant impact on our organization.
-
-## Key Responsibilities
-- Lead and execute strategic initiatives in your domain
-- Collaborate with cross-functional teams to deliver high-quality solutions
-- Mentor junior team members and contribute to team growth
-- Drive innovation and continuous improvement in processes and technologies
-- Participate in architectural decisions and technical planning
-
-## Required Qualifications
-- Bachelor's degree in relevant field or equivalent experience
-- 5+ years of experience in a similar role
-- Strong technical skills and problem-solving abilities
-- Excellent communication and collaboration skills
-- Proven track record of delivering results in fast-paced environments
-
-## Preferred Qualifications
-- Master's degree in related field
-- Experience with modern technologies and frameworks
-- Leadership experience and mentoring capabilities
-- Industry certifications relevant to the role
-
-## What We Offer
-- Competitive salary and comprehensive benefits package
-- Flexible work arrangements including remote options
-- Professional development opportunities and training budget
-- Collaborative and inclusive work environment
-- Cutting-edge technology stack and tools
-
-## How to Apply
-Submit your resume and portfolio through our application portal. We look forward to hearing from you!`
-
+      const generatedJD = await api.generateJobDescription(jobTitle)
       setJobDescription(generatedJD)
     } catch (error) {
       console.error("Error generating job description:", error)

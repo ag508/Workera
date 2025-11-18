@@ -1,0 +1,41 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Workera Backend API - NestJS with Google AI",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "ts-node src/main.ts",
+    "start:dev": "ts-node-dev --respawn src/main.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nestjs",
+    "recruitment",
+    "ai"
+  ],
+  "author": "Kauzway",
+  "license": "ISC",
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@nestjs/schematics": "^10.2.3",
+    "@types/express": "^4.17.25",
+    "@types/node": "^20.19.25",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "reflect-metadata": "^0.1.14",
+    "rxjs": "^7.8.1",
+    "ts-node-dev": "^2.0.0"
+  }
+}
