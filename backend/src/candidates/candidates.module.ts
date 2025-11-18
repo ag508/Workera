@@ -6,12 +6,14 @@ import { CandidatesService } from './candidates.service';
 import { ResumeParserService } from './resume-parser.service';
 import { AiModule } from '../ai/ai.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Candidate, Resume, Application]),
     AiModule,
     NotificationsModule,
+    RealtimeModule,
   ],
   controllers: [CandidatesController],
   providers: [CandidatesService, ResumeParserService],

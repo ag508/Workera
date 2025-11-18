@@ -6,6 +6,8 @@ import { AiModule } from './ai/ai.module';
 import { CandidatesModule } from './candidates/candidates.module';
 import { InterviewsModule } from './interviews/interviews.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { GDPRModule } from './gdpr/gdpr.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     CandidatesModule,
     InterviewsModule,
     AnalyticsModule,
+    RealtimeModule,
+    GDPRModule,
   ],
 })
 export class AppModule {}
