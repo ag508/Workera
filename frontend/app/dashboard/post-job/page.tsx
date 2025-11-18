@@ -3,18 +3,19 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import ChannelIcon from "@/components/dashboard/ChannelIcon"
 
 export default function PostJobPage() {
   const [jobTitle, setJobTitle] = useState("")
   const [jobDescription, setJobDescription] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [channels, setChannels] = useState([
-    { name: "LinkedIn", enabled: true, status: "draft", icon: "💼" },
-    { name: "Indeed", enabled: true, status: "draft", icon: "🔍" },
-    { name: "Workday", enabled: false, status: "draft", icon: "📊" },
-    { name: "Monster", enabled: false, status: "draft", icon: "👹" },
-    { name: "Glassdoor", enabled: true, status: "draft", icon: "🏢" },
-    { name: "Company Website", enabled: true, status: "draft", icon: "🌐" }
+    { name: "LinkedIn", enabled: true, status: "draft" },
+    { name: "Indeed", enabled: true, status: "draft" },
+    { name: "Workday", enabled: false, status: "draft" },
+    { name: "Monster", enabled: false, status: "draft" },
+    { name: "Glassdoor", enabled: true, status: "draft" },
+    { name: "Company Website", enabled: true, status: "draft" }
   ])
 
   const generateJobDescription = async () => {
@@ -192,12 +193,14 @@ Submit your resume and portfolio through our application portal. We look forward
             <CardContent>
               <div className="space-y-3">
                 {channels.map((channel, index) => (
-                  <div 
+                  <div
                     key={index}
                     className="flex items-center justify-between p-3 rounded-lg border border-[var(--gray-200)] hover:border-[var(--emerald)] transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{channel.icon}</span>
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--emerald)] to-[var(--mint)] flex items-center justify-center text-white">
+                        <ChannelIcon channel={channel.name} />
+                      </div>
                       <div>
                         <p className="font-medium text-[var(--gray-900)]">{channel.name}</p>
                         <p className="text-xs text-[var(--gray-500)] capitalize">{channel.status}</p>

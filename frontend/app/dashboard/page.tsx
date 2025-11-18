@@ -1,4 +1,5 @@
 import KPICard from "@/components/dashboard/KPICard"
+import ActivityIcon from "@/components/dashboard/ActivityIcon"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 export default function DashboardPage() {
@@ -72,11 +73,11 @@ export default function DashboardPage() {
   ]
 
   const recentActivity = [
-    { action: "Resume parsed", candidate: "John Smith - Senior Developer", time: "5 minutes ago", icon: "✓" },
-    { action: "Job posted", job: "Backend Engineer - Remote", time: "12 minutes ago", icon: "📝" },
-    { action: "Match found", candidate: "Sarah Johnson - 94% match", time: "23 minutes ago", icon: "⭐" },
-    { action: "Interview scheduled", candidate: "Michael Chen", time: "1 hour ago", icon: "📅" },
-    { action: "Application received", job: "Frontend Developer", time: "2 hours ago", icon: "📨" }
+    { action: "Resume parsed", candidate: "John Smith - Senior Developer", time: "5 minutes ago", type: "parsed" },
+    { action: "Job posted", job: "Backend Engineer - Remote", time: "12 minutes ago", type: "posted" },
+    { action: "Match found", candidate: "Sarah Johnson - 94% match", time: "23 minutes ago", type: "match" },
+    { action: "Interview scheduled", candidate: "Michael Chen", time: "1 hour ago", type: "interview" },
+    { action: "Application received", job: "Frontend Developer", time: "2 hours ago", type: "application" }
   ]
 
   const topCandidates = [
@@ -107,8 +108,8 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start gap-3 pb-3 border-b border-[var(--gray-200)] last:border-0">
-                  <div className="w-8 h-8 rounded-full bg-[var(--gray-100)] flex items-center justify-center text-lg">
-                    {activity.icon}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--emerald)] to-[var(--mint)] flex items-center justify-center text-white">
+                    <ActivityIcon type={activity.type} className="w-4 h-4" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-[var(--gray-900)]">{activity.action}</p>
