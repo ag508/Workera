@@ -8,6 +8,8 @@ import { IntegrationsController } from './integrations.controller';
 import { DatabaseImportService } from './database-import.service';
 import { LinkedInService } from './linkedin.service';
 import { WorkdayService } from './workday.service';
+import { NaukriService } from './naukri.service';
+import { JobBoardsService } from './job-boards.service';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
@@ -16,7 +18,19 @@ import { AiModule } from '../ai/ai.module';
     AiModule,
   ],
   controllers: [IntegrationsController],
-  providers: [DatabaseImportService, LinkedInService, WorkdayService],
-  exports: [DatabaseImportService, LinkedInService, WorkdayService],
+  providers: [
+    DatabaseImportService,
+    LinkedInService,
+    WorkdayService,
+    NaukriService,
+    JobBoardsService,
+  ],
+  exports: [
+    DatabaseImportService,
+    LinkedInService,
+    WorkdayService,
+    NaukriService,
+    JobBoardsService,
+  ],
 })
 export class IntegrationsModule {}

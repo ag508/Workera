@@ -22,12 +22,13 @@ Workera automates end-to-end hiring workflows with advanced AI/NLP technology. F
 
 ### Key Capabilities
 
-- **AI Resume Parser** - Extract skills, experience, education automatically
-- **Semantic Search** - Find candidates using natural language queries
-- **Smart Matching** - RAG-powered candidate-job matching with explanations
-- **Email Campaigns** - Targeted outreach with personalization
-- **Real-time Dashboard** - Live activity feed and analytics
-- **GDPR Compliant** - Built-in data privacy and audit logging
+- **AI Resume Parser** - Extract skills, experience, education automatically with Gemini 3 Pro
+- **Semantic Search** - Find candidates using natural language queries powered by advanced NLP
+- **Smart Matching** - RAG-powered candidate-job matching with AI-generated explanations
+- **Multi-Job-Board Integration** - Post to 20+ job boards (Indeed, Monster, Naukri, Shine, etc.) simultaneously
+- **Email Campaigns** - Targeted outreach with personalization and rate limiting
+- **Real-time Dashboard** - Live activity feed and analytics with WebSocket updates
+- **GDPR Compliant** - Built-in data privacy and comprehensive audit logging
 
 ---
 
@@ -40,10 +41,11 @@ Workera automates end-to-end hiring workflows with advanced AI/NLP technology. F
 
 ### Backend
 - **NestJS** with TypeScript
-- **PostgreSQL** (multi-tenant)
-- **Google Generative AI** (Gemini Pro)
-- **Vector Embeddings** (FAISS-like in-memory store)
+- **PostgreSQL** (multi-tenant architecture)
+- **Google Generative AI** (Gemini 3 Pro for resume parsing, NLP, RAG)
+- **Vector Embeddings** (768-dimensional embeddings with FAISS-like similarity search)
 - **WebSocket** (Socket.IO) for real-time updates
+- **Multi-Platform Integrations** (LinkedIn, Workday, Naukri, Indeed, Monster, 15+ more)
 
 ---
 
@@ -486,14 +488,29 @@ POST   /activity-feed               # Log activity
 
 **Integrations**
 ```bash
+# Database Import
 POST   /integrations/database/import              # Import from SQL/NoSQL database
+
+# LinkedIn
 POST   /integrations/linkedin/jobs/import         # Import jobs from LinkedIn
 POST   /integrations/linkedin/candidates/search   # Search LinkedIn candidates
 POST   /integrations/linkedin/candidates/import   # Import LinkedIn candidates
 POST   /integrations/linkedin/jobs/post           # Post job to LinkedIn
+
+# Workday
 POST   /integrations/workday/jobs/import          # Import Workday job requisitions
 POST   /integrations/workday/candidates/import    # Import Workday candidates
 POST   /integrations/workday/applications/sync    # Sync application status to Workday
+
+# Naukri
+POST   /integrations/naukri/jobs/post             # Post job to Naukri
+POST   /integrations/naukri/applications/import   # Import Naukri applications
+POST   /integrations/naukri/candidates/search     # Search Naukri candidates
+
+# Multi-Job-Board (20+ platforms)
+POST   /integrations/job-boards/post              # Post to multiple job boards
+POST   /integrations/job-boards/applications/fetch # Fetch from multiple boards
+POST   /integrations/job-boards/candidates/search # Search across boards
 ```
 
 ### Example: Semantic Search
@@ -714,6 +731,184 @@ const result = await response.json();
 console.log(result.success ? 'Status synced successfully' : 'Sync failed');
 ```
 
+### Naukri.com Integration
+
+India's largest job portal with comprehensive resume database and job posting capabilities.
+
+**Endpoints:**
+```bash
+POST /integrations/naukri/jobs/post                    # Post job to Naukri
+POST /integrations/naukri/applications/import          # Import applications
+POST /integrations/naukri/candidates/search            # Search candidates
+```
+
+**Example: Post Job to Naukri**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/naukri/jobs/post', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      accountId: 'your_naukri_account_id',
+      apiKey: 'your_naukri_api_key',
+    },
+    jobId: 'workera-job-id',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const result = await response.json();
+console.log(result.success ? `Posted to Naukri: ${result.naukriJobId}` : result.error);
+```
+
+**Example: Search Naukri Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/naukri/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      accountId: 'your_naukri_account_id',
+      apiKey: 'your_naukri_api_key',
+    },
+    searchCriteria: {
+      keywords: 'Full Stack Developer',
+      location: 'Bangalore',
+      experience: '3-5 years',
+      skills: ['React', 'Node.js', 'MongoDB'],
+      education: 'Graduation'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 50,
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates from Naukri`);
+```
+
+### Multi-Job-Board Integration
+
+Post jobs and fetch candidates from 20+ major job boards worldwide with a single API call.
+
+**Supported Platforms:**
+- **Global**: Indeed, Monster, Glassdoor, CareerBuilder, ZipRecruiter, Dice, SimplyHired
+- **India**: Naukri, Shine, TimesJobs, FoundIt (Monster India), Hirist, Instahyre, Cutshort, Apna, FreshersWorld
+- **Tech-focused**: Stack Overflow Jobs, GitHub Jobs, AngelList/Wellfound
+
+**Endpoints:**
+```bash
+POST /integrations/job-boards/post                     # Post to multiple boards
+POST /integrations/job-boards/applications/fetch       # Fetch from multiple boards
+POST /integrations/job-boards/candidates/search        # Search across boards
+```
+
+**Example: Post Job to Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/post', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      {
+        platform: 'indeed',
+        apiKey: 'your_indeed_api_key',
+      },
+      {
+        platform: 'monster',
+        apiKey: 'your_monster_api_key',
+        accountId: 'your_account_id'
+      },
+      {
+        platform: 'shine',
+        apiKey: 'your_shine_api_key'
+      },
+      {
+        platform: 'timesjobs',
+        apiKey: 'your_timesjobs_api_key',
+        accountId: 'your_account_id'
+      }
+    ],
+    jobId: 'workera-job-id',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const result = await response.json();
+console.log(`Posted to ${result.successful.length} platforms: ${result.successful.join(', ')}`);
+if (result.failed.length > 0) {
+  console.log('Failed platforms:', result.failed);
+}
+```
+
+**Example: Search Candidates Across Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      { platform: 'indeed', apiKey: 'key1' },
+      { platform: 'dice', apiKey: 'key2' },
+      { platform: 'naukri', apiKey: 'key3', accountId: 'account123' },
+      { platform: 'shine', apiKey: 'key4' }
+    ],
+    searchCriteria: {
+      keywords: 'Python Developer Machine Learning',
+      location: 'Remote',
+      skills: ['Python', 'TensorFlow', 'PyTorch'],
+      experienceYears: 5
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 100,  // Per platform
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Total imported: ${result.imported} candidates`);
+console.log('Breakdown by platform:', result.byPlatform);
+// Example output: { indeed: 45, dice: 32, naukri: 78, shine: 56 }
+```
+
+**Example: Fetch Applications from Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/applications/fetch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      { platform: 'indeed', apiKey: 'key1' },
+      { platform: 'monster', apiKey: 'key2' },
+      { platform: 'naukri', apiKey: 'key3', accountId: 'account123' }
+    ],
+    jobMapping: {
+      indeed: 'indeed-job-id-12345',
+      monster: 'monster-job-id-67890',
+      naukri: 'naukri-job-id-abcde'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Total imported: ${result.imported} applications`);
+console.log('By platform:', result.byPlatform);
+```
+
 ### Integration Setup Notes
 
 **LinkedIn API Setup:**
@@ -743,9 +938,10 @@ console.log(result.success ? 'Status synced successfully' : 'Sync failed');
 | **Phase 5** | WebSocket, GDPR, AI Ranking | ✅ Complete |
 | **Phase 6** | Audit Logs, Campaign Infrastructure | ✅ Complete |
 | **Phase 7** | Campaign Engine, Activity Feed | ✅ Complete |
-| **Phase 8** | NLP, RAG, Semantic Search | ✅ Complete |
+| **Phase 8** | NLP, RAG, Semantic Search (Gemini 3 Pro) | ✅ Complete |
 | **Phase 9** | Mobile-Friendly UI | ✅ Complete |
 | **Phase 10** | External Integrations (LinkedIn, Workday, Database Import) | ✅ Complete |
+| **Phase 11** | Multi-Job-Board Integration (20+ platforms including Naukri, Indeed, Monster, Shine) | ✅ Complete |
 
 ---
 

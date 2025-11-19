@@ -2,6 +2,8 @@ import { Controller, Post, Get, Body, Query } from '@nestjs/common';
 import { DatabaseImportService, DatabaseConfig, ImportMapping } from './database-import.service';
 import { LinkedInService, LinkedInConfig } from './linkedin.service';
 import { WorkdayService, WorkdayConfig } from './workday.service';
+import { NaukriService, NaukriConfig } from './naukri.service';
+import { JobBoardsService, JobBoardConfig, JobBoardPlatform } from './job-boards.service';
 
 @Controller('integrations')
 export class IntegrationsController {
@@ -9,6 +11,8 @@ export class IntegrationsController {
     private readonly databaseImportService: DatabaseImportService,
     private readonly linkedInService: LinkedInService,
     private readonly workdayService: WorkdayService,
+    private readonly naukriService: NaukriService,
+    private readonly jobBoardsService: JobBoardsService,
   ) {}
 
   /**
@@ -207,5 +211,162 @@ export class IntegrationsController {
     // Fetch application and sync
     // This is a placeholder
     return { success: true };
+  }
+
+  /**
+   * Post job to Naukri
+   * POST /integrations/naukri/jobs/post
+   */
+  @Post('naukri/jobs/post')
+  async postJobToNaukri(
+    @Body()
+    body: {
+      config: NaukriConfig;
+      jobId: string;
+      tenantId: string;
+    },
+  ) {
+    return this.naukriService.postJobToNaukri(
+      body.config,
+      body.jobId,
+      body.tenantId,
+    );
+  }
+
+  /**
+   * Import applications from Naukri
+   * POST /integrations/naukri/applications/import
+   */
+  @Post('naukri/applications/import')
+  async importNaukriApplications(
+    @Body()
+    body: {
+      config: NaukriConfig;
+      naukriJobId: string;
+      tenantId: string;
+      options?: {
+        startDate?: string;
+        endDate?: string;
+        limit?: number;
+        parseResumes?: boolean;
+      };
+    },
+  ) {
+    return this.naukriService.importApplicationsFromNaukri(
+      body.config,
+      body.naukriJobId,
+      body.tenantId,
+      body.options,
+    );
+  }
+
+  /**
+   * Search and import candidates from Naukri
+   * POST /integrations/naukri/candidates/search
+   */
+  @Post('naukri/candidates/search')
+  async searchNaukriCandidates(
+    @Body()
+    body: {
+      config: NaukriConfig;
+      searchCriteria: {
+        keywords?: string;
+        location?: string;
+        experience?: string;
+        skills?: string[];
+        education?: string;
+        currentCompany?: string;
+      };
+      tenantId: string;
+      options?: {
+        limit?: number;
+        parseResumes?: boolean;
+      };
+    },
+  ) {
+    return this.naukriService.searchAndImportCandidates(
+      body.config,
+      body.searchCriteria,
+      body.tenantId,
+      body.options,
+    );
+  }
+
+  /**
+   * Post job to multiple job boards
+   * POST /integrations/job-boards/post
+   */
+  @Post('job-boards/post')
+  async postJobToBoards(
+    @Body()
+    body: {
+      configs: JobBoardConfig[];
+      jobId: string;
+      tenantId: string;
+    },
+  ) {
+    return this.jobBoardsService.postJobToBoards(
+      body.configs,
+      body.jobId,
+      body.tenantId,
+    );
+  }
+
+  /**
+   * Fetch applications from multiple job boards
+   * POST /integrations/job-boards/applications/fetch
+   */
+  @Post('job-boards/applications/fetch')
+  async fetchApplicationsFromBoards(
+    @Body()
+    body: {
+      configs: JobBoardConfig[];
+      jobMapping: Record<JobBoardPlatform, string>;
+      tenantId: string;
+      options?: {
+        startDate?: Date;
+        endDate?: Date;
+        parseResumes?: boolean;
+      };
+    },
+  ) {
+    const jobMapping = new Map(Object.entries(body.jobMapping) as Array<[JobBoardPlatform, string]>);
+    return this.jobBoardsService.fetchApplicationsFromBoards(
+      body.configs,
+      jobMapping,
+      body.tenantId,
+      body.options,
+    );
+  }
+
+  /**
+   * Search candidates across multiple job boards
+   * POST /integrations/job-boards/candidates/search
+   */
+  @Post('job-boards/candidates/search')
+  async searchCandidatesAcrossBoards(
+    @Body()
+    body: {
+      configs: JobBoardConfig[];
+      searchCriteria: {
+        keywords?: string;
+        location?: string;
+        skills?: string[];
+        experienceYears?: number;
+        education?: string;
+      };
+      tenantId: string;
+      options?: {
+        limit?: number;
+        parseResumes?: boolean;
+      };
+    },
+  ) {
+    return this.jobBoardsService.searchCandidatesAcrossBoards(
+      body.configs,
+      body.searchCriteria,
+      body.tenantId,
+      body.options,
+    );
   }
 }

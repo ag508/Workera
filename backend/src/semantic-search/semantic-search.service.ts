@@ -148,7 +148,7 @@ export class SemanticSearchService {
     retrievedDocs: SearchResult[],
   ): Promise<RAGResult> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
       // Build context from retrieved documents
       const context = retrievedDocs
@@ -245,7 +245,7 @@ Return your response in JSON format:
     weaknesses: string[];
   }> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
       const prompt = `
 Analyze the match between this candidate and job description.
