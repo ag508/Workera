@@ -909,6 +909,241 @@ console.log(`Total imported: ${result.imported} applications`);
 console.log('By platform:', result.byPlatform);
 ```
 
+### Recruitment Forms & Candidate Portal
+
+Create custom application forms similar to Workday's recruitment system, with a full candidate portal for tracking applications.
+
+**Key Features:**
+- Custom form builder with drag-and-drop fields
+- Shareable application links
+- Candidate authentication and portal access
+- Application status tracking
+- Job browsing for candidates
+- AI-powered resume analysis
+- Form analytics and conversion tracking
+
+**Recruiter Endpoints:**
+```bash
+POST   /integrations/forms                           # Create recruitment form
+GET    /integrations/forms?tenantId=xxx              # List all forms
+GET    /integrations/forms/slug/:slug                # Get form by slug (public)
+PATCH  /integrations/forms/:id                       # Update form
+DELETE /integrations/forms/:id                       # Delete/deactivate form
+GET    /integrations/forms/:id/submissions           # Get submissions
+PATCH  /integrations/forms/submissions/:id/status    # Update submission status
+GET    /integrations/forms/:id/analytics             # Get form analytics
+```
+
+**Candidate Portal Endpoints:**
+```bash
+POST   /integrations/candidate/register              # Register new candidate
+POST   /integrations/candidate/login                 # Login candidate
+POST   /integrations/candidate/password-reset/request  # Request password reset
+POST   /integrations/candidate/password-reset/confirm  # Reset password
+POST   /integrations/candidate/verify-email          # Verify email
+GET    /integrations/candidate/profile               # Get candidate profile
+PATCH  /integrations/candidate/profile               # Update profile
+POST   /integrations/candidate/change-password       # Change password
+GET    /integrations/candidate/applications          # List my applications
+GET    /integrations/candidate/applications/:id      # Get application details
+POST   /integrations/candidate/applications/:id/withdraw  # Withdraw application
+GET    /integrations/candidate/jobs                  # Browse available jobs
+GET    /integrations/candidate/jobs/:id              # Get job details
+POST   /integrations/forms/submit                    # Submit application (public)
+```
+
+**Example: Create Recruitment Form**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/forms', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Software Engineer Application',
+    description: 'Apply for our Software Engineer position',
+    jobId: 'job-uuid-here',
+    fields: [
+      {
+        id: 'firstName',
+        label: 'First Name',
+        type: 'text',
+        required: true,
+        order: 1
+      },
+      {
+        id: 'lastName',
+        label: 'Last Name',
+        type: 'text',
+        required: true,
+        order: 2
+      },
+      {
+        id: 'email',
+        label: 'Email Address',
+        type: 'email',
+        required: true,
+        order: 3
+      },
+      {
+        id: 'phone',
+        label: 'Phone Number',
+        type: 'phone',
+        required: false,
+        order: 4
+      },
+      {
+        id: 'experience',
+        label: 'Years of Experience',
+        type: 'select',
+        required: true,
+        options: ['0-2 years', '2-5 years', '5-10 years', '10+ years'],
+        order: 5
+      },
+      {
+        id: 'skills',
+        label: 'Technical Skills',
+        type: 'multiselect',
+        required: true,
+        options: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java'],
+        order: 6
+      }
+    ],
+    settings: {
+      allowMultipleSubmissions: false,
+      requireLogin: false,
+      showOtherJobs: true,
+      autoSendConfirmationEmail: true,
+      collectResume: true,
+      collectCoverLetter: true
+    },
+    welcomeMessage: 'Thank you for your interest in joining our team!',
+    thankYouMessage: 'Your application has been received. We will be in touch soon.',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const form = await response.json();
+console.log(`Form created: ${form.slug}`);
+console.log(`Share this link: https://yoursite.com/apply/${form.slug}`);
+```
+
+**Example: Candidate Registration & Login**
+
+```javascript
+// Register new candidate
+const registerResponse = await fetch('http://localhost:3001/integrations/candidate/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'candidate@example.com',
+    password: 'SecurePassword123!',
+    firstName: 'John',
+    lastName: 'Doe',
+    phone: '+1234567890',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const { accessToken, candidate } = await registerResponse.json();
+console.log('Candidate registered:', candidate.email);
+console.log('Access token:', accessToken);
+
+// Login existing candidate
+const loginResponse = await fetch('http://localhost:3001/integrations/candidate/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'candidate@example.com',
+    password: 'SecurePassword123!',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const loginData = await loginResponse.json();
+console.log('Logged in:', loginData.candidate.email);
+```
+
+**Example: Submit Application Form**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/forms/submit', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    formId: 'form-uuid-here',
+    data: {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: '+1234567890',
+      experience: '2-5 years',
+      skills: ['JavaScript', 'TypeScript', 'React']
+    },
+    resumeUrl: 'https://storage.example.com/resumes/john-doe.pdf',
+    coverLetter: 'I am excited to apply for this position...',
+    candidateUserId: 'candidate-uuid-here', // Optional if logged in
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0...'
+  })
+});
+
+const submission = await response.json();
+console.log('Application submitted:', submission.id);
+console.log('Status:', submission.status);
+```
+
+**Example: Track Application Status**
+
+```javascript
+// Get all my applications
+const response = await fetch(
+  'http://localhost:3001/integrations/candidate/applications?candidateId=candidate-uuid&tenantId=tenant-id'
+);
+
+const applications = await response.json();
+
+applications.forEach(app => {
+  console.log(`Job: ${app.form.job.title}`);
+  console.log(`Status: ${app.status}`);
+  console.log(`Submitted: ${new Date(app.createdAt).toLocaleDateString()}`);
+  console.log(`AI Match Score: ${app.aiMatchScore}%`);
+  console.log('---');
+});
+```
+
+**Example: Browse Jobs as Candidate**
+
+```javascript
+const response = await fetch(
+  'http://localhost:3001/integrations/candidate/jobs?tenantId=tenant-id&keywords=software+engineer&location=Remote&limit=10'
+);
+
+const { jobs, total } = await response.json();
+
+console.log(`Found ${total} jobs`);
+jobs.forEach(job => {
+  console.log(`${job.title} - ${job.location}`);
+  console.log(job.description);
+  console.log('---');
+});
+```
+
+**Form Analytics:**
+
+```javascript
+const response = await fetch(
+  'http://localhost:3001/integrations/forms/form-uuid/analytics?tenantId=tenant-id'
+);
+
+const analytics = await response.json();
+
+console.log('Total Submissions:', analytics.totalSubmissions);
+console.log('Status Breakdown:', analytics.statusBreakdown);
+console.log('Average Match Score:', analytics.averageMatchScore);
+console.log('Conversion Rate:', analytics.conversionRate + '%');
+console.log('Recent Submissions:', analytics.recentSubmissions);
+```
+
 ### Integration Setup Notes
 
 **LinkedIn API Setup:**
@@ -942,6 +1177,7 @@ console.log('By platform:', result.byPlatform);
 | **Phase 9** | Mobile-Friendly UI | ✅ Complete |
 | **Phase 10** | External Integrations (LinkedIn, Workday, Database Import) | ✅ Complete |
 | **Phase 11** | Multi-Job-Board Integration (20+ platforms including Naukri, Indeed, Monster, Shine) | ✅ Complete |
+| **Phase 12** | Recruitment Forms & Candidate Portal (Workday-style application system) | ✅ Complete |
 
 ---
 

@@ -1,9 +1,12 @@
-import { Controller, Post, Get, Body, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, Patch, Delete } from '@nestjs/common';
 import { DatabaseImportService, DatabaseConfig, ImportMapping } from './database-import.service';
 import { LinkedInService, LinkedInConfig } from './linkedin.service';
 import { WorkdayService, WorkdayConfig } from './workday.service';
 import { NaukriService, NaukriConfig } from './naukri.service';
 import { JobBoardsService, JobBoardConfig, JobBoardPlatform } from './job-boards.service';
+import { RecruitmentFormsService, CreateFormDto, SubmitFormDto } from './recruitment-forms.service';
+import { CandidatePortalService, RegisterCandidateDto, LoginCandidateDto, UpdateProfileDto } from './candidate-portal.service';
+import { SubmissionStatus } from '../database/entities/form-submission.entity';
 
 @Controller('integrations')
 export class IntegrationsController {
@@ -13,6 +16,8 @@ export class IntegrationsController {
     private readonly workdayService: WorkdayService,
     private readonly naukriService: NaukriService,
     private readonly jobBoardsService: JobBoardsService,
+    private readonly recruitmentFormsService: RecruitmentFormsService,
+    private readonly candidatePortalService: CandidatePortalService,
   ) {}
 
   /**
@@ -368,5 +373,329 @@ export class IntegrationsController {
       body.tenantId,
       body.options,
     );
+  }
+
+  // ============================================================================
+  // RECRUITMENT FORMS & CANDIDATE PORTAL
+  // ============================================================================
+
+  /**
+   * Create recruitment form
+   * POST /integrations/forms
+   */
+  @Post('forms')
+  async createForm(@Body() dto: CreateFormDto) {
+    return this.recruitmentFormsService.createForm(dto);
+  }
+
+  /**
+   * Get all forms for tenant
+   * GET /integrations/forms?tenantId=xxx
+   */
+  @Get('forms')
+  async getForms(@Query('tenantId') tenantId: string) {
+    return this.recruitmentFormsService.getForms(tenantId);
+  }
+
+  /**
+   * Get form by slug (public endpoint)
+   * GET /integrations/forms/slug/:slug
+   */
+  @Get('forms/slug/:slug')
+  async getFormBySlug(@Param('slug') slug: string) {
+    return this.recruitmentFormsService.getFormBySlug(slug);
+  }
+
+  /**
+   * Update recruitment form
+   * PATCH /integrations/forms/:id
+   */
+  @Patch('forms/:id')
+  async updateForm(
+    @Param('id') id: string,
+    @Query('tenantId') tenantId: string,
+    @Body() updates: Partial<CreateFormDto>,
+  ) {
+    return this.recruitmentFormsService.updateForm(id, tenantId, updates);
+  }
+
+  /**
+   * Delete/deactivate form
+   * DELETE /integrations/forms/:id
+   */
+  @Delete('forms/:id')
+  async deleteForm(
+    @Param('id') id: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.recruitmentFormsService.deleteForm(id, tenantId);
+  }
+
+  /**
+   * Submit application form (public endpoint)
+   * POST /integrations/forms/submit
+   */
+  @Post('forms/submit')
+  async submitForm(@Body() dto: SubmitFormDto) {
+    return this.recruitmentFormsService.submitForm(dto);
+  }
+
+  /**
+   * Get form submissions
+   * GET /integrations/forms/:id/submissions
+   */
+  @Get('forms/:id/submissions')
+  async getSubmissions(
+    @Param('id') formId: string,
+    @Query('tenantId') tenantId: string,
+    @Query('status') status?: SubmissionStatus,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const filters: any = {};
+    if (status) filters.status = status;
+    if (startDate) filters.startDate = new Date(startDate);
+    if (endDate) filters.endDate = new Date(endDate);
+
+    return this.recruitmentFormsService.getSubmissions(formId, tenantId, filters);
+  }
+
+  /**
+   * Update submission status
+   * PATCH /integrations/forms/submissions/:id/status
+   */
+  @Patch('forms/submissions/:id/status')
+  async updateSubmissionStatus(
+    @Param('id') submissionId: string,
+    @Body() body: {
+      tenantId: string;
+      status: SubmissionStatus;
+      reviewerNotes?: string;
+    },
+  ) {
+    return this.recruitmentFormsService.updateSubmissionStatus(
+      submissionId,
+      body.tenantId,
+      body.status,
+      body.reviewerNotes,
+    );
+  }
+
+  /**
+   * Get form analytics
+   * GET /integrations/forms/:id/analytics
+   */
+  @Get('forms/:id/analytics')
+  async getFormAnalytics(
+    @Param('id') formId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.recruitmentFormsService.getFormAnalytics(formId, tenantId);
+  }
+
+  // ============================================================================
+  // CANDIDATE PORTAL - AUTHENTICATION
+  // ============================================================================
+
+  /**
+   * Register candidate (public endpoint)
+   * POST /integrations/candidate/register
+   */
+  @Post('candidate/register')
+  async registerCandidate(@Body() dto: RegisterCandidateDto) {
+    return this.candidatePortalService.register(dto);
+  }
+
+  /**
+   * Login candidate (public endpoint)
+   * POST /integrations/candidate/login
+   */
+  @Post('candidate/login')
+  async loginCandidate(@Body() dto: LoginCandidateDto) {
+    return this.candidatePortalService.login(dto);
+  }
+
+  /**
+   * Request password reset (public endpoint)
+   * POST /integrations/candidate/password-reset/request
+   */
+  @Post('candidate/password-reset/request')
+  async requestPasswordReset(
+    @Body() body: { email: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.requestPasswordReset(
+      body.email,
+      body.tenantId,
+    );
+  }
+
+  /**
+   * Reset password with token (public endpoint)
+   * POST /integrations/candidate/password-reset/confirm
+   */
+  @Post('candidate/password-reset/confirm')
+  async resetPassword(
+    @Body() body: { token: string; newPassword: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.resetPassword(
+      body.token,
+      body.newPassword,
+      body.tenantId,
+    );
+  }
+
+  /**
+   * Verify email (public endpoint)
+   * POST /integrations/candidate/verify-email
+   */
+  @Post('candidate/verify-email')
+  async verifyEmail(
+    @Body() body: { token: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.verifyEmail(body.token, body.tenantId);
+  }
+
+  // ============================================================================
+  // CANDIDATE PORTAL - PROFILE MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Get candidate profile
+   * GET /integrations/candidate/profile
+   */
+  @Get('candidate/profile')
+  async getCandidateProfile(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalService.getProfile(candidateId, tenantId);
+  }
+
+  /**
+   * Update candidate profile
+   * PATCH /integrations/candidate/profile
+   */
+  @Patch('candidate/profile')
+  async updateCandidateProfile(
+    @Body() body: {
+      candidateId: string;
+      tenantId: string;
+      updates: UpdateProfileDto;
+    },
+  ) {
+    return this.candidatePortalService.updateProfile(
+      body.candidateId,
+      body.tenantId,
+      body.updates,
+    );
+  }
+
+  /**
+   * Change password
+   * POST /integrations/candidate/change-password
+   */
+  @Post('candidate/change-password')
+  async changePassword(
+    @Body() body: {
+      candidateId: string;
+      tenantId: string;
+      currentPassword: string;
+      newPassword: string;
+    },
+  ) {
+    return this.candidatePortalService.changePassword(
+      body.candidateId,
+      body.tenantId,
+      body.currentPassword,
+      body.newPassword,
+    );
+  }
+
+  // ============================================================================
+  // CANDIDATE PORTAL - APPLICATION TRACKING
+  // ============================================================================
+
+  /**
+   * Get candidate's applications
+   * GET /integrations/candidate/applications
+   */
+  @Get('candidate/applications')
+  async getCandidateApplications(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalService.getMyApplications(
+      candidateId,
+      tenantId,
+    );
+  }
+
+  /**
+   * Get application details
+   * GET /integrations/candidate/applications/:id
+   */
+  @Get('candidate/applications/:id')
+  async getApplicationDetails(
+    @Param('id') submissionId: string,
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalService.getApplicationDetails(
+      candidateId,
+      submissionId,
+      tenantId,
+    );
+  }
+
+  /**
+   * Withdraw application
+   * POST /integrations/candidate/applications/:id/withdraw
+   */
+  @Post('candidate/applications/:id/withdraw')
+  async withdrawApplication(
+    @Param('id') submissionId: string,
+    @Body() body: { candidateId: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.withdrawApplication(
+      body.candidateId,
+      submissionId,
+      body.tenantId,
+    );
+  }
+
+  // ============================================================================
+  // CANDIDATE PORTAL - JOB BROWSING
+  // ============================================================================
+
+  /**
+   * Browse available jobs (public endpoint)
+   * GET /integrations/candidate/jobs
+   */
+  @Get('candidate/jobs')
+  async browseJobs(
+    @Query('tenantId') tenantId: string,
+    @Query('location') location?: string,
+    @Query('keywords') keywords?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.candidatePortalService.browseJobs(tenantId, {
+      location,
+      keywords,
+      limit: limit ? parseInt(limit.toString()) : undefined,
+      offset: offset ? parseInt(offset.toString()) : undefined,
+    });
+  }
+
+  /**
+   * Get job details (public endpoint)
+   * GET /integrations/candidate/jobs/:id
+   */
+  @Get('candidate/jobs/:id')
+  async getJobDetails(
+    @Param('id') jobId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalService.getJobDetails(jobId, tenantId);
   }
 }
