@@ -484,6 +484,18 @@ GET    /activity-feed/important?tenantId=xxx # Important activities
 POST   /activity-feed               # Log activity
 ```
 
+**Integrations**
+```bash
+POST   /integrations/database/import              # Import from SQL/NoSQL database
+POST   /integrations/linkedin/jobs/import         # Import jobs from LinkedIn
+POST   /integrations/linkedin/candidates/search   # Search LinkedIn candidates
+POST   /integrations/linkedin/candidates/import   # Import LinkedIn candidates
+POST   /integrations/linkedin/jobs/post           # Post job to LinkedIn
+POST   /integrations/workday/jobs/import          # Import Workday job requisitions
+POST   /integrations/workday/candidates/import    # Import Workday candidates
+POST   /integrations/workday/applications/sync    # Sync application status to Workday
+```
+
 ### Example: Semantic Search
 
 ```javascript
@@ -504,6 +516,224 @@ console.log('AI explanation:', ragAnswer.answer);
 
 ---
 
+## External Integrations
+
+Workera supports importing candidates from company databases and syncing with external ATS platforms like LinkedIn and Workday.
+
+### Database Import
+
+Import candidates from existing SQL or NoSQL databases with flexible field mapping.
+
+**Supported Databases:**
+- MySQL, PostgreSQL, Microsoft SQL Server, Oracle
+- MongoDB
+
+**Example: Import from MySQL**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/database/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      type: 'mysql',
+      host: 'db.company.com',
+      port: 3306,
+      user: 'hr_user',
+      password: 'secure_password',
+      database: 'hr_system',
+      candidatesTable: 'employees'
+    },
+    mapping: {
+      email: 'work_email',
+      firstName: 'first_name',
+      lastName: 'last_name',
+      phone: 'phone_number',
+      resumeText: 'cv_text',
+      skills: 'technical_skills'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      parseResumes: true,  // Enable AI resume parsing
+      limit: 100,
+      whereClause: "status = 'active'"
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates`);
+```
+
+### LinkedIn Integration
+
+Sync job postings and source candidates from LinkedIn.
+
+**Endpoints:**
+```bash
+POST /integrations/linkedin/jobs/import      # Import jobs from LinkedIn
+POST /integrations/linkedin/candidates/search # Search LinkedIn candidates
+POST /integrations/linkedin/candidates/import # Import candidates
+POST /integrations/linkedin/jobs/post         # Post job to LinkedIn
+```
+
+**Example: Import LinkedIn Jobs**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/linkedin/jobs/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      clientId: 'your_linkedin_client_id',
+      clientSecret: 'your_linkedin_client_secret',
+      accessToken: 'your_linkedin_access_token',
+      organizationId: 'your_org_id'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 50,
+      status: 'open'  // 'open', 'closed', or 'all'
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} jobs from LinkedIn`);
+```
+
+**Example: Search LinkedIn Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/linkedin/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      clientId: 'your_linkedin_client_id',
+      clientSecret: 'your_linkedin_client_secret',
+      accessToken: 'your_linkedin_access_token',
+      organizationId: 'your_org_id'
+    },
+    searchCriteria: {
+      keywords: 'Senior React Developer',
+      location: 'San Francisco Bay Area',
+      title: 'Software Engineer'
+    },
+    options: {
+      limit: 20
+    }
+  })
+});
+
+const candidates = await response.json();
+console.log(`Found ${candidates.length} matching candidates`);
+```
+
+### Workday Integration
+
+Bi-directional sync with Workday HCM for job requisitions and candidates.
+
+**Endpoints:**
+```bash
+POST /integrations/workday/jobs/import           # Import job requisitions
+POST /integrations/workday/candidates/import     # Import candidates
+POST /integrations/workday/applications/sync     # Sync application status
+```
+
+**Example: Import Workday Jobs**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/jobs/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      status: 'Open',
+      limit: 100
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} job requisitions from Workday`);
+```
+
+**Example: Import Workday Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/candidates/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      jobRequisitionId: 'R-12345',  // Optional: filter by job
+      limit: 50
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates from Workday`);
+```
+
+**Example: Sync Application Status to Workday**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/applications/sync', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    applicationId: 'workera-application-id',
+    workdayJobApplicationId: 'WD-JOB-APP-123',
+    status: 'Interview'
+  })
+});
+
+const result = await response.json();
+console.log(result.success ? 'Status synced successfully' : 'Sync failed');
+```
+
+### Integration Setup Notes
+
+**LinkedIn API Setup:**
+1. Create LinkedIn app at https://www.linkedin.com/developers/
+2. Add required OAuth scopes: `r_liteprofile`, `r_organization_social`, `w_organization_social`
+3. Generate access token for API calls
+
+**Workday API Setup:**
+1. Contact Workday administrator to create integration user
+2. Grant permissions: `Recruiting`, `Job Applications`, `Job Requisitions`
+3. Use REST API endpoints (not SOAP/XML)
+
+**Database Security:**
+- Use read-only database credentials when possible
+- Enable SSL/TLS for database connections
+- Store credentials in environment variables or secret manager
+- Apply IP whitelisting for production databases
+
+---
+
 ## Features by Phase
 
 | Phase | Features | Status |
@@ -515,6 +745,7 @@ console.log('AI explanation:', ragAnswer.answer);
 | **Phase 7** | Campaign Engine, Activity Feed | ✅ Complete |
 | **Phase 8** | NLP, RAG, Semantic Search | ✅ Complete |
 | **Phase 9** | Mobile-Friendly UI | ✅ Complete |
+| **Phase 10** | External Integrations (LinkedIn, Workday, Database Import) | ✅ Complete |
 
 ---
 

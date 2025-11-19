@@ -51,4 +51,62 @@ export class AiService {
       throw new Error('Failed to analyze resume');
     }
   }
+
+  async parseResume(resumeText: string): Promise<any> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const prompt = `You are an expert resume parser. Extract structured information from this resume.
+
+RESUME TEXT:
+${resumeText}
+
+Provide your output in JSON format with the following structure:
+{
+  "summary": "Brief professional summary (2-3 sentences)",
+  "experience": [
+    {
+      "company": "Company name",
+      "position": "Job title",
+      "startDate": "YYYY-MM or YYYY",
+      "endDate": "YYYY-MM or YYYY or Present",
+      "description": "Key responsibilities and achievements"
+    }
+  ],
+  "education": [
+    {
+      "institution": "School/University name",
+      "degree": "Degree type",
+      "field": "Field of study",
+      "year": "Graduation year"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3"],
+  "certifications": ["cert1", "cert2"]
+}
+
+Extract all available information. If a field is not present, use an empty array or empty string.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+
+      throw new Error('Invalid response format');
+    } catch (error) {
+      console.error('Error parsing resume:', error);
+      // Return default structure if parsing fails
+      return {
+        summary: '',
+        experience: [],
+        education: [],
+        skills: [],
+        certifications: [],
+      };
+    }
+  }
 }
