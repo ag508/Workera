@@ -22,12 +22,13 @@ Workera automates end-to-end hiring workflows with advanced AI/NLP technology. F
 
 ### Key Capabilities
 
-- **AI Resume Parser** - Extract skills, experience, education automatically
-- **Semantic Search** - Find candidates using natural language queries
-- **Smart Matching** - RAG-powered candidate-job matching with explanations
-- **Email Campaigns** - Targeted outreach with personalization
-- **Real-time Dashboard** - Live activity feed and analytics
-- **GDPR Compliant** - Built-in data privacy and audit logging
+- **AI Resume Parser** - Extract skills, experience, education automatically with Gemini 3 Pro
+- **Semantic Search** - Find candidates using natural language queries powered by advanced NLP
+- **Smart Matching** - RAG-powered candidate-job matching with AI-generated explanations
+- **Multi-Job-Board Integration** - Post to 20+ job boards (Indeed, Monster, Naukri, Shine, etc.) simultaneously
+- **Email Campaigns** - Targeted outreach with personalization and rate limiting
+- **Real-time Dashboard** - Live activity feed and analytics with WebSocket updates
+- **GDPR Compliant** - Built-in data privacy and comprehensive audit logging
 
 ---
 
@@ -40,10 +41,11 @@ Workera automates end-to-end hiring workflows with advanced AI/NLP technology. F
 
 ### Backend
 - **NestJS** with TypeScript
-- **PostgreSQL** (multi-tenant)
-- **Google Generative AI** (Gemini Pro)
-- **Vector Embeddings** (FAISS-like in-memory store)
+- **PostgreSQL** (multi-tenant architecture)
+- **Google Generative AI** (Gemini 3 Pro for resume parsing, NLP, RAG)
+- **Vector Embeddings** (768-dimensional embeddings with FAISS-like similarity search)
 - **WebSocket** (Socket.IO) for real-time updates
+- **Multi-Platform Integrations** (LinkedIn, Workday, Naukri, Indeed, Monster, 15+ more)
 
 ---
 
@@ -484,6 +486,33 @@ GET    /activity-feed/important?tenantId=xxx # Important activities
 POST   /activity-feed               # Log activity
 ```
 
+**Integrations**
+```bash
+# Database Import
+POST   /integrations/database/import              # Import from SQL/NoSQL database
+
+# LinkedIn
+POST   /integrations/linkedin/jobs/import         # Import jobs from LinkedIn
+POST   /integrations/linkedin/candidates/search   # Search LinkedIn candidates
+POST   /integrations/linkedin/candidates/import   # Import LinkedIn candidates
+POST   /integrations/linkedin/jobs/post           # Post job to LinkedIn
+
+# Workday
+POST   /integrations/workday/jobs/import          # Import Workday job requisitions
+POST   /integrations/workday/candidates/import    # Import Workday candidates
+POST   /integrations/workday/applications/sync    # Sync application status to Workday
+
+# Naukri
+POST   /integrations/naukri/jobs/post             # Post job to Naukri
+POST   /integrations/naukri/applications/import   # Import Naukri applications
+POST   /integrations/naukri/candidates/search     # Search Naukri candidates
+
+# Multi-Job-Board (20+ platforms)
+POST   /integrations/job-boards/post              # Post to multiple job boards
+POST   /integrations/job-boards/applications/fetch # Fetch from multiple boards
+POST   /integrations/job-boards/candidates/search # Search across boards
+```
+
 ### Example: Semantic Search
 
 ```javascript
@@ -504,6 +533,637 @@ console.log('AI explanation:', ragAnswer.answer);
 
 ---
 
+## External Integrations
+
+Workera supports importing candidates from company databases and syncing with external ATS platforms like LinkedIn and Workday.
+
+### Database Import
+
+Import candidates from existing SQL or NoSQL databases with flexible field mapping.
+
+**Supported Databases:**
+- MySQL, PostgreSQL, Microsoft SQL Server, Oracle
+- MongoDB
+
+**Example: Import from MySQL**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/database/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      type: 'mysql',
+      host: 'db.company.com',
+      port: 3306,
+      user: 'hr_user',
+      password: 'secure_password',
+      database: 'hr_system',
+      candidatesTable: 'employees'
+    },
+    mapping: {
+      email: 'work_email',
+      firstName: 'first_name',
+      lastName: 'last_name',
+      phone: 'phone_number',
+      resumeText: 'cv_text',
+      skills: 'technical_skills'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      parseResumes: true,  // Enable AI resume parsing
+      limit: 100,
+      whereClause: "status = 'active'"
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates`);
+```
+
+### LinkedIn Integration
+
+Sync job postings and source candidates from LinkedIn.
+
+**Endpoints:**
+```bash
+POST /integrations/linkedin/jobs/import      # Import jobs from LinkedIn
+POST /integrations/linkedin/candidates/search # Search LinkedIn candidates
+POST /integrations/linkedin/candidates/import # Import candidates
+POST /integrations/linkedin/jobs/post         # Post job to LinkedIn
+```
+
+**Example: Import LinkedIn Jobs**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/linkedin/jobs/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      clientId: 'your_linkedin_client_id',
+      clientSecret: 'your_linkedin_client_secret',
+      accessToken: 'your_linkedin_access_token',
+      organizationId: 'your_org_id'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 50,
+      status: 'open'  // 'open', 'closed', or 'all'
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} jobs from LinkedIn`);
+```
+
+**Example: Search LinkedIn Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/linkedin/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      clientId: 'your_linkedin_client_id',
+      clientSecret: 'your_linkedin_client_secret',
+      accessToken: 'your_linkedin_access_token',
+      organizationId: 'your_org_id'
+    },
+    searchCriteria: {
+      keywords: 'Senior React Developer',
+      location: 'San Francisco Bay Area',
+      title: 'Software Engineer'
+    },
+    options: {
+      limit: 20
+    }
+  })
+});
+
+const candidates = await response.json();
+console.log(`Found ${candidates.length} matching candidates`);
+```
+
+### Workday Integration
+
+Bi-directional sync with Workday HCM for job requisitions and candidates.
+
+**Endpoints:**
+```bash
+POST /integrations/workday/jobs/import           # Import job requisitions
+POST /integrations/workday/candidates/import     # Import candidates
+POST /integrations/workday/applications/sync     # Sync application status
+```
+
+**Example: Import Workday Jobs**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/jobs/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      status: 'Open',
+      limit: 100
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} job requisitions from Workday`);
+```
+
+**Example: Import Workday Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/candidates/import', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      jobRequisitionId: 'R-12345',  // Optional: filter by job
+      limit: 50
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates from Workday`);
+```
+
+**Example: Sync Application Status to Workday**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/workday/applications/sync', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      tenantName: 'your_company',
+      username: 'workday_api_user',
+      password: 'workday_password',
+      baseUrl: 'https://wd2-impl-services1.workday.com'
+    },
+    applicationId: 'workera-application-id',
+    workdayJobApplicationId: 'WD-JOB-APP-123',
+    status: 'Interview'
+  })
+});
+
+const result = await response.json();
+console.log(result.success ? 'Status synced successfully' : 'Sync failed');
+```
+
+### Naukri.com Integration
+
+India's largest job portal with comprehensive resume database and job posting capabilities.
+
+**Endpoints:**
+```bash
+POST /integrations/naukri/jobs/post                    # Post job to Naukri
+POST /integrations/naukri/applications/import          # Import applications
+POST /integrations/naukri/candidates/search            # Search candidates
+```
+
+**Example: Post Job to Naukri**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/naukri/jobs/post', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      accountId: 'your_naukri_account_id',
+      apiKey: 'your_naukri_api_key',
+    },
+    jobId: 'workera-job-id',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const result = await response.json();
+console.log(result.success ? `Posted to Naukri: ${result.naukriJobId}` : result.error);
+```
+
+**Example: Search Naukri Candidates**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/naukri/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    config: {
+      accountId: 'your_naukri_account_id',
+      apiKey: 'your_naukri_api_key',
+    },
+    searchCriteria: {
+      keywords: 'Full Stack Developer',
+      location: 'Bangalore',
+      experience: '3-5 years',
+      skills: ['React', 'Node.js', 'MongoDB'],
+      education: 'Graduation'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 50,
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Imported ${result.imported} candidates from Naukri`);
+```
+
+### Multi-Job-Board Integration
+
+Post jobs and fetch candidates from 20+ major job boards worldwide with a single API call.
+
+**Supported Platforms:**
+- **Global**: Indeed, Monster, Glassdoor, CareerBuilder, ZipRecruiter, Dice, SimplyHired
+- **India**: Naukri, Shine, TimesJobs, FoundIt (Monster India), Hirist, Instahyre, Cutshort, Apna, FreshersWorld
+- **Tech-focused**: Stack Overflow Jobs, GitHub Jobs, AngelList/Wellfound
+
+**Endpoints:**
+```bash
+POST /integrations/job-boards/post                     # Post to multiple boards
+POST /integrations/job-boards/applications/fetch       # Fetch from multiple boards
+POST /integrations/job-boards/candidates/search        # Search across boards
+```
+
+**Example: Post Job to Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/post', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      {
+        platform: 'indeed',
+        apiKey: 'your_indeed_api_key',
+      },
+      {
+        platform: 'monster',
+        apiKey: 'your_monster_api_key',
+        accountId: 'your_account_id'
+      },
+      {
+        platform: 'shine',
+        apiKey: 'your_shine_api_key'
+      },
+      {
+        platform: 'timesjobs',
+        apiKey: 'your_timesjobs_api_key',
+        accountId: 'your_account_id'
+      }
+    ],
+    jobId: 'workera-job-id',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const result = await response.json();
+console.log(`Posted to ${result.successful.length} platforms: ${result.successful.join(', ')}`);
+if (result.failed.length > 0) {
+  console.log('Failed platforms:', result.failed);
+}
+```
+
+**Example: Search Candidates Across Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/candidates/search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      { platform: 'indeed', apiKey: 'key1' },
+      { platform: 'dice', apiKey: 'key2' },
+      { platform: 'naukri', apiKey: 'key3', accountId: 'account123' },
+      { platform: 'shine', apiKey: 'key4' }
+    ],
+    searchCriteria: {
+      keywords: 'Python Developer Machine Learning',
+      location: 'Remote',
+      skills: ['Python', 'TensorFlow', 'PyTorch'],
+      experienceYears: 5
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      limit: 100,  // Per platform
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Total imported: ${result.imported} candidates`);
+console.log('Breakdown by platform:', result.byPlatform);
+// Example output: { indeed: 45, dice: 32, naukri: 78, shine: 56 }
+```
+
+**Example: Fetch Applications from Multiple Boards**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/job-boards/applications/fetch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    configs: [
+      { platform: 'indeed', apiKey: 'key1' },
+      { platform: 'monster', apiKey: 'key2' },
+      { platform: 'naukri', apiKey: 'key3', accountId: 'account123' }
+    ],
+    jobMapping: {
+      indeed: 'indeed-job-id-12345',
+      monster: 'monster-job-id-67890',
+      naukri: 'naukri-job-id-abcde'
+    },
+    tenantId: 'your-tenant-id',
+    options: {
+      parseResumes: true
+    }
+  })
+});
+
+const result = await response.json();
+console.log(`Total imported: ${result.imported} applications`);
+console.log('By platform:', result.byPlatform);
+```
+
+### Recruitment Forms & Candidate Portal
+
+Create custom application forms similar to Workday's recruitment system, with a full candidate portal for tracking applications.
+
+**Key Features:**
+- Custom form builder with drag-and-drop fields
+- Shareable application links
+- Candidate authentication and portal access
+- Application status tracking
+- Job browsing for candidates
+- AI-powered resume analysis
+- Form analytics and conversion tracking
+
+**Recruiter Endpoints:**
+```bash
+POST   /integrations/forms                           # Create recruitment form
+GET    /integrations/forms?tenantId=xxx              # List all forms
+GET    /integrations/forms/slug/:slug                # Get form by slug (public)
+PATCH  /integrations/forms/:id                       # Update form
+DELETE /integrations/forms/:id                       # Delete/deactivate form
+GET    /integrations/forms/:id/submissions           # Get submissions
+PATCH  /integrations/forms/submissions/:id/status    # Update submission status
+GET    /integrations/forms/:id/analytics             # Get form analytics
+```
+
+**Candidate Portal Endpoints:**
+```bash
+POST   /integrations/candidate/register              # Register new candidate
+POST   /integrations/candidate/login                 # Login candidate
+POST   /integrations/candidate/password-reset/request  # Request password reset
+POST   /integrations/candidate/password-reset/confirm  # Reset password
+POST   /integrations/candidate/verify-email          # Verify email
+GET    /integrations/candidate/profile               # Get candidate profile
+PATCH  /integrations/candidate/profile               # Update profile
+POST   /integrations/candidate/change-password       # Change password
+GET    /integrations/candidate/applications          # List my applications
+GET    /integrations/candidate/applications/:id      # Get application details
+POST   /integrations/candidate/applications/:id/withdraw  # Withdraw application
+GET    /integrations/candidate/jobs                  # Browse available jobs
+GET    /integrations/candidate/jobs/:id              # Get job details
+POST   /integrations/forms/submit                    # Submit application (public)
+```
+
+**Example: Create Recruitment Form**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/forms', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Software Engineer Application',
+    description: 'Apply for our Software Engineer position',
+    jobId: 'job-uuid-here',
+    fields: [
+      {
+        id: 'firstName',
+        label: 'First Name',
+        type: 'text',
+        required: true,
+        order: 1
+      },
+      {
+        id: 'lastName',
+        label: 'Last Name',
+        type: 'text',
+        required: true,
+        order: 2
+      },
+      {
+        id: 'email',
+        label: 'Email Address',
+        type: 'email',
+        required: true,
+        order: 3
+      },
+      {
+        id: 'phone',
+        label: 'Phone Number',
+        type: 'phone',
+        required: false,
+        order: 4
+      },
+      {
+        id: 'experience',
+        label: 'Years of Experience',
+        type: 'select',
+        required: true,
+        options: ['0-2 years', '2-5 years', '5-10 years', '10+ years'],
+        order: 5
+      },
+      {
+        id: 'skills',
+        label: 'Technical Skills',
+        type: 'multiselect',
+        required: true,
+        options: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java'],
+        order: 6
+      }
+    ],
+    settings: {
+      allowMultipleSubmissions: false,
+      requireLogin: false,
+      showOtherJobs: true,
+      autoSendConfirmationEmail: true,
+      collectResume: true,
+      collectCoverLetter: true
+    },
+    welcomeMessage: 'Thank you for your interest in joining our team!',
+    thankYouMessage: 'Your application has been received. We will be in touch soon.',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const form = await response.json();
+console.log(`Form created: ${form.slug}`);
+console.log(`Share this link: https://yoursite.com/apply/${form.slug}`);
+```
+
+**Example: Candidate Registration & Login**
+
+```javascript
+// Register new candidate
+const registerResponse = await fetch('http://localhost:3001/integrations/candidate/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'candidate@example.com',
+    password: 'SecurePassword123!',
+    firstName: 'John',
+    lastName: 'Doe',
+    phone: '+1234567890',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const { accessToken, candidate } = await registerResponse.json();
+console.log('Candidate registered:', candidate.email);
+console.log('Access token:', accessToken);
+
+// Login existing candidate
+const loginResponse = await fetch('http://localhost:3001/integrations/candidate/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'candidate@example.com',
+    password: 'SecurePassword123!',
+    tenantId: 'your-tenant-id'
+  })
+});
+
+const loginData = await loginResponse.json();
+console.log('Logged in:', loginData.candidate.email);
+```
+
+**Example: Submit Application Form**
+
+```javascript
+const response = await fetch('http://localhost:3001/integrations/forms/submit', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    formId: 'form-uuid-here',
+    data: {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: '+1234567890',
+      experience: '2-5 years',
+      skills: ['JavaScript', 'TypeScript', 'React']
+    },
+    resumeUrl: 'https://storage.example.com/resumes/john-doe.pdf',
+    coverLetter: 'I am excited to apply for this position...',
+    candidateUserId: 'candidate-uuid-here', // Optional if logged in
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0...'
+  })
+});
+
+const submission = await response.json();
+console.log('Application submitted:', submission.id);
+console.log('Status:', submission.status);
+```
+
+**Example: Track Application Status**
+
+```javascript
+// Get all my applications
+const response = await fetch(
+  'http://localhost:3001/integrations/candidate/applications?candidateId=candidate-uuid&tenantId=tenant-id'
+);
+
+const applications = await response.json();
+
+applications.forEach(app => {
+  console.log(`Job: ${app.form.job.title}`);
+  console.log(`Status: ${app.status}`);
+  console.log(`Submitted: ${new Date(app.createdAt).toLocaleDateString()}`);
+  console.log(`AI Match Score: ${app.aiMatchScore}%`);
+  console.log('---');
+});
+```
+
+**Example: Browse Jobs as Candidate**
+
+```javascript
+const response = await fetch(
+  'http://localhost:3001/integrations/candidate/jobs?tenantId=tenant-id&keywords=software+engineer&location=Remote&limit=10'
+);
+
+const { jobs, total } = await response.json();
+
+console.log(`Found ${total} jobs`);
+jobs.forEach(job => {
+  console.log(`${job.title} - ${job.location}`);
+  console.log(job.description);
+  console.log('---');
+});
+```
+
+**Form Analytics:**
+
+```javascript
+const response = await fetch(
+  'http://localhost:3001/integrations/forms/form-uuid/analytics?tenantId=tenant-id'
+);
+
+const analytics = await response.json();
+
+console.log('Total Submissions:', analytics.totalSubmissions);
+console.log('Status Breakdown:', analytics.statusBreakdown);
+console.log('Average Match Score:', analytics.averageMatchScore);
+console.log('Conversion Rate:', analytics.conversionRate + '%');
+console.log('Recent Submissions:', analytics.recentSubmissions);
+```
+
+### Integration Setup Notes
+
+**LinkedIn API Setup:**
+1. Create LinkedIn app at https://www.linkedin.com/developers/
+2. Add required OAuth scopes: `r_liteprofile`, `r_organization_social`, `w_organization_social`
+3. Generate access token for API calls
+
+**Workday API Setup:**
+1. Contact Workday administrator to create integration user
+2. Grant permissions: `Recruiting`, `Job Applications`, `Job Requisitions`
+3. Use REST API endpoints (not SOAP/XML)
+
+**Database Security:**
+- Use read-only database credentials when possible
+- Enable SSL/TLS for database connections
+- Store credentials in environment variables or secret manager
+- Apply IP whitelisting for production databases
+
+---
+
 ## Features by Phase
 
 | Phase | Features | Status |
@@ -513,8 +1173,11 @@ console.log('AI explanation:', ragAnswer.answer);
 | **Phase 5** | WebSocket, GDPR, AI Ranking | ✅ Complete |
 | **Phase 6** | Audit Logs, Campaign Infrastructure | ✅ Complete |
 | **Phase 7** | Campaign Engine, Activity Feed | ✅ Complete |
-| **Phase 8** | NLP, RAG, Semantic Search | ✅ Complete |
+| **Phase 8** | NLP, RAG, Semantic Search (Gemini 3 Pro) | ✅ Complete |
 | **Phase 9** | Mobile-Friendly UI | ✅ Complete |
+| **Phase 10** | External Integrations (LinkedIn, Workday, Database Import) | ✅ Complete |
+| **Phase 11** | Multi-Job-Board Integration (20+ platforms including Naukri, Indeed, Monster, Shine) | ✅ Complete |
+| **Phase 12** | Recruitment Forms & Candidate Portal (Workday-style application system) | ✅ Complete |
 
 ---
 

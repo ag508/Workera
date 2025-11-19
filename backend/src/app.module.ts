@@ -14,6 +14,7 @@ import { ActivityFeedModule } from './activity-feed/activity-feed.module';
 import { NLPModule } from './nlp/nlp.module';
 import { EmbeddingsModule } from './embeddings/embeddings.module';
 import { SemanticSearchModule } from './semantic-search/semantic-search.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { SemanticSearchModule } from './semantic-search/semantic-search.module';
     NLPModule,
     EmbeddingsModule,
     SemanticSearchModule,
+    IntegrationsModule,
   ],
 })
 export class AppModule {}

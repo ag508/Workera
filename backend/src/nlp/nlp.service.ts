@@ -52,7 +52,7 @@ export class NLPService {
    */
   async analyzeText(text: string): Promise<NLPAnalysis> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
       const prompt = `
 Analyze the following text and extract structured information in JSON format.
@@ -150,7 +150,7 @@ Return ONLY valid JSON in this exact format:
     naturalLanguage: string;
   }> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
       const prompt = `
 Analyze this search query and extract the intent and structured filters.
@@ -223,7 +223,7 @@ Return ONLY valid JSON in this format:
    */
   async extractSkills(text: string): Promise<string[]> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
       const prompt = `
 Extract all technical skills, tools, technologies, and competencies from this text.
