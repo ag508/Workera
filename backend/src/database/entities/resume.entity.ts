@@ -12,7 +12,7 @@ export class Resume {
   @Column({ type: 'text', nullable: true })
   summary: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   experience: Array<{
     company: string;
     position: string;
@@ -21,7 +21,7 @@ export class Resume {
     description: string;
   }>;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   education: Array<{
     institution: string;
     degree: string;
@@ -29,10 +29,10 @@ export class Resume {
     year: string;
   }>;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   skills: string[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   certifications: string[];
 
   @Column({ nullable: true })

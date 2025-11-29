@@ -23,7 +23,7 @@ export class Candidate {
   @Column({ nullable: true })
   location: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   skills: string[];
 
   @Column({ nullable: true })

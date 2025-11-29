@@ -16,7 +16,7 @@ export class Tenant {
   @Column({ nullable: true })
   logo: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   settings: Record<string, any>;
 
   @Column({ default: true })

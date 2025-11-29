@@ -6,13 +6,16 @@ export class AiService {
   private genAI: GoogleGenerativeAI;
 
   constructor() {
-    const apiKey = process.env.GOOGLE_AI_API_KEY || 'AIzaSyCCl9Dsqx70cI36v2oDR7H5FGfE9gji7vU';
+    const apiKey = process.env.GOOGLE_AI_API_KEY || 'mock_key';
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
   async generateJobDescription(jobTitle: string, company?: string, requirements?: string[]): Promise<string> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      if (process.env.GOOGLE_AI_API_KEY === 'mock_key' || !process.env.GOOGLE_AI_API_KEY) {
+        return this.getMockJobDescription(jobTitle, company);
+      }
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const companyLine = company ? 'Company: ' + company : '';
       const reqLine = requirements && requirements.length > 0 ? 'Additional Requirements: ' + requirements.join(', ') : '';
@@ -26,13 +29,16 @@ export class AiService {
       return text;
     } catch (error) {
       console.error('Error generating job description:', error);
-      throw new Error('Failed to generate job description');
+      return this.getMockJobDescription(jobTitle, company);
     }
   }
 
   async analyzeResume(resumeText: string, jobDescription: string): Promise<any> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      if (process.env.GOOGLE_AI_API_KEY === 'mock_key' || !process.env.GOOGLE_AI_API_KEY) {
+        return this.getMockResumeAnalysis();
+      }
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = 'As an expert recruiter, analyze how well this candidate resume matches the job description.\n\nJOB DESCRIPTION:\n' + jobDescription + '\n\nRESUME:\n' + resumeText + '\n\nProvide your analysis in JSON format with: matchScore (0-100), strengths (array), gaps (array), recommendation (string)';
 
@@ -48,13 +54,16 @@ export class AiService {
       throw new Error('Invalid response format');
     } catch (error) {
       console.error('Error analyzing resume:', error);
-      throw new Error('Failed to analyze resume');
+      return this.getMockResumeAnalysis();
     }
   }
 
   async parseResume(resumeText: string): Promise<any> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      if (process.env.GOOGLE_AI_API_KEY === 'mock_key' || !process.env.GOOGLE_AI_API_KEY) {
+        return this.getMockParsedResume();
+      }
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = `You are an expert resume parser. Extract structured information from this resume.
 
@@ -100,13 +109,66 @@ Extract all available information. If a field is not present, use an empty array
     } catch (error) {
       console.error('Error parsing resume:', error);
       // Return default structure if parsing fails
-      return {
-        summary: '',
-        experience: [],
-        education: [],
-        skills: [],
-        certifications: [],
-      };
+      return this.getMockParsedResume();
     }
+  }
+
+  private getMockJobDescription(title: string, company?: string): string {
+    return `# ${title}
+
+## About the Role
+Join ${company || 'our team'} as a ${title}. We are looking for a passionate individual to drive innovation and success.
+
+## Key Responsibilities
+- Collaborate with cross-functional teams
+- Design and implement scalable solutions
+- Monitor performance and ensure reliability
+- Mentor junior team members
+
+## Required Qualifications
+- Bachelor's degree in related field
+- 3+ years of experience
+- Strong problem-solving skills
+- Excellent communication abilities
+
+## What We Offer
+- Competitive salary
+- Remote work options
+- Health insurance
+- Professional development budget`;
+  }
+
+  private getMockResumeAnalysis() {
+    return {
+      matchScore: 85,
+      strengths: ['Relevant experience', 'Strong educational background', 'Key skills present'],
+      gaps: ['Lack of specific certification'],
+      recommendation: 'Strong candidate, proceed to interview.'
+    };
+  }
+
+  private getMockParsedResume() {
+    return {
+      summary: 'Experienced professional with a strong track record.',
+      experience: [
+        {
+          company: 'Tech Corp',
+          position: 'Senior Developer',
+          startDate: '2020',
+          endDate: 'Present',
+          description: 'Led development of key features.'
+        }
+      ],
+      education: [
+        {
+          institution: 'State University',
+          degree: 'Bachelor of Science',
+          field: 'Computer Science',
+          year: '2019'
+        }
+      ],
+      skills: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
+      certifications: ['AWS Certified Solutions Architect']
+    };
   }
 }

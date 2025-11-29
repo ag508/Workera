@@ -23,16 +23,16 @@ export class Job {
   company: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: JobStatus,
     default: JobStatus.DRAFT
   })
   status: JobStatus;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   channels: string[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   requirements: string[];
 
   @Column({ nullable: true })

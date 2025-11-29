@@ -37,7 +37,7 @@ export class ActivityFeed {
   @Column()
   tenantId: string;
 
-  @Column({ type: 'enum', enum: ActivityType })
+  @Column({ type: 'simple-enum', enum: ActivityType })
   activityType: ActivityType;
 
   @Column({ nullable: true })
@@ -61,7 +61,7 @@ export class ActivityFeed {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   metadata: {
     oldValue?: any;
     newValue?: any;

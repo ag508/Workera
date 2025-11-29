@@ -38,10 +38,10 @@ export class EmailCampaign {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'enum', enum: CampaignType })
+  @Column({ type: 'simple-enum', enum: CampaignType })
   type: CampaignType;
 
-  @Column({ type: 'enum', enum: CampaignStatus, default: CampaignStatus.DRAFT })
+  @Column({ type: 'simple-enum', enum: CampaignStatus, default: CampaignStatus.DRAFT })
   status: CampaignStatus;
 
   @Column()
@@ -53,7 +53,7 @@ export class EmailCampaign {
   @Column({ type: 'text' })
   textContent: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   recipientCriteria: {
     skills?: string[];
     location?: string;
@@ -62,7 +62,7 @@ export class EmailCampaign {
     candidateIds?: string[];
   };
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   scheduledAt: Date;
 
   @Column({ type: 'int', default: 0 })
@@ -86,7 +86,7 @@ export class EmailCampaign {
   @Column({ nullable: true })
   createdBy: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   sentAt: Date;
 
   @CreateDateColumn()

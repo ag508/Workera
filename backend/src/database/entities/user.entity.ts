@@ -26,7 +26,7 @@ export class User {
   lastName: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: UserRole,
     default: UserRole.RECRUITER
   })
