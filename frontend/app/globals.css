@@ -1,107 +1,97 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&display=swap');
 
 :root {
-  /* Workera Brand Colors */
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Primary Brand Colors */
-  --emerald: #10B981;
-  --emerald-dark: #059669;
-  --mint: #6EE7B7;
-  --mint-light: #A7F3D0;
-
-  /* Accent Colors */
-  --gold: #F1C40F;
-  --gold-dark: #F39C12;
-
-  /* Neutral Colors */
-  --gray-50: #F9FAFB;
-  --gray-100: #F3F4F6;
-  --gray-200: #E5E7EB;
-  --gray-300: #D1D5DB;
-  --gray-400: #9CA3AF;
-  --gray-500: #6B7280;
-  --gray-600: #4B5563;
-  --gray-700: #374151;
-  --gray-800: #1F2937;
-  --gray-900: #111827;
-
-  /* UI States */
-  --primary: var(--emerald);
+  /* Workera Brand - Extracted from Logo */
+  --primary: #25b876; /* Vibrant Green */
   --primary-foreground: #ffffff;
-  --secondary: var(--mint);
-  --secondary-foreground: var(--gray-900);
-  --accent: var(--gold);
-  --accent-foreground: var(--gray-900);
 
-  /* Component Variables */
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --card-border: var(--gray-200);
-  --radius: 0.5rem;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --secondary: #e4f4ed; /* Mint Background */
+  --secondary-foreground: #047857; /* Darker green for text on mint */
+
+  --accent: #83cfad; /* Soft Green */
+  --accent-foreground: #ffffff;
+
+  --sage: #80938b;
+
+  --muted: #f4f4f5;
+  --muted-foreground: #737373;
+
+  --card: rgba(255, 255, 255, 0.9);
+  --card-foreground: #171717;
+
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #25b876;
+
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-emerald: var(--emerald);
-  --color-emerald-dark: var(--emerald-dark);
-  --color-mint: var(--mint);
-  --color-mint-light: var(--mint-light);
-  --color-gold: var(--gold);
-  --color-gold-dark: var(--gold-dark);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
-  --font-sans: 'Inter', 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --radius: var(--radius);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism Utilities */
 .glass {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
-.glass-dark {
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(37, 184, 118, 0.1);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 40px 0 rgba(37, 184, 118, 0.15);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: 4px;
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
