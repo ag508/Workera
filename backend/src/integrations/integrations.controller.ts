@@ -6,6 +6,7 @@ import { NaukriService, NaukriConfig } from './naukri.service';
 import { JobBoardsService, JobBoardConfig, JobBoardPlatform } from './job-boards.service';
 import { RecruitmentFormsService, CreateFormDto, SubmitFormDto } from './recruitment-forms.service';
 import { CandidatePortalService, RegisterCandidateDto, LoginCandidateDto, UpdateProfileDto } from './candidate-portal.service';
+import { IntegrationSettingsService, IntegrationSettings } from './integration-settings.service';
 import { SubmissionStatus } from '../database/entities/form-submission.entity';
 
 @Controller('integrations')
@@ -18,7 +19,29 @@ export class IntegrationsController {
     private readonly jobBoardsService: JobBoardsService,
     private readonly recruitmentFormsService: RecruitmentFormsService,
     private readonly candidatePortalService: CandidatePortalService,
+    private readonly integrationSettingsService: IntegrationSettingsService,
   ) {}
+
+  /**
+   * Get integration settings
+   * GET /integrations/settings
+   */
+  @Get('settings')
+  async getSettings(@Query('tenantId') tenantId: string) {
+    return this.integrationSettingsService.getSettings(tenantId);
+  }
+
+  /**
+   * Update integration settings
+   * PUT /integrations/settings
+   */
+  @Post('settings')
+  async updateSettings(
+    @Query('tenantId') tenantId: string,
+    @Body() settings: IntegrationSettings,
+  ) {
+    return this.integrationSettingsService.updateSettings(tenantId, settings);
+  }
 
   /**
    * Import candidates from external database
