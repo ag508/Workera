@@ -1,6 +1,8 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import GradientText from "@/components/reactbits/GradientText"
+import ShinyText from "@/components/reactbits/ShinyText"
 
 export default function Hero() {
   return (
@@ -21,10 +23,22 @@ export default function Hero() {
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6 text-[var(--gray-900)]">
               Intelligent Resume Parsing and{" "}
-              <span className="text-[var(--emerald)]">Recruitment Automation</span>
+              <GradientText
+                colors={["#00e0a5", "#00c490", "#00a87a", "#00c490", "#00e0a5"]}
+                animationSpeed={4}
+                showBorder={false}
+                className="block sm:inline"
+              >
+                Recruitment Automation
+              </GradientText>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-[var(--gray-600)] mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0">
-              Powered by advanced LLM technology, Workera automates end-to-end hiring workflows—from resume parsing to semantic candidate matching—so you can find top talent faster.
+              <ShinyText
+                text="Powered by advanced LLM technology, Workera automates end-to-end hiring workflows—from resume parsing to semantic candidate matching—so you can find top talent faster."
+                disabled={false}
+                speed={3}
+                className="text-gray-600"
+              />
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link href="/demo">
