@@ -8,6 +8,7 @@ import { Application } from '../database/entities/application.entity';
 import { ApplicationForm } from '../database/entities/application-form.entity';
 import { FormSubmission } from '../database/entities/form-submission.entity';
 import { CandidateUser } from '../database/entities/candidate-user.entity';
+import { Tenant } from '../database/entities/tenant.entity';
 import { IntegrationsController } from './integrations.controller';
 import { DatabaseImportService } from './database-import.service';
 import { LinkedInService } from './linkedin.service';
@@ -16,6 +17,7 @@ import { NaukriService } from './naukri.service';
 import { JobBoardsService } from './job-boards.service';
 import { RecruitmentFormsService } from './recruitment-forms.service';
 import { CandidatePortalService } from './candidate-portal.service';
+import { IntegrationSettingsService } from './integration-settings.service';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
@@ -28,6 +30,7 @@ import { AiModule } from '../ai/ai.module';
       ApplicationForm,
       FormSubmission,
       CandidateUser,
+      Tenant,
     ]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
@@ -44,6 +47,7 @@ import { AiModule } from '../ai/ai.module';
     JobBoardsService,
     RecruitmentFormsService,
     CandidatePortalService,
+    IntegrationSettingsService,
   ],
   exports: [
     DatabaseImportService,
