@@ -51,10 +51,10 @@ export class ApplicationForm {
   @Column({ nullable: true })
   jobId: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', nullable: true })
   fields: FormField[];
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'simple-json', nullable: true })
   settings: FormSettings;
 
   @Column({ default: true })

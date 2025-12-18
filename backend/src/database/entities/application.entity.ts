@@ -32,7 +32,7 @@ export class Application {
   candidateId: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ApplicationStatus,
     default: ApplicationStatus.APPLIED
   })
@@ -41,7 +41,7 @@ export class Application {
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   matchScore: number;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   aiAnalysis: {
     strengths: string[];
     gaps: string[];

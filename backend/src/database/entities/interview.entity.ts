@@ -39,13 +39,13 @@ export class Interview {
   @JoinColumn({ name: 'applicationId' })
   application: Application;
 
-  @Column({ type: 'enum', enum: InterviewType })
+  @Column({ type: 'simple-enum', enum: InterviewType })
   type: InterviewType;
 
-  @Column({ type: 'enum', enum: InterviewStatus, default: InterviewStatus.SCHEDULED })
+  @Column({ type: 'simple-enum', enum: InterviewStatus, default: InterviewStatus.SCHEDULED })
   status: InterviewStatus;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   scheduledAt: Date;
 
   @Column({ type: 'int', default: 60 })
@@ -67,7 +67,7 @@ export class Interview {
   @JoinColumn({ name: 'interviewerId' })
   interviewer: User;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   feedback: {
     rating?: number;
     strengths?: string[];

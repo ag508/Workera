@@ -1,36 +1,39 @@
-import Sidebar from "@/components/dashboard/Sidebar"
-import MobileNav from "@/components/dashboard/MobileNav"
+import { Sidebar } from '@/components/dashboard/Sidebar';
+import { RightPanel } from '@/components/dashboard/RightPanel';
+import Image from 'next/image';
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--gray-50)]">
-      <Sidebar />
-      <MobileNav />
-      <div className="lg:ml-64 pt-16 lg:pt-0">
-        <header className="bg-white border-b border-[var(--gray-200)] px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-[var(--gray-900)] truncate">Dashboard</h1>
-              <p className="text-xs sm:text-sm text-[var(--gray-600)] hidden sm:block">Welcome back! Here's your recruitment overview.</p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <button className="relative p-2 rounded-lg hover:bg-[var(--gray-100)] transition-colors">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--gray-600)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--gold)] rounded-full"></span>
-              </button>
-            </div>
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto flex max-w-[1300px] justify-center">
+        {/* Left Sidebar */}
+        <Sidebar />
+
+        {/* Center Content */}
+        <main className="ml-[275px] flex min-w-0 flex-1 flex-col border-r border-gray-100 xl:mr-[350px]">
+          <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-md">
+             <div className="flex items-center gap-2">
+                 <Image
+                   src="/images/brand/Workera_Full_Icon.png"
+                   alt="Workera"
+                   width={100}
+                   height={24}
+                   className="h-6 w-auto object-contain"
+                 />
+             </div>
           </div>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">
-          {children}
+          <div className="p-4">
+            {children}
+          </div>
         </main>
+
+        {/* Right Sidebar */}
+        <RightPanel />
       </div>
     </div>
-  )
+  );
 }

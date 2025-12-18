@@ -1,142 +1,82 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Home,
+  Briefcase,
+  Users,
+  MessageSquare,
+  Settings,
+  PlusCircle,
+  LogOut,
+  Bell
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const navigation = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    )
-  },
-  {
-    name: "Job Descriptions",
-    href: "/dashboard/jobs",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    )
-  },
-  {
-    name: "Post Job",
-    href: "/dashboard/post-job",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-      </svg>
-    )
-  },
-  {
-    name: "Resume Database",
-    href: "/dashboard/resumes",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    )
-  },
-  {
-    name: "Candidate Search",
-    href: "/dashboard/search",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    )
-  },
-  {
-    name: "Shortlist",
-    href: "/dashboard/shortlist",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    )
-  },
-  {
-    name: "Interviews & Tests",
-    href: "/dashboard/interviews",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    )
-  },
-  {
-    name: "Settings",
-    href: "/dashboard/settings",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    )
-  }
-]
+  { name: 'Home', href: '/dashboard', icon: Home },
+  { name: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
+  { name: 'Candidates', href: '/dashboard/candidates', icon: Users },
+  { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+];
 
-export default function Sidebar() {
-  const pathname = usePathname()
+export function Sidebar() {
+  const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-[var(--gray-900)] text-white flex-col shadow-lg z-50">
-      {/* Logo */}
-      <div className="p-6 border-b border-[var(--gray-800)]">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <Image 
-            src="/images/brand/Workera_logo_icon.png"
-            alt="Workera"
-            width={40}
-            height={40}
-            className="rounded-lg"
-          />
-          <span className="text-xl font-bold">Workera</span>
+    <div className="fixed inset-y-0 left-0 z-50 flex w-[275px] flex-col justify-between border-r border-gray-100 bg-white px-6 py-6">
+      <div className="flex flex-col gap-2">
+        {/* Logo */}
+        <Link href="/dashboard" className="mb-6 flex items-center gap-3 px-2">
+          <div className="h-8 w-8 rounded bg-primary" />
+          <span className="text-xl font-bold tracking-tight text-gray-900">Workera</span>
         </Link>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-2">
+        {/* Nav Items */}
+        <nav className="space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href;
             return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "group flex items-center gap-4 rounded-full px-4 py-3 text-lg transition-colors",
+                  isActive
+                    ? "font-semibold text-primary"
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <item.icon
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
-                    isActive
-                      ? "bg-[var(--emerald)] text-white shadow-md"
-                      : "text-[var(--gray-400)] hover:bg-[var(--gray-800)] hover:text-white"
+                    "h-6 w-6 transition-colors",
+                    isActive ? "stroke-[2.5px]" : "stroke-2"
                   )}
-                >
-                  {item.icon}
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              </li>
-            )
+                />
+                <span>{item.name}</span>
+              </Link>
+            );
           })}
-        </ul>
-      </nav>
+        </nav>
 
-      {/* User Info */}
-      <div className="p-4 border-t border-[var(--gray-800)]">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--gray-800)]">
-          <div className="w-10 h-10 rounded-full bg-[var(--emerald)] flex items-center justify-center font-bold">
-            U
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">User Name</p>
-            <p className="text-xs text-[var(--gray-400)]">user@company.com</p>
-          </div>
-        </div>
+        {/* CTA */}
+        <button className="mt-6 w-full rounded-full bg-primary py-3.5 text-lg font-bold text-white shadow-lg transition-transform hover:scale-105 hover:bg-emerald-600">
+          Post Job
+        </button>
       </div>
-    </aside>
-  )
+
+      {/* User Profile */}
+      <div className="flex cursor-pointer items-center gap-3 rounded-full p-3 hover:bg-gray-100">
+        <div className="h-10 w-10 rounded-full bg-gray-200" />
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-gray-900">Recruiter</span>
+          <span className="text-xs text-gray-500">@workera_hr</span>
+        </div>
+        <LogOut className="ml-auto h-4 w-4 text-gray-400" />
+      </div>
+    </div>
+  );
 }

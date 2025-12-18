@@ -38,7 +38,7 @@ export class FormSubmission {
   @Column({ nullable: true })
   candidateUserId: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'simple-json' })
   data: SubmissionData;
 
   @Column({ nullable: true })
@@ -48,7 +48,7 @@ export class FormSubmission {
   coverLetter: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: SubmissionStatus,
     default: SubmissionStatus.SUBMITTED
   })
@@ -67,7 +67,7 @@ export class FormSubmission {
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   aiMatchScore: number;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   aiAnalysis: any;
 
   @Column({ nullable: true })

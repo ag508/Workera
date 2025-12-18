@@ -44,22 +44,22 @@ export class AuditLog {
   @Column({ nullable: true })
   userEmail: string;
 
-  @Column({ type: 'enum', enum: AuditAction })
+  @Column({ type: 'simple-enum', enum: AuditAction })
   action: AuditAction;
 
-  @Column({ type: 'enum', enum: AuditEntityType })
+  @Column({ type: 'simple-enum', enum: AuditEntityType })
   entityType: AuditEntityType;
 
   @Column()
   entityId: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   previousData: any;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   newData: any;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   metadata: {
     ipAddress?: string;
     userAgent?: string;

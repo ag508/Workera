@@ -40,7 +40,7 @@ export class CandidateUser {
   @Column({ type: 'text', nullable: true })
   bio: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', nullable: true })
   skills: string[];
 
   @Column({ nullable: true })
