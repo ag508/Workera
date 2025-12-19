@@ -62,7 +62,7 @@ export class EmailCampaign {
     candidateIds?: string[];
   };
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   scheduledAt: Date;
 
   @Column({ type: 'int', default: 0 })
@@ -86,7 +86,7 @@ export class EmailCampaign {
   @Column({ nullable: true })
   createdBy: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   sentAt: Date;
 
   @CreateDateColumn()

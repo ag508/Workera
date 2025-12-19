@@ -45,7 +45,7 @@ export class Interview {
   @Column({ type: 'simple-enum', enum: InterviewStatus, default: InterviewStatus.SCHEDULED })
   status: InterviewStatus;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   scheduledAt: Date;
 
   @Column({ type: 'int', default: 60 })
