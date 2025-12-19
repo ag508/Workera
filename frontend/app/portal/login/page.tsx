@@ -144,19 +144,29 @@ export default function CandidateLoginPage() {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 text-center">
             <Image
-              src="/images/brand/Workera_Text_logo.png"
+              src="/images/brand/Workera_logo_icon.png"
               alt="Workera"
-              width={150}
-              height={50}
+              width={180}
+              height={60}
               className="object-contain mx-auto"
             />
           </div>
 
           {/* Card */}
           <div className="rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
+            {/* Logo in Card */}
+            <div className="hidden lg:flex justify-center mb-6">
+              <Image
+                src="/images/brand/Workera_logo_icon.png"
+                alt="Workera"
+                width={160}
+                height={50}
+                className="object-contain"
+              />
+            </div>
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Candidate Portal</h2>
-              <p className="text-gray-500 mt-2">Sign in to manage your applications</p>
+              <p className="text-gray-600 mt-2 text-base">Sign in to manage your applications</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
@@ -224,15 +234,15 @@ export default function CandidateLoginPage() {
               </button>
 
               {/* Demo Hint */}
-              <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-center">
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-gray-700">Demo Login:</span> demo@workera.ai / any password
+              <div className="rounded-xl bg-primary/5 border border-primary/20 px-4 py-4 text-center">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold text-primary">Demo Login:</span> demo@workera.ai / any password
                 </p>
               </div>
 
-              <div className="text-center pt-2">
-                <span className="text-sm text-gray-500">Don't have an account? </span>
-                <Link href="/portal/register" className="text-sm font-semibold text-primary hover:underline">
+              <div className="text-center pt-3">
+                <span className="text-base text-gray-600">Don't have an account? </span>
+                <Link href="/portal/register" className="text-base font-semibold text-primary hover:underline">
                   Register here
                 </Link>
               </div>

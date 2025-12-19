@@ -196,7 +196,7 @@ export default function Home() {
       <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'glass-nav shadow-sm' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/images/brand/Workera_Full_Icon.png" alt="Workera" width={140} height={40} className="h-10 w-auto object-contain" />
+            <Image src="/images/brand/Workera_logo_icon.png" alt="Workera" width={140} height={40} className="h-10 w-auto object-contain" />
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Features</Link>

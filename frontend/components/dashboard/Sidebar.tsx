@@ -16,7 +16,9 @@ import {
   PieChart,
   Plug,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Video,
+  ScrollText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +26,8 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
   { name: 'Candidates', href: '/dashboard/candidates', icon: Users },
+  { name: 'Interviews', href: '/dashboard/interviews', icon: Video },
+  { name: 'Resumes', href: '/dashboard/resumes', icon: ScrollText },
   { name: 'Forms', href: '/dashboard/forms', icon: FileText },
   { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
   { name: 'Analytics', href: '/dashboard/analytics', icon: PieChart },

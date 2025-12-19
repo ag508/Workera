@@ -6,13 +6,20 @@ export class AiService {
   private genAI: GoogleGenerativeAI;
 
   constructor() {
-    const apiKey = process.env.GOOGLE_AI_API_KEY || 'AIzaSyCCl9Dsqx70cI36v2oDR7H5FGfE9gji7vU';
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    if (!apiKey) {
+      console.warn('GOOGLE_AI_API_KEY not set. AI features will use mock responses.');
+    }
+    this.genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null as any;
   }
 
   async generateJobDescription(jobTitle: string, company?: string, requirements?: string[]): Promise<string> {
+    if (!this.genAI) {
+      return this.getMockJobDescription(jobTitle, company);
+    }
+
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const companyLine = company ? 'Company: ' + company : '';
       const reqLine = requirements && requirements.length > 0 ? 'Additional Requirements: ' + requirements.join(', ') : '';
@@ -31,8 +38,12 @@ export class AiService {
   }
 
   async analyzeResume(resumeText: string, jobDescription: string): Promise<any> {
+    if (!this.genAI) {
+      return this.getMockResumeAnalysis();
+    }
+
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const prompt = 'As an expert recruiter, analyze how well this candidate resume matches the job description.\n\nJOB DESCRIPTION:\n' + jobDescription + '\n\nRESUME:\n' + resumeText + '\n\nProvide your analysis in JSON format with: matchScore (0-100), strengths (array), gaps (array), recommendation (string)';
 
@@ -53,8 +64,12 @@ export class AiService {
   }
 
   async parseResume(resumeText: string): Promise<any> {
+    if (!this.genAI) {
+      return this.getMockParsedResume();
+    }
+
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const prompt = `You are an expert resume parser. Extract structured information from this resume.
 
