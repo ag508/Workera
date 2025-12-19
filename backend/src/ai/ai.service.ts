@@ -19,7 +19,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const companyLine = company ? 'Company: ' + company : '';
       const reqLine = requirements && requirements.length > 0 ? 'Additional Requirements: ' + requirements.join(', ') : '';
@@ -43,7 +43,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const prompt = 'As an expert recruiter, analyze how well this candidate resume matches the job description.\n\nJOB DESCRIPTION:\n' + jobDescription + '\n\nRESUME:\n' + resumeText + '\n\nProvide your analysis in JSON format with: matchScore (0-100), strengths (array), gaps (array), recommendation (string)';
 
@@ -69,7 +69,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
       const prompt = `You are an expert resume parser. Extract structured information from this resume.
 
