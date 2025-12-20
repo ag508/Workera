@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -86,14 +85,11 @@ export default function CandidateLoginPage() {
         />
 
         {/* Logo */}
-        <div className="relative z-10">
-          <Image
-            src="/images/brand/Workera_Text_logo.png"
-            alt="Workera"
-            width={180}
-            height={60}
-            className="object-contain brightness-0 invert"
-          />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white font-bold text-2xl">W</span>
+          </div>
+          <span className="text-3xl font-bold text-white">Workera</span>
         </div>
 
         {/* Content */}
@@ -143,26 +139,28 @@ export default function CandidateLoginPage() {
         >
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 text-center">
-            <Image
-              src="/images/brand/Workera_logo_icon.png"
-              alt="Workera"
-              width={180}
-              height={60}
-              className="object-contain mx-auto"
-            />
+            <div className="inline-flex items-center gap-2">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">W</span>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+                Workera
+              </span>
+            </div>
           </div>
 
           {/* Card */}
           <div className="rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
             {/* Logo in Card */}
             <div className="hidden lg:flex justify-center mb-6">
-              <Image
-                src="/images/brand/Workera_logo_icon.png"
-                alt="Workera"
-                width={160}
-                height={50}
-                className="object-contain"
-              />
+              <div className="flex items-center gap-2">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <span className="text-white font-bold text-2xl">W</span>
+                </div>
+                <span className="text-3xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+                  Workera
+                </span>
+              </div>
             </div>
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Candidate Portal</h2>

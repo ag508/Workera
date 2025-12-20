@@ -79,6 +79,14 @@ export default function CandidateProfilePage() {
   const [newSkill, setNewSkill] = useState('');
   const tenantId = getTenantId();
 
+  // Modal states
+  const [showExperienceModal, setShowExperienceModal] = useState(false);
+  const [showEducationModal, setShowEducationModal] = useState(false);
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [newExperience, setNewExperience] = useState({ company: '', position: '', duration: '', description: '' });
+  const [newEducation, setNewEducation] = useState({ institution: '', degree: '', year: '' });
+  const [newCertification, setNewCertification] = useState('');
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -129,6 +137,42 @@ export default function CandidateProfilePage() {
 
   const removeSkill = (skill: string) => {
     setProfile({ ...profile, skills: profile.skills.filter((s: string) => s !== skill) });
+  };
+
+  const addExperience = () => {
+    if (newExperience.company && newExperience.position) {
+      setProfile({ ...profile, experience: [...profile.experience, newExperience] });
+      setNewExperience({ company: '', position: '', duration: '', description: '' });
+      setShowExperienceModal(false);
+    }
+  };
+
+  const removeExperience = (index: number) => {
+    setProfile({ ...profile, experience: profile.experience.filter((_: any, i: number) => i !== index) });
+  };
+
+  const addEducation = () => {
+    if (newEducation.institution && newEducation.degree) {
+      setProfile({ ...profile, education: [...profile.education, newEducation] });
+      setNewEducation({ institution: '', degree: '', year: '' });
+      setShowEducationModal(false);
+    }
+  };
+
+  const removeEducation = (index: number) => {
+    setProfile({ ...profile, education: profile.education.filter((_: any, i: number) => i !== index) });
+  };
+
+  const addCertification = () => {
+    if (newCertification.trim() && !profile.certifications.includes(newCertification.trim())) {
+      setProfile({ ...profile, certifications: [...profile.certifications, newCertification.trim()] });
+      setNewCertification('');
+      setShowCertModal(false);
+    }
+  };
+
+  const removeCertification = (cert: string) => {
+    setProfile({ ...profile, certifications: profile.certifications.filter((c: string) => c !== cert) });
   };
 
   if (loading) {
@@ -315,7 +359,10 @@ export default function CandidateProfilePage() {
             <Briefcase className="h-5 w-5 text-gray-400" />
             Experience
           </h3>
-          <button className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          <button
+            onClick={() => setShowExperienceModal(true)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             Add Experience
           </button>
@@ -327,9 +374,15 @@ export default function CandidateProfilePage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
-              className="relative pl-6 border-l-2 border-gray-200"
+              className="group relative pl-6 border-l-2 border-gray-200"
             >
               <div className="absolute -left-2 top-0 h-4 w-4 rounded-full bg-primary"></div>
+              <button
+                onClick={() => removeExperience(index)}
+                className="absolute right-0 top-0 p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
               <div className="mb-1">
                 <h4 className="font-semibold text-gray-900">{exp.position}</h4>
                 <p className="text-sm text-gray-600">{exp.company}</p>
@@ -353,7 +406,10 @@ export default function CandidateProfilePage() {
             <GraduationCap className="h-5 w-5 text-gray-400" />
             Education
           </h3>
-          <button className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          <button
+            onClick={() => setShowEducationModal(true)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             Add Education
           </button>
@@ -365,8 +421,14 @@ export default function CandidateProfilePage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + index * 0.1 }}
-              className="flex items-start gap-4 p-4 rounded-xl bg-gray-50"
+              className="group flex items-start gap-4 p-4 rounded-xl bg-gray-50 relative"
             >
+              <button
+                onClick={() => removeEducation(index)}
+                className="absolute right-3 top-3 p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
               <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
                 <GraduationCap className="h-6 w-6 text-primary" />
               </div>
@@ -392,7 +454,10 @@ export default function CandidateProfilePage() {
             <Award className="h-5 w-5 text-gray-400" />
             Certifications
           </h3>
-          <button className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          <button
+            onClick={() => setShowCertModal(true)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             Add Certification
           </button>
@@ -404,10 +469,16 @@ export default function CandidateProfilePage() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + index * 0.1 }}
-              className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2"
+              className="group flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2"
             >
               <Award className="h-4 w-4 text-amber-600" />
               <span className="text-sm font-medium text-amber-800">{cert}</span>
+              <button
+                onClick={() => removeCertification(cert)}
+                className="opacity-0 group-hover:opacity-100 text-amber-600 hover:text-red-500 transition-all ml-1"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </motion.div>
           ))}
         </div>
@@ -464,6 +535,190 @@ export default function CandidateProfilePage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Experience Modal */}
+      {showExperienceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Add Experience</h3>
+              <button
+                onClick={() => setShowExperienceModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Company *</label>
+                <input
+                  value={newExperience.company}
+                  onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                  placeholder="e.g. Google"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Position *</label>
+                <input
+                  value={newExperience.position}
+                  onChange={(e) => setNewExperience({ ...newExperience, position: e.target.value })}
+                  placeholder="e.g. Senior Software Engineer"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Duration</label>
+                <input
+                  value={newExperience.duration}
+                  onChange={(e) => setNewExperience({ ...newExperience, duration: e.target.value })}
+                  placeholder="e.g. 2020 - Present"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  value={newExperience.description}
+                  onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
+                  placeholder="Describe your responsibilities..."
+                  rows={3}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowExperienceModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addExperience}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                Add Experience
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Education Modal */}
+      {showEducationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Add Education</h3>
+              <button
+                onClick={() => setShowEducationModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Institution *</label>
+                <input
+                  value={newEducation.institution}
+                  onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
+                  placeholder="e.g. Stanford University"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Degree *</label>
+                <input
+                  value={newEducation.degree}
+                  onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                  placeholder="e.g. B.S. Computer Science"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Year</label>
+                <input
+                  value={newEducation.year}
+                  onChange={(e) => setNewEducation({ ...newEducation, year: e.target.value })}
+                  placeholder="e.g. 2020"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowEducationModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addEducation}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                Add Education
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Certification Modal */}
+      {showCertModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Add Certification</h3>
+              <button
+                onClick={() => setShowCertModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Certification Name *</label>
+                <input
+                  value={newCertification}
+                  onChange={(e) => setNewCertification(e.target.value)}
+                  placeholder="e.g. AWS Certified Solutions Architect"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowCertModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addCertification}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                Add Certification
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

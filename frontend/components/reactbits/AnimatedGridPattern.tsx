@@ -26,9 +26,11 @@ export default function AnimatedGridPattern({
   className,
   maxOpacity = 0.3,
   duration = 4,
-  // repeatDelay = 1, // Removed unused prop
+  repeatDelay = 1,
   ...props
 }: AnimatedGridPatternProps) {
+  // Extract repeatDelay to prevent it from being passed to SVG DOM element
+  void repeatDelay;
   const id = useId();
   const containerRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });

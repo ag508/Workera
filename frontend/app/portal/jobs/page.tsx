@@ -337,82 +337,122 @@ export default function JobBoardPage() {
             <p className="text-gray-500 mt-1">Try adjusting your search or filter criteria</p>
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
-              {filteredJobs.filter(j => !j.featured).map((job, index) => (
-                <motion.div
-                  key={job.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="h-14 w-14 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-lg flex-shrink-0">
-                        {job.company?.charAt(0) || 'W'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                          <span className="flex items-center gap-1 font-medium text-gray-700">
-                            <Building2 className="h-3.5 w-3.5" />
-                            {job.company}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {job.location}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Briefcase className="h-3.5 w-3.5" />
-                            {job.type}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {job.skills?.slice(0, 4).map((skill: string) => (
-                            <span key={skill} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+              {filteredJobs.filter(j => !j.featured).map((job, index) => {
+                const colors = [
+                  'from-blue-500 to-indigo-600',
+                  'from-purple-500 to-pink-600',
+                  'from-emerald-500 to-teal-600',
+                  'from-orange-500 to-red-600',
+                  'from-cyan-500 to-blue-600',
+                  'from-rose-500 to-pink-600'
+                ];
+                const colorClass = colors[index % colors.length];
 
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">{job.salary}</p>
-                        <p className="text-xs text-gray-500 mt-1">{job.postedAt}</p>
-                        {job.matchScore && (
-                          <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
-                            <Star className="h-3 w-3" />
-                            {job.matchScore}% match
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
+                return (
+                  <motion.div
+                    key={job.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300"
+                  >
+                    {/* Header with gradient */}
+                    <div className={`h-2 bg-gradient-to-r ${colorClass}`} />
+
+                    <div className="p-5">
+                      {/* Company & Save */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                            {job.company?.charAt(0) || 'W'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{job.company}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {job.location}
+                            </p>
+                          </div>
+                        </div>
                         <button
                           onClick={() => toggleSaveJob(job.id)}
-                          className={`p-2 rounded-lg transition-colors ${
+                          className={`p-2 rounded-lg transition-all ${
                             savedJobs.includes(job.id)
                               ? 'bg-primary/10 text-primary'
-                              : 'hover:bg-gray-100 text-gray-400'
+                              : 'hover:bg-gray-100 text-gray-400 group-hover:text-gray-600'
                           }`}
                         >
                           <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? 'fill-current' : ''}`} />
                         </button>
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                        {job.title}
+                      </h3>
+
+                      {/* Meta info */}
+                      <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-gray-500">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
+                          <Briefcase className="h-3 w-3" />
+                          {job.type}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
+                          <Clock className="h-3 w-3" />
+                          {job.postedAt}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
+                          <Users className="h-3 w-3" />
+                          {job.applicants}
+                        </span>
+                      </div>
+
+                      {/* Skills */}
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {job.skills?.slice(0, 3).map((skill: string) => (
+                          <span key={skill} className="rounded-full bg-primary/5 border border-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                            {skill}
+                          </span>
+                        ))}
+                        {job.skills?.length > 3 && (
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
+                            +{job.skills.length - 3}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div>
+                          <p className="text-lg font-bold text-gray-900">{job.salary}</p>
+                          {job.matchScore && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"
+                                  style={{ width: `${job.matchScore}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-emerald-600">{job.matchScore}%</span>
+                            </div>
+                          )}
+                        </div>
                         <Link
                           href={`/apply/${job.id}`}
-                          className="inline-flex items-center gap-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors shadow-sm"
                         >
-                          Apply Now
+                          Apply
+                          <ArrowUpRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
         )}
