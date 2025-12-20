@@ -7,7 +7,6 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import Lottie from 'lottie-react';
 import {
   ArrowRight,
-  Bot,
   Search,
   Zap,
   CheckCircle2,
@@ -136,7 +135,7 @@ function PricingCard({ name, price, description, features, popular = false, dela
       <div className="mb-6"><h3 className={`text-xl font-bold ${popular ? 'text-white' : 'text-gray-900'}`}>{name}</h3><p className={`mt-2 text-sm ${popular ? 'text-gray-300' : 'text-gray-500'}`}>{description}</p></div>
       <div className="mb-6"><span className={`text-4xl font-bold ${popular ? 'text-white' : 'text-gray-900'}`}>{price}</span>{price !== 'Custom' && <span className={popular ? 'text-gray-300' : 'text-gray-500'}>/month</span>}</div>
       <ul className="mb-8 space-y-3">{features.map((feature, i) => <li key={i} className="flex items-center gap-3"><Check className={`h-5 w-5 ${popular ? 'text-primary' : 'text-primary'}`} /><span className={popular ? 'text-gray-200' : 'text-gray-600'}>{feature}</span></li>)}</ul>
-      <Link href="/dashboard" className={`block w-full rounded-full py-3 text-center font-semibold transition-all ${popular ? 'bg-primary text-white hover:bg-emerald-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>Get Started</Link>
+      <Link href="/get-started" className={`block w-full rounded-full py-3 text-center font-semibold transition-all ${popular ? 'bg-primary text-white hover:bg-emerald-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>Get Started</Link>
     </motion.div>
   );
 }
@@ -196,7 +195,12 @@ export default function Home() {
       <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'glass-nav shadow-sm' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/images/brand/Workera_logo_icon.png" alt="Workera" width={140} height={40} className="h-10 w-auto object-contain" />
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
+              <span className="text-white font-bold text-lg">W</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+              Workera
+            </span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Features</Link>
@@ -206,7 +210,7 @@ export default function Home() {
           </div>
           <div className="hidden items-center gap-4 md:flex">
             <Link href="/portal/login" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Sign In</Link>
-            <Link href="/dashboard" className="btn-primary text-sm">Start Free Trial</Link>
+            <Link href="/get-started" className="btn-primary text-sm">Start Free Trial</Link>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2">
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -219,7 +223,7 @@ export default function Home() {
               <Link href="#how-it-works" className="block text-gray-600 hover:text-primary">How it Works</Link>
               <Link href="#pricing" className="block text-gray-600 hover:text-primary">Pricing</Link>
               <Link href="/portal/login" className="block text-gray-600 hover:text-primary">Sign In</Link>
-              <Link href="/dashboard" className="btn-primary block text-center">Start Free Trial</Link>
+              <Link href="/get-started" className="btn-primary block text-center">Start Free Trial</Link>
             </div>
           </motion.div>
         )}
@@ -242,7 +246,7 @@ export default function Home() {
                   The AI-powered recruitment platform that transforms how you source, screen, and hire top talent. From resume parsing to candidate matching - all automated.
                 </motion.p>
                 <motion.div variants={fadeInUp} className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-                  <Link href="/dashboard" className="group btn-primary flex items-center gap-2 text-lg">Start Free Trial<ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" /></Link>
+                  <Link href="/get-started" className="group btn-primary flex items-center gap-2 text-lg">Start Free Trial<ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" /></Link>
                   <Link href="/demo" className="btn-secondary flex items-center gap-2 text-lg"><Play className="h-5 w-5" />Watch Demo</Link>
                 </motion.div>
                 <motion.div variants={fadeInUp} className="mt-10 flex items-center justify-center gap-6 lg:justify-start">
@@ -289,7 +293,15 @@ export default function Home() {
         <section className="py-16 border-y border-gray-100 bg-white overflow-hidden">
           <div className="mx-auto max-w-7xl px-6">
             <p className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-10">Trusted by industry leaders</p>
-            <div className="relative"><div className="flex animate-marquee gap-16">{[...logos, ...logos].map((name, i) => <div key={i} className="flex-shrink-0 text-2xl font-bold text-gray-300 hover:text-gray-400 transition-colors">{name}</div>)}</div></div>
+            <div className="relative">
+              <div className="flex animate-marquee gap-12 items-center">
+                {[...logos, ...logos].map((name, i) => (
+                  <div key={i} className="flex-shrink-0 px-6 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300">
+                    <span className="text-xl font-bold bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent hover:from-primary hover:to-emerald-600">{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -345,7 +357,12 @@ export default function Home() {
               <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative">
                 <div className="relative rounded-2xl bg-white/5 backdrop-blur border border-white/10 p-8">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5"><Bot className="h-8 w-8 text-emerald-400" /><div><div className="text-sm text-gray-400">AI Analysis</div><div className="font-semibold">Finding best matches...</div></div></div>
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                      <div><div className="text-sm text-gray-400">AI Analysis</div><div className="font-semibold">Finding best matches...</div></div>
+                    </div>
                     {['Senior React Developer - 95% Match', 'Full Stack Engineer - 89% Match', 'Frontend Lead - 87% Match'].map((item, i) => (
                       <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.2 }} className="flex items-center justify-between p-4 rounded-xl bg-white/5">
                         <span>{item.split(' - ')[0]}</span><span className="text-emerald-400 font-semibold">{item.split(' - ')[1]}</span>
@@ -395,7 +412,7 @@ export default function Home() {
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold mb-6 sm:text-5xl">Ready to Transform Your Hiring?</motion.h2>
               <motion.p variants={fadeInUp} className="text-xl text-emerald-100 mb-10">Join 10,000+ recruiters who hire better candidates, faster with Workera.</motion.p>
               <motion.div variants={fadeInUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link href="/dashboard" className="w-full sm:w-auto rounded-full bg-white px-8 py-4 text-lg font-bold text-primary shadow-xl transition-all hover:scale-105 hover:shadow-2xl">Start Free Trial</Link>
+                <Link href="/get-started" className="w-full sm:w-auto rounded-full bg-white px-8 py-4 text-lg font-bold text-primary shadow-xl transition-all hover:scale-105 hover:shadow-2xl">Start Free Trial</Link>
                 <Link href="/demo" className="w-full sm:w-auto rounded-full border-2 border-white/30 bg-white/10 backdrop-blur px-8 py-4 text-lg font-bold text-white transition-all hover:bg-white/20">Schedule Demo</Link>
               </motion.div>
             </motion.div>
@@ -407,7 +424,12 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5 mb-16">
               <div className="lg:col-span-2">
-                <Image src="/images/brand/Workera_Full_Icon.png" alt="Workera" width={140} height={40} className="h-10 w-auto object-contain brightness-0 invert mb-6" />
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">W</span>
+                  </div>
+                  <span className="text-2xl font-bold text-white">Workera</span>
+                </div>
                 <p className="text-gray-400 mb-6 max-w-sm">The intelligent recruitment platform that helps you find, engage, and hire top talent faster.</p>
                 <div className="flex gap-4">{['LinkedIn', 'Twitter', 'GitHub'].map((social) => <a key={social} href="#" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><Globe className="h-5 w-5" /></a>)}</div>
               </div>
@@ -417,7 +439,11 @@ export default function Home() {
             </div>
             <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} Workera Inc. All rights reserved.</p>
-              <div className="flex gap-6 text-sm"><a href="#" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a><a href="#" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a><a href="#" className="text-gray-500 hover:text-white transition-colors">Cookie Policy</a></div>
+              <div className="flex gap-6 text-sm">
+                <Link href="/privacy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="text-gray-500 hover:text-white transition-colors">Terms of Service</Link>
+                <Link href="/cookies" className="text-gray-500 hover:text-white transition-colors">Cookie Policy</Link>
+              </div>
             </div>
           </div>
         </footer>

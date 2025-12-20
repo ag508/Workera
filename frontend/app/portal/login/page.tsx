@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -86,14 +85,11 @@ export default function CandidateLoginPage() {
         />
 
         {/* Logo */}
-        <div className="relative z-10">
-          <Image
-            src="/images/brand/Workera_Text_logo.png"
-            alt="Workera"
-            width={180}
-            height={60}
-            className="object-contain brightness-0 invert"
-          />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white font-bold text-2xl">W</span>
+          </div>
+          <span className="text-3xl font-bold text-white">Workera</span>
         </div>
 
         {/* Content */}
