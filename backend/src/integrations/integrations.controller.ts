@@ -8,6 +8,7 @@ import { RecruitmentFormsService, CreateFormDto, SubmitFormDto } from './recruit
 import { CandidatePortalService, RegisterCandidateDto, LoginCandidateDto, UpdateProfileDto } from './candidate-portal.service';
 import { IntegrationSettingsService, IntegrationSettings } from './integration-settings.service';
 import { SubmissionStatus } from '../database/entities/form-submission.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('integrations')
 export class IntegrationsController {
@@ -424,6 +425,7 @@ export class IntegrationsController {
    * Get form by slug (public endpoint)
    * GET /integrations/forms/slug/:slug
    */
+  @Public()
   @Get('forms/slug/:slug')
   async getFormBySlug(@Param('slug') slug: string) {
     return this.recruitmentFormsService.getFormBySlug(slug);
@@ -458,6 +460,7 @@ export class IntegrationsController {
    * Submit application form (public endpoint)
    * POST /integrations/forms/submit
    */
+  @Public()
   @Post('forms/submit')
   async submitForm(@Body() dto: SubmitFormDto) {
     return this.recruitmentFormsService.submitForm(dto);
@@ -524,6 +527,7 @@ export class IntegrationsController {
    * Register candidate (public endpoint)
    * POST /integrations/candidate/register
    */
+  @Public()
   @Post('candidate/register')
   async registerCandidate(@Body() dto: RegisterCandidateDto) {
     return this.candidatePortalService.register(dto);
@@ -533,6 +537,7 @@ export class IntegrationsController {
    * Login candidate (public endpoint)
    * POST /integrations/candidate/login
    */
+  @Public()
   @Post('candidate/login')
   async loginCandidate(@Body() dto: LoginCandidateDto) {
     return this.candidatePortalService.login(dto);
@@ -542,6 +547,7 @@ export class IntegrationsController {
    * Request password reset (public endpoint)
    * POST /integrations/candidate/password-reset/request
    */
+  @Public()
   @Post('candidate/password-reset/request')
   async requestPasswordReset(
     @Body() body: { email: string; tenantId: string },
@@ -556,6 +562,7 @@ export class IntegrationsController {
    * Reset password with token (public endpoint)
    * POST /integrations/candidate/password-reset/confirm
    */
+  @Public()
   @Post('candidate/password-reset/confirm')
   async resetPassword(
     @Body() body: { token: string; newPassword: string; tenantId: string },
@@ -571,6 +578,7 @@ export class IntegrationsController {
    * Verify email (public endpoint)
    * POST /integrations/candidate/verify-email
    */
+  @Public()
   @Post('candidate/verify-email')
   async verifyEmail(
     @Body() body: { token: string; tenantId: string },
@@ -694,6 +702,7 @@ export class IntegrationsController {
    * Browse available jobs (public endpoint)
    * GET /integrations/candidate/jobs
    */
+  @Public()
   @Get('candidate/jobs')
   async browseJobs(
     @Query('tenantId') tenantId: string,
@@ -714,6 +723,7 @@ export class IntegrationsController {
    * Get job details (public endpoint)
    * GET /integrations/candidate/jobs/:id
    */
+  @Public()
   @Get('candidate/jobs/:id')
   async getJobDetails(
     @Param('id') jobId: string,

@@ -11,3 +11,6 @@ export { ActivityFeed, ActivityType } from './activity-feed.entity';
 export { ApplicationForm, FormField, FormSettings } from './application-form.entity';
 export { FormSubmission, SubmissionData, SubmissionStatus } from './form-submission.entity';
 export { CandidateUser } from './candidate-user.entity';
+
+// Requisition Management Entities
+export * from './requisitions';
