@@ -1,7 +1,25 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser } from './entities';
+import {
+  Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
+  EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  // Requisition Management Entities
+  BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
+  JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
+  HiringTeamMember, BudgetReservation,
+} from './entities';
+
+// All entities array for TypeORM
+const allEntities = [
+  // Core Entities
+  Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
+  EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  // Requisition Management Entities
+  BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
+  JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
+  HiringTeamMember, BudgetReservation,
+];
 
 @Module({
   imports: [
@@ -10,7 +28,7 @@ import { Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const dbType = configService.get<string>('DB_TYPE') || 'postgres';
-        const entities = [Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog, EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser];
+        const entities = allEntities;
 
         if (dbType === 'sqlite') {
           return {
