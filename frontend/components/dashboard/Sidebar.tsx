@@ -70,16 +70,7 @@ const navigation: NavItem[] = [
       { name: 'Application Forms', href: '/dashboard/forms' },
     ],
   },
-  {
-    name: 'Talent Pool',
-    href: '/dashboard/candidates',
-    icon: Users,
-    children: [
-      { name: 'All Candidates', href: '/dashboard/candidates', icon: Users },
-      { name: 'Resume Bank', href: '/dashboard/resumes', icon: ScrollText },
-      { name: 'Shortlists', href: '/dashboard/shortlist', icon: UserPlus },
-    ],
-  },
+  { name: 'Shortlists', href: '/dashboard/shortlist', icon: UserPlus },
   { name: 'Interviews', href: '/dashboard/interviews', icon: Video },
   {
     name: 'Inbox',

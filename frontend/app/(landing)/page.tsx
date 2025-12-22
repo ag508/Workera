@@ -7,7 +7,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import Lottie from 'lottie-react';
 import {
   ArrowRight,
-  Bot,
+  Brain,
   Search,
   Zap,
   CheckCircle2,
@@ -17,7 +17,6 @@ import {
   Users,
   Star,
   Sparkles,
-  Play,
   ChevronRight,
   FileText,
   UserCheck,
@@ -30,7 +29,11 @@ import {
   Building2,
   DollarSign,
   Clock,
-  Layers
+  Layers,
+  Briefcase,
+  UserPlus,
+  Upload,
+  Eye
 } from 'lucide-react';
 import AnimatedGridPattern from '@/components/reactbits/AnimatedGridPattern';
 
@@ -168,7 +171,7 @@ export default function Home() {
   }, []);
 
   const features = [
-    { icon: Bot, title: 'AI Resume Parsing', description: 'Extract skills, experience, and qualifications automatically with 99% accuracy using advanced NLP.', color: 'bg-emerald-100 text-emerald-600' },
+    { icon: Brain, title: 'AI Resume Parsing', description: 'Extract skills, experience, and qualifications automatically with 99% accuracy using advanced NLP.', color: 'bg-emerald-100 text-emerald-600' },
     { icon: Search, title: 'Semantic Search', description: 'Find candidates using natural language. Search "React developer with fintech experience" and get precise results.', color: 'bg-blue-100 text-blue-600' },
     { icon: Zap, title: 'Smart Matching', description: 'AI-powered candidate ranking with explainable scores showing why each candidate is a good fit.', color: 'bg-purple-100 text-purple-600' },
     { icon: Globe, title: 'Multi-Channel Posting', description: 'Post to 20+ job boards including LinkedIn, Indeed, and Naukri with one click.', color: 'bg-amber-100 text-amber-600' },
@@ -194,8 +197,6 @@ export default function Home() {
     { quote: 'Finally, an ATS that actually helps us find better candidates, not just manage applications.', author: 'Michael Roberts', role: 'Head of Talent', company: 'ScaleUp', image: 'https://i.pravatar.cc/150?img=3' },
     { quote: 'The semantic search alone has transformed how we recruit. No more keyword matching nightmares.', author: 'Emma Watson', role: 'Recruiting Lead', company: 'InnovateCo', image: 'https://i.pravatar.cc/150?img=5' },
   ];
-
-  const logos = ['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple', 'Netflix', 'Spotify', 'Airbnb'];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-white">
@@ -255,7 +256,7 @@ export default function Home() {
               <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="text-center lg:text-left">
                 <motion.div variants={fadeInUp} className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
                   <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-primary" /></span>
-                  Powered by Advanced AI
+                  Next-Gen Recruitment Platform
                 </motion.div>
                 <motion.h1 variants={fadeInUp} className="mb-6 text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
                   Hire Smarter.<br /><span className="gradient-text">Hire Faster.</span>
@@ -265,7 +266,7 @@ export default function Home() {
                 </motion.p>
                 <motion.div variants={fadeInUp} className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
                   <Link href="/get-started" className="group btn-primary flex items-center gap-2 text-lg">Start Free Trial<ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" /></Link>
-                  <Link href="/demo" className="btn-secondary flex items-center gap-2 text-lg"><Play className="h-5 w-5" />Watch Demo</Link>
+                  <Link href="/book-demo" className="btn-secondary flex items-center gap-2 text-lg"><Calendar className="h-5 w-5" />Schedule Demo</Link>
                 </motion.div>
                 <motion.div variants={fadeInUp} className="mt-10 flex items-center justify-center gap-6 lg:justify-start">
                   <div className="flex -space-x-3">{[11, 12, 13, 14, 15].map((i) => <img key={i} src={`https://i.pravatar.cc/100?img=${i}`} alt="User" className="h-10 w-10 rounded-full border-2 border-white object-cover" />)}</div>
@@ -281,7 +282,14 @@ export default function Home() {
                   <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl animate-blob" />
                   <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl animate-blob animation-delay-2000" />
                   <div className="relative z-10 rounded-3xl bg-white/50 backdrop-blur-sm border border-white/60 p-8 shadow-2xl">
-                    <Lottie animationData={heroAnimation} loop className="w-full h-auto" />
+                    <Image
+                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop"
+                      alt="Modern recruitment team collaborating"
+                      width={600}
+                      height={400}
+                      className="w-full h-auto rounded-2xl object-cover"
+                      priority
+                    />
                     <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="absolute -left-8 top-20 glass-card rounded-xl p-4 shadow-xl">
                       <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center"><CheckCircle2 className="h-5 w-5 text-green-600" /></div><div><div className="text-sm font-semibold text-gray-900">Match Found!</div><div className="text-xs text-gray-500">98% compatibility</div></div></div>
                     </motion.div>
@@ -313,9 +321,28 @@ export default function Home() {
             <p className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-10">Trusted by industry leaders</p>
             <div className="relative">
               <div className="flex animate-marquee gap-12 items-center">
-                {[...logos, ...logos].map((name, i) => (
-                  <div key={i} className="flex-shrink-0 px-6 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300">
-                    <span className="text-xl font-bold bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent hover:from-primary hover:to-emerald-600">{name}</span>
+                {[
+                  { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
+                  { name: 'Microsoft', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg' },
+                  { name: 'Amazon', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
+                  { name: 'Meta', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg' },
+                  { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
+                  { name: 'Netflix', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg' },
+                  { name: 'Spotify', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' },
+                  { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg' },
+                  { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
+                  { name: 'Microsoft', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg' },
+                  { name: 'Amazon', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
+                  { name: 'Meta', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg' },
+                  { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
+                  { name: 'Netflix', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg' },
+                  { name: 'Spotify', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' },
+                  { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg' },
+                ].map((company, i) => (
+                  <div key={i} className="flex-shrink-0 px-6 py-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 group">
+                    <div className="h-8 w-24 flex items-center justify-center grayscale group-hover:grayscale-0 transition-all duration-300" style={{ filter: 'grayscale(100%) brightness(0.4) sepia(100%) hue-rotate(100deg) saturate(500%)' }}>
+                      <img src={company.logo} alt={company.name} className="h-full w-auto object-contain" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -343,7 +370,23 @@ export default function Home() {
               <h2 className="text-4xl font-bold text-gray-900 mb-4">How Workera Works</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">Get started in minutes. Our streamlined process takes you from posting to hiring faster than ever.</p>
             </motion.div>
-            <div className="mb-16"><Lottie animationData={workflowAnimation} loop className="max-w-md mx-auto" /></div>
+            <div className="mb-16">
+              <div className="max-w-2xl mx-auto flex items-center justify-center gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-8 w-8 text-primary" />
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-primary/40" />
+                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                    <UserCheck className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-blue-400/40" />
+                  <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Calendar className="h-8 w-8 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="grid gap-8 md:grid-cols-3">
               {howItWorks.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.2 }} className="relative text-center">
@@ -364,7 +407,7 @@ export default function Home() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
               <span className="badge badge-primary mb-4">New Feature</span>
               <h2 className="text-4xl font-bold text-gray-900 mb-4">Enterprise-Grade Job Requisition Management</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">Streamline your hiring workflow with Oracle HCM-equivalent functionality. From requisition creation to multi-level approvals - all automated.</p>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">Streamline your hiring workflow with industry-leading functionality that outperforms traditional HCM systems. From requisition creation to multi-level approvals - all automated and intelligent.</p>
             </motion.div>
 
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
@@ -471,6 +514,12 @@ export default function Home() {
                     <motion.li key={i} variants={fadeInUp} className="flex items-center gap-3"><CheckCircle2 className="h-6 w-6 text-emerald-400" /><span className="text-gray-200">{item}</span></motion.li>
                   ))}
                 </motion.ul>
+                <motion.div variants={fadeInUp} className="mt-8">
+                  <Link href="/dashboard/search" className="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">
+                    Explore AI Job Search
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative">
                 <div className="relative rounded-2xl bg-white/5 backdrop-blur border border-white/10 p-8">
@@ -493,8 +542,97 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Candidate Portal Section */}
+        <section id="candidate-portal" className="py-24 bg-gray-50">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+              {/* Left: Content */}
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}>
+                <motion.span variants={fadeInUp} className="badge badge-primary mb-4">Candidate Portal</motion.span>
+                <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-gray-900 mb-6">Your Branded Career Portal</motion.h2>
+                <motion.p variants={fadeInUp} className="text-xl text-gray-600 mb-8">Create a seamless application experience like leading enterprise platforms. Host jobs on your branded portal where candidates can apply, track status, and engage with your company.</motion.p>
+
+                <motion.div variants={staggerContainer} className="space-y-4">
+                  {[
+                    { icon: Upload, title: 'Smart Resume Import', desc: 'Import from LinkedIn, job portals, or PDF with AI-powered parsing' },
+                    { icon: Brain, title: 'Intelligent Auto-Fill', desc: 'AI extracts experience, skills, and education to populate forms automatically' },
+                    { icon: Eye, title: 'Application Tracking', desc: 'Candidates track their application status in real-time' },
+                    { icon: Search, title: 'AI Job Matching', desc: 'Smart suggestions for positions matching candidate profiles' },
+                  ].map((feature, idx) => (
+                    <motion.div key={idx} variants={fadeInUp} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <feature.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{feature.title}</h4>
+                        <p className="text-sm text-gray-600">{feature.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="mt-8">
+                  <Link href="/portal" className="inline-flex items-center gap-2 text-primary font-semibold hover:underline">
+                    Explore Candidate Portal
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+              </motion.div>
+
+              {/* Right: Portal Preview */}
+              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-3xl blur-2xl" />
+                <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+                  {/* Browser Header */}
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-400" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                      <div className="w-3 h-3 rounded-full bg-green-400" />
+                      <div className="ml-4 flex-1 bg-white rounded-lg px-3 py-1 text-sm text-gray-500">careers.yourcompany.com</div>
+                    </div>
+                  </div>
+                  {/* Portal Content */}
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Briefcase className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">TechCorp Careers</h4>
+                        <p className="text-sm text-gray-500">Find your next opportunity</p>
+                      </div>
+                    </div>
+
+                    {/* Job Cards */}
+                    {[
+                      { title: 'Senior Software Engineer', location: 'San Francisco, CA', type: 'Full-time' },
+                      { title: 'Product Designer', location: 'Remote', type: 'Full-time' },
+                      { title: 'Data Scientist', location: 'New York, NY', type: 'Hybrid' },
+                    ].map((job, idx) => (
+                      <motion.div key={idx} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + idx * 0.1 }} className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-sm transition-all cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="font-semibold text-gray-900">{job.title}</h5>
+                            <p className="text-sm text-gray-500">{job.location} • {job.type}</p>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </motion.div>
+                    ))}
+
+                    <div className="pt-4">
+                      <div className="text-center text-sm text-gray-500">Powered by <span className="font-semibold text-primary">Workera</span></div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* Testimonials */}
-        <section id="testimonials" className="py-24 bg-gray-50">
+        <section id="testimonials" className="py-24 bg-white">
           <div className="mx-auto max-w-7xl px-6">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
               <span className="badge badge-primary mb-4">Testimonials</span>
@@ -531,7 +669,7 @@ export default function Home() {
               <motion.p variants={fadeInUp} className="text-xl text-emerald-100 mb-10">Join 10,000+ recruiters who hire better candidates, faster with Workera.</motion.p>
               <motion.div variants={fadeInUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link href="/get-started" className="w-full sm:w-auto rounded-full bg-white px-8 py-4 text-lg font-bold text-primary shadow-xl transition-all hover:scale-105 hover:shadow-2xl">Start Free Trial</Link>
-                <Link href="/demo" className="w-full sm:w-auto rounded-full border-2 border-white/30 bg-white/10 backdrop-blur px-8 py-4 text-lg font-bold text-white transition-all hover:bg-white/20">Schedule Demo</Link>
+                <Link href="/book-demo" className="w-full sm:w-auto rounded-full border-2 border-white/30 bg-white/10 backdrop-blur px-8 py-4 text-lg font-bold text-white transition-all hover:bg-white/20">Schedule Demo</Link>
               </motion.div>
             </motion.div>
           </div>
@@ -553,7 +691,17 @@ export default function Home() {
                   <span className="text-2xl font-bold text-white">Workera</span>
                 </div>
                 <p className="text-gray-400 mb-6 max-w-sm">The intelligent recruitment platform that helps you find, engage, and hire top talent faster.</p>
-                <div className="flex gap-4">{['LinkedIn', 'Twitter', 'GitHub'].map((social) => <a key={social} href="#" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><Globe className="h-5 w-5" /></a>)}</div>
+                <div className="flex gap-4">
+                  <a href="#" className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-emerald-600/20 flex items-center justify-center hover:from-primary/30 hover:to-emerald-600/30 transition-all">
+                    <svg className="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                  </a>
+                  <a href="#" className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-emerald-600/20 flex items-center justify-center hover:from-primary/30 hover:to-emerald-600/30 transition-all">
+                    <svg className="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  </a>
+                  <a href="#" className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-emerald-600/20 flex items-center justify-center hover:from-primary/30 hover:to-emerald-600/30 transition-all">
+                    <svg className="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </a>
+                </div>
               </div>
               <div><h4 className="font-semibold text-white mb-4">Product</h4><ul className="space-y-3">{['Features', 'Pricing', 'Integrations', 'API', 'Security'].map((item) => <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>)}</ul></div>
               <div><h4 className="font-semibold text-white mb-4">Resources</h4><ul className="space-y-3">{['Blog', 'Case Studies', 'Webinars', 'Help Center', 'Documentation'].map((item) => <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>)}</ul></div>
