@@ -24,7 +24,13 @@ import {
   Calendar,
   Check,
   X,
-  Menu
+  Menu,
+  ClipboardList,
+  Workflow,
+  Building2,
+  DollarSign,
+  Clock,
+  Layers
 } from 'lucide-react';
 import AnimatedGridPattern from '@/components/reactbits/AnimatedGridPattern';
 
@@ -201,19 +207,23 @@ export default function Home() {
       {/* Navbar */}
       <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'glass-nav shadow-sm' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/images/brand/Workera_logo_icon.png"
+              alt="Workera"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
               Workera
             </span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Features</Link>
+            <Link href="#requisitions" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Requisitions</Link>
             <Link href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">How it Works</Link>
             <Link href="#pricing" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Pricing</Link>
-            <Link href="#testimonials" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Testimonials</Link>
           </div>
           <div className="hidden items-center gap-4 md:flex">
             <Link href="/portal/login" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Sign In</Link>
@@ -227,6 +237,7 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-white border-t border-gray-100">
             <div className="px-6 py-4 space-y-4">
               <Link href="#features" className="block text-gray-600 hover:text-primary">Features</Link>
+              <Link href="#requisitions" className="block text-gray-600 hover:text-primary">Requisitions</Link>
               <Link href="#how-it-works" className="block text-gray-600 hover:text-primary">How it Works</Link>
               <Link href="#pricing" className="block text-gray-600 hover:text-primary">Pricing</Link>
               <Link href="/portal/login" className="block text-gray-600 hover:text-primary">Sign In</Link>
@@ -347,6 +358,106 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Job Requisition Management Section */}
+        <section id="requisitions" className="py-24 bg-white">
+          <div className="mx-auto max-w-7xl px-6">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
+              <span className="badge badge-primary mb-4">New Feature</span>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Enterprise-Grade Job Requisition Management</h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">Streamline your hiring workflow with Oracle HCM-equivalent functionality. From requisition creation to multi-level approvals - all automated.</p>
+            </motion.div>
+
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
+              {/* Left: Feature Preview */}
+              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-emerald-500/20 rounded-3xl blur-2xl" />
+                <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="ml-4 text-gray-400 text-sm">Job Requisition Dashboard</span>
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className="p-6 space-y-4">
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-4 gap-3">
+                      {[
+                        { label: 'Open', value: '12', color: 'text-blue-600 bg-blue-50' },
+                        { label: 'Pending', value: '4', color: 'text-amber-600 bg-amber-50' },
+                        { label: 'Approved', value: '8', color: 'text-green-600 bg-green-50' },
+                        { label: 'Filled', value: '23', color: 'text-purple-600 bg-purple-50' },
+                      ].map((stat) => (
+                        <div key={stat.label} className="text-center p-3 rounded-xl bg-gray-50">
+                          <div className={`text-2xl font-bold ${stat.color.split(' ')[0]}`}>{stat.value}</div>
+                          <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Requisition Cards */}
+                    {[
+                      { title: 'Senior Software Engineer', dept: 'Engineering', status: 'Pending Approval', level: '2/3', priority: 'High' },
+                      { title: 'Product Manager', dept: 'Product', status: 'Approved', level: '3/3', priority: 'Normal' },
+                      { title: 'DevOps Engineer', dept: 'Engineering', status: 'Posted', level: '3/3', priority: 'Critical' },
+                    ].map((req, idx) => (
+                      <motion.div key={idx} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + idx * 0.1 }} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-sm transition-all">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <ClipboardList className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-900">{req.title}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${req.priority === 'Critical' ? 'bg-red-100 text-red-600' : req.priority === 'High' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>{req.priority}</span>
+                          </div>
+                          <div className="text-sm text-gray-500">{req.dept}</div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs font-medium px-2 py-1 rounded-full ${req.status === 'Approved' ? 'bg-green-100 text-green-600' : req.status === 'Posted' ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-600'}`}>{req.status}</span>
+                          <div className="text-xs text-gray-400 mt-1">Level {req.level}</div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Right: Features List */}
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="space-y-6">
+                <motion.h3 variants={fadeInUp} className="text-2xl font-bold text-gray-900">Everything you need for enterprise hiring</motion.h3>
+
+                <div className="grid gap-4">
+                  {[
+                    { icon: ClipboardList, title: '8-Step Creation Wizard', desc: 'Guided requisition creation with validation at every step' },
+                    { icon: Workflow, title: 'Dynamic Approval Workflows', desc: 'Rule-based approval chains with SLA monitoring and escalation' },
+                    { icon: Building2, title: 'Multi-Tenant Support', desc: 'Full data isolation with white-label ready deployment' },
+                    { icon: DollarSign, title: 'Budget Validation', desc: 'Real-time cost center checks and salary band compliance' },
+                    { icon: Clock, title: 'SLA Monitoring', desc: 'Automatic escalation for overdue approvals with notifications' },
+                    { icon: Layers, title: 'Audit Trail', desc: 'Immutable logging for compliance and GDPR requirements' },
+                  ].map((feature, idx) => (
+                    <motion.div key={idx} variants={fadeInUp} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <feature.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{feature.title}</h4>
+                        <p className="text-sm text-gray-600 mt-0.5">{feature.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Link href="/dashboard/requisitions" className="inline-flex items-center gap-2 text-primary font-semibold hover:underline">
+                  Explore Requisition Management
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* AI Feature Highlight */}
         <section className="py-24 bg-gray-900 text-white overflow-hidden">
           <div className="mx-auto max-w-7xl px-6">
@@ -432,9 +543,13 @@ export default function Home() {
             <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5 mb-16">
               <div className="lg:col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">W</span>
-                  </div>
+                  <Image
+                    src="/images/brand/Workera_logo_icon.png"
+                    alt="Workera"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain"
+                  />
                   <span className="text-2xl font-bold text-white">Workera</span>
                 </div>
                 <p className="text-gray-400 mb-6 max-w-sm">The intelligent recruitment platform that helps you find, engage, and hire top talent faster.</p>

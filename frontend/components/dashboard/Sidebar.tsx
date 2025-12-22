@@ -207,12 +207,15 @@ export function Sidebar() {
       <div className="flex h-20 items-center px-6 border-b border-gray-50">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
-            src="/images/brand/Workera_Full_Icon.png"
+            src="/images/brand/Workera_logo_icon.png"
             alt="Workera"
-            width={140}
-            height={40}
-            className="h-9 w-auto object-contain"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
           />
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+            Workera
+          </span>
         </Link>
       </div>
 
