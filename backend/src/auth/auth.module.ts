@@ -15,7 +15,7 @@ import { RolesGuard } from './guards/roles.guard';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'workera-jwt-secret-change-in-production',
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '8h',
+          expiresIn: configService.get<number>('JWT_EXPIRES_IN') || 28800, // 8 hours in seconds
         },
       }),
       inject: [ConfigService],
@@ -34,4 +34,4 @@ import { RolesGuard } from './guards/roles.guard';
     RolesGuard,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

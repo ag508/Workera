@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import Lottie from 'lottie-react';
 import {
   ArrowRight,
+  Bot,
   Search,
   Zap,
   CheckCircle2,
@@ -31,27 +32,33 @@ import AnimatedGridPattern from '@/components/reactbits/AnimatedGridPattern';
 const heroAnimation = {
   v: "5.7.4", fr: 30, ip: 0, op: 120, w: 500, h: 500, nm: "Hiring Flow", ddd: 0, assets: [],
   layers: [
-    { ddd: 0, ind: 1, ty: 4, nm: "Outer Ring", sr: 1,
+    {
+      ddd: 0, ind: 1, ty: 4, nm: "Outer Ring", sr: 1,
       ks: { o: { a: 0, k: 30 }, r: { a: 1, k: [{ t: 0, s: [0] }, { t: 120, s: [360] }] }, p: { a: 0, k: [250, 250, 0] }, s: { a: 0, k: [100, 100, 100] } },
       shapes: [{ ty: "el", s: { a: 0, k: [400, 400] }, p: { a: 0, k: [0, 0] } }, { ty: "st", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 2 }, lc: 2, d: [{ n: "d", nm: "dash", v: { a: 0, k: 10 } }, { n: "g", nm: "gap", v: { a: 0, k: 10 } }] }]
     },
-    { ddd: 0, ind: 2, ty: 4, nm: "Middle Ring", sr: 1,
+    {
+      ddd: 0, ind: 2, ty: 4, nm: "Middle Ring", sr: 1,
       ks: { o: { a: 0, k: 50 }, r: { a: 1, k: [{ t: 0, s: [0] }, { t: 120, s: [-360] }] }, p: { a: 0, k: [250, 250, 0] }, s: { a: 0, k: [100, 100, 100] } },
       shapes: [{ ty: "el", s: { a: 0, k: [300, 300] }, p: { a: 0, k: [0, 0] } }, { ty: "st", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 3 }, lc: 2 }]
     },
-    { ddd: 0, ind: 3, ty: 4, nm: "Inner Ring", sr: 1,
+    {
+      ddd: 0, ind: 3, ty: 4, nm: "Inner Ring", sr: 1,
       ks: { o: { a: 0, k: 80 }, r: { a: 1, k: [{ t: 0, s: [0] }, { t: 120, s: [360] }] }, p: { a: 0, k: [250, 250, 0] }, s: { a: 1, k: [{ t: 0, s: [100, 100, 100] }, { t: 60, s: [105, 105, 100] }, { t: 120, s: [100, 100, 100] }] } },
       shapes: [{ ty: "el", s: { a: 0, k: [200, 200] }, p: { a: 0, k: [0, 0] } }, { ty: "st", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 4 }, lc: 2 }]
     },
-    { ddd: 0, ind: 4, ty: 4, nm: "Center Pulse", sr: 1,
+    {
+      ddd: 0, ind: 4, ty: 4, nm: "Center Pulse", sr: 1,
       ks: { o: { a: 1, k: [{ t: 0, s: [100] }, { t: 60, s: [60] }, { t: 120, s: [100] }] }, p: { a: 0, k: [250, 250, 0] }, s: { a: 1, k: [{ t: 0, s: [100, 100, 100] }, { t: 60, s: [90, 90, 100] }, { t: 120, s: [100, 100, 100] }] } },
       shapes: [{ ty: "el", s: { a: 0, k: [100, 100] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 } }]
     },
-    { ddd: 0, ind: 5, ty: 4, nm: "Dot 1", sr: 1,
+    {
+      ddd: 0, ind: 5, ty: 4, nm: "Dot 1", sr: 1,
       ks: { o: { a: 0, k: 100 }, p: { a: 1, k: [{ t: 0, s: [150, 150, 0] }, { t: 30, s: [350, 150, 0] }, { t: 60, s: [350, 350, 0] }, { t: 90, s: [150, 350, 0] }, { t: 120, s: [150, 150, 0] }] }, s: { a: 0, k: [100, 100, 100] } },
       shapes: [{ ty: "el", s: { a: 0, k: [20, 20] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.231, 0.51, 0.965, 1] }, o: { a: 0, k: 100 } }]
     },
-    { ddd: 0, ind: 6, ty: 4, nm: "Dot 2", sr: 1,
+    {
+      ddd: 0, ind: 6, ty: 4, nm: "Dot 2", sr: 1,
       ks: { o: { a: 0, k: 100 }, p: { a: 1, k: [{ t: 0, s: [350, 350, 0] }, { t: 30, s: [150, 350, 0] }, { t: 60, s: [150, 150, 0] }, { t: 90, s: [350, 150, 0] }, { t: 120, s: [350, 350, 0] }] }, s: { a: 0, k: [100, 100, 100] } },
       shapes: [{ ty: "el", s: { a: 0, k: [16, 16] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.545, 0.361, 0.965, 1] }, o: { a: 0, k: 100 } }]
     }

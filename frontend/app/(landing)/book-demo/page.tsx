@@ -19,8 +19,7 @@ import {
   User,
   MessageSquare,
   ChevronLeft,
-  Loader2,
-  Play
+  Loader2
 } from 'lucide-react';
 
 export default function BookDemoPage() {
