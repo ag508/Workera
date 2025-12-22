@@ -12,7 +12,7 @@ import {
   ParseUUIDPipe,
   ValidationPipe,
 } from '@nestjs/common';
-import { RequisitionsService, RequisitionFilters } from './requisitions.service';
+import { RequisitionsService } from './requisitions.service';
 import { ApprovalWorkflowService } from './approval-workflow.service';
 import { BudgetValidationService } from './budget-validation.service';
 import { RequisitionAuditService } from './requisition-audit.service';
@@ -35,19 +35,20 @@ export class CreateRequisitionDto {
   headcount: number;
   employmentType: EmploymentType;
   workModel: WorkModel;
-  locationId?: string;
-  costCenterId?: string;
-  jobGradeId?: string;
+  businessUnitId: string;
+  locationId: string;
+  costCenterId: string;
+  jobGradeId: string;
   positionId?: string;
-  salaryMin?: number;
-  salaryMax?: number;
+  salaryMin: number;
+  salaryMax: number;
   currency?: string;
   justification?: string;
   jobDescription?: string;
   requirements?: string;
   preferredQualifications?: string;
   responsibilities?: string;
-  targetStartDate?: Date;
+  targetStartDate: Date;
   priority?: RequisitionPriority;
   recruiterId?: string;
   recruiterName?: string;
@@ -143,7 +144,7 @@ export class RequisitionsController {
     private readonly approvalWorkflowService: ApprovalWorkflowService,
     private readonly budgetValidationService: BudgetValidationService,
     private readonly auditService: RequisitionAuditService,
-  ) {}
+  ) { }
 
   // ============================================================================
   // CRUD OPERATIONS
@@ -155,42 +156,40 @@ export class RequisitionsController {
     const page = query.page || 1;
     const limit = query.limit || 20;
 
-    const filters: RequisitionFilters = {
+    const filters = {
       status: query.status,
-      departmentId: query.departmentId,
+      departmentId: query.departmentId ? [query.departmentId] : undefined,
       hiringManagerId: query.hiringManagerId,
       recruiterId: query.recruiterId,
-      priority: query.priority,
-      employmentType: query.employmentType,
-      workModel: query.workModel,
-      createdAfter: query.createdAfter,
-      createdBefore: query.createdBefore,
+      priority: query.priority ? [query.priority] : undefined,
+      createdFrom: query.createdAfter,
+      createdTo: query.createdBefore,
     };
 
-    const result = await this.requisitionsService.findAll(
+    const requisitions = await this.requisitionsService.findAll(
       tenantId,
       filters,
-      page,
-      limit,
-      query.sortBy,
-      query.sortOrder,
     );
+
+    // Apply pagination manually
+    const start = (page - 1) * limit;
+    const paginatedData = requisitions.slice(start, start + limit);
 
     return {
       success: true,
-      data: result.requisitions,
+      data: paginatedData,
       meta: {
-        total: result.total,
+        total: requisitions.length,
         page,
         limit,
-        totalPages: Math.ceil(result.total / limit),
+        totalPages: Math.ceil(requisitions.length / limit),
       },
     };
   }
 
   @Get('stats')
   async getStatistics(@Query('tenantId') tenantId?: string) {
-    const stats = await this.requisitionsService.getStatistics(
+    const stats = await this.requisitionsService.getStats(
       tenantId || 'default-tenant',
     );
 
@@ -206,8 +205,8 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
   ) {
     const requisition = await this.requisitionsService.findById(
-      id,
       tenantId || 'default-tenant',
+      id,
     );
 
     return {
@@ -269,10 +268,9 @@ export class RequisitionsController {
     const updatedBy = dto.updatedBy || 'system';
 
     const requisition = await this.requisitionsService.update(
-      id,
       tenantId,
-      dto,
-      updatedBy,
+      id,
+      { ...dto, updatedBy },
     );
 
     return {
@@ -289,8 +287,8 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     await this.requisitionsService.delete(
-      id,
       tenantId || 'default-tenant',
+      id,
       userId || 'system',
     );
   }
@@ -305,9 +303,9 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
     @Query('userId') userId?: string,
   ) {
-    const requisition = await this.requisitionsService.submitForApproval(
-      id,
+    const requisition = await this.requisitionsService.submit(
       tenantId || 'default-tenant',
+      id,
       userId || 'system',
     );
 
@@ -326,14 +324,30 @@ export class RequisitionsController {
     const tenantId = dto.tenantId || 'default-tenant';
     const userId = dto.userId || 'system';
 
-    const requisition = await this.requisitionsService.processApproval(
-      id,
-      tenantId,
-      userId,
-      dto.decision,
-      dto.comments,
-      dto.delegateTo,
-    );
+    let requisition;
+    if (dto.decision === 'APPROVE') {
+      requisition = await this.requisitionsService.approve(
+        tenantId,
+        id,
+        userId,
+        dto.comments,
+      );
+    } else if (dto.decision === 'REJECT') {
+      requisition = await this.requisitionsService.reject(
+        tenantId,
+        id,
+        userId,
+        dto.comments || 'Rejected',
+      );
+    } else {
+      // SEND_BACK or DELEGATE - treat as reject for now
+      requisition = await this.requisitionsService.reject(
+        tenantId,
+        id,
+        userId,
+        dto.comments || dto.decision,
+      );
+    }
 
     return {
       success: true,
@@ -348,8 +362,8 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: CancelRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.cancel(
-      id,
       dto.tenantId || 'default-tenant',
+      id,
       dto.userId || 'system',
       dto.reason,
     );
@@ -367,8 +381,8 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: HoldRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.hold(
-      id,
       dto.tenantId || 'default-tenant',
+      id,
       dto.userId || 'system',
       dto.reason,
     );
@@ -387,8 +401,8 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     const requisition = await this.requisitionsService.resume(
-      id,
       tenantId || 'default-tenant',
+      id,
       userId || 'system',
     );
 
@@ -405,8 +419,8 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: PostRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.postToJob(
-      id,
       dto.tenantId || 'default-tenant',
+      id,
       dto.userId || 'system',
       dto.channels,
     );
@@ -424,8 +438,8 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: FillRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.markFilled(
-      id,
       dto.tenantId || 'default-tenant',
+      id,
       dto.userId || 'system',
       dto.count,
     );

@@ -12,7 +12,7 @@ export class RequisitionAuditService {
   constructor(
     @InjectRepository(RequisitionAuditLog)
     private readonly auditRepository: Repository<RequisitionAuditLog>,
-  ) {}
+  ) { }
 
   private async log(
     requisition: JobRequisition,
@@ -21,17 +21,25 @@ export class RequisitionAuditService {
     changes?: Record<string, { old: any; new: any }>,
     metadata?: Record<string, any>,
   ): Promise<void> {
+    const changesList = changes
+      ? Object.entries(changes).map(([field, val]) => ({
+        field,
+        oldValue: val.old,
+        newValue: val.new,
+      }))
+      : null;
+
     const auditLog = this.auditRepository.create({
       requisitionId: requisition.id,
       tenantId: requisition.tenantId,
       action,
+      actionDescription: `${action} requisition ${requisition.requisitionNumber}`,
       changedBy: userId,
-      changedAt: new Date(),
-      changes: changes ? JSON.stringify(changes) : null,
-      metadata: metadata ? JSON.stringify(metadata) : null,
+      changedByName: userId, // Would fetch from user service in production
+      changedByEmail: 'user@company.com', // Would fetch from user service in production
+      changes: changesList,
       requisitionNumber: requisition.requisitionNumber,
-      requisitionStatus: requisition.status,
-    });
+    } as any);
 
     await this.auditRepository.save(auditLog);
   }
@@ -152,7 +160,7 @@ export class RequisitionAuditService {
   ): Promise<RequisitionAuditLog[]> {
     return this.auditRepository.find({
       where: { requisitionId, tenantId },
-      order: { changedAt: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -166,7 +174,7 @@ export class RequisitionAuditService {
   ): Promise<RequisitionAuditLog[]> {
     return this.auditRepository.find({
       where: { tenantId, changedBy: userId },
-      order: { changedAt: 'DESC' },
+      order: { createdAt: 'DESC' },
       take: limit,
     });
   }
@@ -180,7 +188,7 @@ export class RequisitionAuditService {
   ): Promise<RequisitionAuditLog[]> {
     return this.auditRepository.find({
       where: { tenantId },
-      order: { changedAt: 'DESC' },
+      order: { createdAt: 'DESC' },
       take: limit,
     });
   }

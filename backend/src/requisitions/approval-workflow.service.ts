@@ -37,7 +37,7 @@ export class ApprovalWorkflowService {
     private readonly ruleRepository: Repository<ApprovalRule>,
     @InjectRepository(JobRequisition)
     private readonly requisitionRepository: Repository<JobRequisition>,
-  ) {}
+  ) { }
 
   // ============================================================================
   // WORKFLOW INITIALIZATION
@@ -60,15 +60,14 @@ export class ApprovalWorkflowService {
         const approval = this.approvalRepository.create({
           requisitionId: requisition.id,
           tenantId: requisition.tenantId,
-          level: rule.level,
-          approverId: approver.id,
+          approvalLevel: rule.approvalLevel,
+          approverUserId: approver.id,
           approverName: approver.name,
           approverEmail: approver.email,
           approverRole: rule.approverRole,
-          status: rule.level === 1 ? ApprovalStatus.PENDING : ApprovalStatus.PENDING,
-          slaHours: rule.slaHours,
-          dueAt: this.calculateDueDate(rule.slaHours),
-        });
+          status: rule.approvalLevel === 1 ? ApprovalStatus.PENDING : ApprovalStatus.PENDING,
+          dueDate: this.calculateDueDate(rule.slaHours),
+        } as any);
 
         await this.approvalRepository.save(approval);
       }
@@ -100,7 +99,7 @@ export class ApprovalWorkflowService {
     // Apply priority-based rules
     if (requisition.priority === RequisitionPriority.CRITICAL) {
       // Critical requisitions may have expedited approval
-      return rules.filter(r => r.level <= 2); // Only first 2 levels
+      return rules.filter(r => r.approvalLevel <= 2); // Only first 2 levels
     }
 
     return rules;
@@ -128,7 +127,9 @@ export class ApprovalWorkflowService {
       [ApproverRole.EXECUTIVE]: [
         { id: 'exec-001', name: 'VP of Engineering', email: 'vp@company.com' },
       ],
-      [ApproverRole.CUSTOM]: rule.customApprovers || [],
+      [ApproverRole.CUSTOM]: rule.specificUserId
+        ? [{ id: rule.specificUserId, name: 'Custom Approver', email: 'approver@company.com' }]
+        : [],
     };
 
     return approversByRole[rule.approverRole] || [];
@@ -155,8 +156,8 @@ export class ApprovalWorkflowService {
     const approval = await this.approvalRepository.findOne({
       where: {
         requisitionId: requisition.id,
-        level: requisition.currentApprovalLevel,
-        approverId: userId,
+        approvalLevel: requisition.currentApprovalLevel,
+        approverUserId: userId,
         status: ApprovalStatus.PENDING,
       },
     });
@@ -191,14 +192,14 @@ export class ApprovalWorkflowService {
       status: ApprovalStatus.APPROVED,
       decision: ApprovalDecision.APPROVE,
       comments,
-      decidedAt: new Date(),
+      respondedAt: new Date(),
     });
 
     // Check if all approvers at this level have approved
     const pendingAtLevel = await this.approvalRepository.count({
       where: {
         requisitionId: requisition.id,
-        level: requisition.currentApprovalLevel,
+        approvalLevel: requisition.currentApprovalLevel,
         status: ApprovalStatus.PENDING,
       },
     });
@@ -208,7 +209,7 @@ export class ApprovalWorkflowService {
       const nextLevelApprovals = await this.approvalRepository.find({
         where: {
           requisitionId: requisition.id,
-          level: requisition.currentApprovalLevel + 1,
+          approvalLevel: requisition.currentApprovalLevel + 1,
         },
       });
 
@@ -223,8 +224,8 @@ export class ApprovalWorkflowService {
 
       // Activate next level approvals
       await this.approvalRepository.update(
-        { requisitionId: requisition.id, level: requisition.currentApprovalLevel + 1 },
-        { dueAt: this.calculateDueDate(nextLevelApprovals[0].slaHours || 24) },
+        { requisitionId: requisition.id, approvalLevel: requisition.currentApprovalLevel + 1 },
+        { dueDate: this.calculateDueDate((nextLevelApprovals[0] as any).slaHours || 24) },
       );
 
       return {
@@ -252,7 +253,7 @@ export class ApprovalWorkflowService {
       status: ApprovalStatus.REJECTED,
       decision: ApprovalDecision.REJECT,
       comments,
-      decidedAt: new Date(),
+      respondedAt: new Date(),
     });
 
     // Mark all other pending approvals as skipped
@@ -277,7 +278,7 @@ export class ApprovalWorkflowService {
       status: ApprovalStatus.REJECTED,
       decision: ApprovalDecision.SEND_BACK,
       comments,
-      decidedAt: new Date(),
+      respondedAt: new Date(),
     });
 
     return {
@@ -298,19 +299,19 @@ export class ApprovalWorkflowService {
       status: ApprovalStatus.DELEGATED,
       decision: ApprovalDecision.DELEGATE,
       comments: `Delegated to: ${delegateTo}. ${comments || ''}`,
-      decidedAt: new Date(),
+      respondedAt: new Date(),
     });
 
     // Create new approval for delegate
     const delegateApproval = this.approvalRepository.create({
       ...approval,
       id: undefined,
-      approverId: delegateTo,
+      approverUserId: delegateTo,
       approverName: delegateTo, // Would fetch from user service
       status: ApprovalStatus.PENDING,
-      dueAt: this.calculateDueDate(approval.slaHours || 24),
-      delegatedFrom: approval.approverId,
-    });
+      dueDate: this.calculateDueDate((approval as any).slaHours || 24),
+      delegatedFromUserId: approval.approverUserId,
+    } as any);
 
     await this.approvalRepository.save(delegateApproval);
 
@@ -323,7 +324,7 @@ export class ApprovalWorkflowService {
 
   private async getPendingApproverNames(requisitionId: string, level: number): Promise<string[]> {
     const pending = await this.approvalRepository.find({
-      where: { requisitionId, level, status: ApprovalStatus.PENDING },
+      where: { requisitionId, approvalLevel: level, status: ApprovalStatus.PENDING },
     });
     return pending.map(a => a.approverName);
   }
@@ -340,7 +341,7 @@ export class ApprovalWorkflowService {
       .innerJoin('approval.requisition', 'req')
       .where('approval.tenantId = :tenantId', { tenantId })
       .andWhere('approval.status = :status', { status: ApprovalStatus.PENDING })
-      .andWhere('approval.dueAt < :now', { now })
+      .andWhere('approval.dueDate < :now', { now })
       .andWhere('approval.escalated = :escalated', { escalated: false })
       .getMany();
 
@@ -358,10 +359,10 @@ export class ApprovalWorkflowService {
       escalations.push({
         requisitionId: approval.requisitionId,
         approvalId: approval.id,
-        approverId: approval.approverId,
+        approverId: approval.approverUserId,
         approverName: approval.approverName,
-        slaBreachedAt: approval.dueAt,
-        escalateTo: approval.escalateToId || 'supervisor', // Would be configured per rule
+        slaBreachedAt: approval.dueDate,
+        escalateTo: approval.escalatedToUserId || 'supervisor', // Would be configured per rule
       });
     }
 
@@ -385,7 +386,7 @@ export class ApprovalWorkflowService {
 
     const approvals = await this.approvalRepository.find({
       where: { requisitionId },
-      order: { level: 'ASC' },
+      order: { approvalLevel: 'ASC' },
     });
 
     const now = new Date();
@@ -393,12 +394,12 @@ export class ApprovalWorkflowService {
     return {
       currentLevel: requisition?.currentApprovalLevel || 0,
       approvals: approvals.map(a => ({
-        level: a.level,
+        level: a.approvalLevel,
         approverName: a.approverName,
         status: a.status,
         slaStatus: this.calculateSLAStatus(a, now),
-        dueAt: a.dueAt,
-        decidedAt: a.decidedAt,
+        dueAt: a.dueDate,
+        decidedAt: a.respondedAt,
       })),
     };
   }
@@ -408,12 +409,12 @@ export class ApprovalWorkflowService {
       return SLAStatus.ON_TRACK;
     }
 
-    if (!approval.dueAt) {
+    if (!approval.dueDate) {
       return SLAStatus.ON_TRACK;
     }
 
-    const timeToDeadline = approval.dueAt.getTime() - now.getTime();
-    const totalTime = approval.dueAt.getTime() - (approval.createdAt?.getTime() || now.getTime());
+    const timeToDeadline = approval.dueDate.getTime() - now.getTime();
+    const totalTime = approval.dueDate.getTime() - (approval.createdAt?.getTime() || now.getTime());
 
     if (timeToDeadline <= 0) {
       return SLAStatus.OVERDUE;
@@ -444,7 +445,7 @@ export class ApprovalWorkflowService {
       .where('approval.tenantId = :tenantId', { tenantId })
       .andWhere('approval.approverId = :userId', { userId })
       .andWhere('approval.status = :status', { status: ApprovalStatus.PENDING })
-      .orderBy('approval.dueAt', 'ASC')
+      .orderBy('approval.dueDate', 'ASC')
       .getMany();
 
     const now = new Date();

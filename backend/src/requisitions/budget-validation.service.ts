@@ -17,7 +17,7 @@ export class BudgetValidationService {
     @InjectRepository(BudgetReservation)
     private readonly budgetReservationRepository: Repository<BudgetReservation>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   /**
    * Validate salary against job grade band
@@ -37,15 +37,15 @@ export class BudgetValidationService {
     }
 
     // Check if salary range is within the grade band
-    if (salaryMin < jobGrade.salaryBandMin) {
+    if (salaryMin < jobGrade.salaryMin) {
       throw new BadRequestException(
-        `Minimum salary ${salaryMin} is below the grade minimum of ${jobGrade.salaryBandMin}`,
+        `Minimum salary ${salaryMin} is below the grade minimum of ${jobGrade.salaryMin}`,
       );
     }
 
-    if (salaryMax > jobGrade.salaryBandMax) {
+    if (salaryMax > jobGrade.salaryMax) {
       throw new BadRequestException(
-        `Maximum salary ${salaryMax} exceeds the grade maximum of ${jobGrade.salaryBandMax}`,
+        `Maximum salary ${salaryMax} exceeds the grade maximum of ${jobGrade.salaryMax}`,
       );
     }
 
@@ -71,9 +71,9 @@ export class BudgetValidationService {
     }
 
     const availableAmount =
-      Number(costCenter.budgetTotal) -
-      Number(costCenter.budgetUsed) -
-      Number(costCenter.budgetReserved);
+      Number(costCenter.budgetAmount) -
+      Number(costCenter.usedAmount) -
+      Number(costCenter.reservedAmount);
 
     if (availableAmount < requiredAmount) {
       return {
@@ -112,9 +112,9 @@ export class BudgetValidationService {
       }
 
       const availableAmount =
-        Number(costCenter.budgetTotal) -
-        Number(costCenter.budgetUsed) -
-        Number(costCenter.budgetReserved);
+        Number(costCenter.budgetAmount) -
+        Number(costCenter.usedAmount) -
+        Number(costCenter.reservedAmount);
 
       if (availableAmount < amount) {
         throw new BadRequestException(
@@ -123,7 +123,7 @@ export class BudgetValidationService {
       }
 
       // Update cost center reserved amount
-      costCenter.budgetReserved = Number(costCenter.budgetReserved) + amount;
+      costCenter.reservedAmount = Number(costCenter.reservedAmount) + amount;
       await queryRunner.manager.save(costCenter);
 
       // Create reservation record
@@ -133,9 +133,11 @@ export class BudgetValidationService {
         costCenterId,
         amount,
         status: 'RESERVED',
-        reservedBy: userId,
+        headcount: 1,
+        salaryPerHead: amount,
+        createdBy: userId,
         reservedAt: new Date(),
-      });
+      } as any);
 
       const saved = await queryRunner.manager.save(reservation);
 
@@ -180,9 +182,9 @@ export class BudgetValidationService {
       });
 
       if (costCenter) {
-        costCenter.budgetReserved = Math.max(
+        costCenter.reservedAmount = Math.max(
           0,
-          Number(costCenter.budgetReserved) - Number(reservation.amount),
+          Number(costCenter.reservedAmount) - Number(reservation.amount),
         );
         await queryRunner.manager.save(costCenter);
       }
@@ -190,7 +192,6 @@ export class BudgetValidationService {
       // Update reservation status
       reservation.status = 'RELEASED';
       reservation.releasedAt = new Date();
-      reservation.releasedBy = userId;
       await queryRunner.manager.save(reservation);
 
       await queryRunner.commitTransaction();
@@ -235,17 +236,16 @@ export class BudgetValidationService {
       }
 
       // Move from reserved to used
-      costCenter.budgetReserved = Math.max(
+      costCenter.reservedAmount = Math.max(
         0,
-        Number(costCenter.budgetReserved) - Number(reservation.amount),
+        Number(costCenter.reservedAmount) - Number(reservation.amount),
       );
-      costCenter.budgetUsed = Number(costCenter.budgetUsed) + Number(reservation.amount);
+      costCenter.usedAmount = Number(costCenter.usedAmount) + Number(reservation.amount);
       await queryRunner.manager.save(costCenter);
 
       // Update reservation status
-      reservation.status = 'COMMITTED';
-      reservation.committedAt = new Date();
-      reservation.committedBy = userId;
+      reservation.status = 'CONFIRMED';
+      reservation.confirmedAt = new Date();
       await queryRunner.manager.save(reservation);
 
       await queryRunner.commitTransaction();
@@ -278,9 +278,9 @@ export class BudgetValidationService {
       throw new BadRequestException('Cost center not found');
     }
 
-    const total = Number(costCenter.budgetTotal);
-    const used = Number(costCenter.budgetUsed);
-    const reserved = Number(costCenter.budgetReserved);
+    const total = Number(costCenter.budgetAmount);
+    const used = Number(costCenter.usedAmount);
+    const reserved = Number(costCenter.reservedAmount);
     const available = total - used - reserved;
 
     return {
