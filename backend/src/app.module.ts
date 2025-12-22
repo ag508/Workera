@@ -19,6 +19,7 @@ import { EmbeddingsModule } from './embeddings/embeddings.module';
 import { SemanticSearchModule } from './semantic-search/semantic-search.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { HealthModule } from './health/health.module';
+import { RequisitionsModule } from './requisitions/requisitions.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -61,6 +62,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     SemanticSearchModule,
     IntegrationsModule,
     HealthModule,
+    RequisitionsModule,
   ],
   providers: [
     // Global JWT Authentication Guard
