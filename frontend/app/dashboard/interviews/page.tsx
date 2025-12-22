@@ -22,7 +22,14 @@ import {
   Star,
   RefreshCw,
   X,
-  ChevronDown
+  ChevronDown,
+  Mail,
+  Send,
+  ExternalLink,
+  Copy,
+  Edit3,
+  Trash2,
+  Link2
 } from 'lucide-react';
 import { interviewsService, Interview, InterviewStatus, InterviewType } from '@/lib/services/interviews';
 
@@ -46,11 +53,65 @@ const TYPE_CONFIG: Record<InterviewType, { label: string; icon: React.ElementTyp
 
 type ViewMode = 'upcoming' | 'all' | 'completed';
 
+// Video Platform options
+const VIDEO_PLATFORMS = [
+  { id: 'zoom', name: 'Zoom', color: 'bg-blue-50 text-blue-600 border-blue-200', connected: true },
+  { id: 'teams', name: 'Microsoft Teams', color: 'bg-purple-50 text-purple-600 border-purple-200', connected: true },
+  { id: 'webex', name: 'Cisco Webex', color: 'bg-green-50 text-green-600 border-green-200', connected: false },
+  { id: 'meet', name: 'Google Meet', color: 'bg-red-50 text-red-600 border-red-200', connected: false },
+  { id: 'in-person', name: 'In-Person', color: 'bg-gray-50 text-gray-600 border-gray-200', connected: true },
+];
+
+// Mock candidates for scheduling
+const MOCK_CANDIDATES = [
+  { id: '1', name: 'John Smith', email: 'john.smith@email.com', job: 'Senior Software Engineer', stage: 'Technical Round' },
+  { id: '2', name: 'Sarah Johnson', email: 'sarah.j@email.com', job: 'Product Manager', stage: 'Final Round' },
+  { id: '3', name: 'Mike Chen', email: 'mike.chen@email.com', job: 'UX Designer', stage: 'Phone Screen' },
+  { id: '4', name: 'Emily Davis', email: 'emily.d@email.com', job: 'DevOps Engineer', stage: 'Technical Round' },
+];
+
+interface ScheduleFormData {
+  candidateId: string;
+  date: string;
+  time: string;
+  duration: number;
+  type: InterviewType;
+  platform: string;
+  location: string;
+  notes: string;
+  sendInvite: boolean;
+  addToCalendar: boolean;
+  interviewers: string[];
+}
+
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('upcoming');
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState<ScheduleFormData>({
+    candidateId: '',
+    date: '',
+    time: '',
+    duration: 60,
+    type: 'TECHNICAL',
+    platform: 'zoom',
+    location: '',
+    notes: '',
+    sendInvite: true,
+    addToCalendar: true,
+    interviewers: [],
+  });
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackData, setFeedbackData] = useState({
+    rating: 0,
+    strengths: '',
+    concerns: '',
+    recommendation: 'PROCEED',
+    comments: '',
+  });
 
   useEffect(() => {
     fetchInterviews();
@@ -124,6 +185,120 @@ export default function InterviewsPage() {
 
   const completedCount = interviews.filter(i => i.status === 'COMPLETED').length;
 
+  const handleScheduleInterview = async () => {
+    if (!scheduleForm.candidateId || !scheduleForm.date || !scheduleForm.time) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setScheduling(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Generate meeting link based on platform
+      const meetingLinks: Record<string, string> = {
+        zoom: `https://zoom.us/j/${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
+        teams: `https://teams.microsoft.com/l/meetup-join/${Math.random().toString(36).substring(7)}`,
+        webex: `https://webex.com/meet/${Math.random().toString(36).substring(7)}`,
+        meet: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
+        'in-person': '',
+      };
+
+      const selectedCandidate = MOCK_CANDIDATES.find(c => c.id === scheduleForm.candidateId);
+
+      alert(`Interview scheduled successfully!
+
+Candidate: ${selectedCandidate?.name}
+Date: ${scheduleForm.date}
+Time: ${scheduleForm.time}
+Platform: ${VIDEO_PLATFORMS.find(p => p.id === scheduleForm.platform)?.name}
+${scheduleForm.platform !== 'in-person' ? `Meeting Link: ${meetingLinks[scheduleForm.platform]}` : `Location: ${scheduleForm.location}`}
+${scheduleForm.sendInvite ? '\nInvite sent to candidate via email' : ''}
+${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
+
+      setShowScheduleModal(false);
+      setScheduleForm({
+        candidateId: '',
+        date: '',
+        time: '',
+        duration: 60,
+        type: 'TECHNICAL',
+        platform: 'zoom',
+        location: '',
+        notes: '',
+        sendInvite: true,
+        addToCalendar: true,
+        interviewers: [],
+      });
+      fetchInterviews();
+    } catch (error) {
+      console.error('Failed to schedule interview:', error);
+      alert('Failed to schedule interview. Please try again.');
+    } finally {
+      setScheduling(false);
+    }
+  };
+
+  const handleConfirmInterview = async (interview: Interview) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      alert(`Interview with ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName} confirmed!`);
+      fetchInterviews();
+    } catch (error) {
+      console.error('Failed to confirm interview:', error);
+    }
+  };
+
+  const handleCancelInterview = async (interview: Interview) => {
+    if (!confirm('Are you sure you want to cancel this interview?')) return;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      alert('Interview cancelled. Candidate will be notified.');
+      fetchInterviews();
+    } catch (error) {
+      console.error('Failed to cancel interview:', error);
+    }
+  };
+
+  const handleAddFeedback = async () => {
+    if (feedbackData.rating === 0) {
+      alert('Please provide a rating');
+      return;
+    }
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert('Feedback submitted successfully!');
+      setShowFeedbackModal(false);
+      setFeedbackData({
+        rating: 0,
+        strengths: '',
+        concerns: '',
+        recommendation: 'PROCEED',
+        comments: '',
+      });
+      setSelectedInterview(null);
+      fetchInterviews();
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    }
+  };
+
+  const handleSendReminder = async (interview: Interview) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
+    } catch (error) {
+      console.error('Failed to send reminder:', error);
+    }
+  };
+
+  const copyMeetingLink = (link: string) => {
+    navigator.clipboard.writeText(link);
+    alert('Meeting link copied to clipboard!');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -132,7 +307,10 @@ export default function InterviewsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Interviews & Tests</h1>
           <p className="text-gray-500 mt-1">Schedule and manage candidate interviews</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors">
+        <button
+          onClick={() => setShowScheduleModal(true)}
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors"
+        >
           <Plus className="h-4 w-4" />
           Schedule Interview
         </button>
@@ -496,37 +674,454 @@ export default function InterviewsPage() {
               </div>
 
               {/* Modal Footer */}
+              <div className="p-6 border-t border-gray-100 flex flex-wrap justify-between gap-3">
+                <div className="flex gap-2">
+                  {selectedInterview.meetingLink && (
+                    <button
+                      onClick={() => copyMeetingLink(selectedInterview.meetingLink!)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy Link
+                    </button>
+                  )}
+                  {['SCHEDULED', 'CONFIRMED'].includes(selectedInterview.status) && (
+                    <button
+                      onClick={() => handleSendReminder(selectedInterview)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Send Reminder
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSelectedInterview(null)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                  {selectedInterview.status === 'SCHEDULED' && (
+                    <>
+                      <button
+                        onClick={() => handleCancelInterview(selectedInterview)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleConfirmInterview(selectedInterview)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Confirm
+                      </button>
+                    </>
+                  )}
+                  {selectedInterview.status === 'COMPLETED' && !selectedInterview.feedback && (
+                    <button
+                      onClick={() => setShowFeedbackModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+                    >
+                      <Star className="h-4 w-4" />
+                      Add Feedback
+                    </button>
+                  )}
+                  {selectedInterview.meetingLink && ['SCHEDULED', 'CONFIRMED'].includes(selectedInterview.status) && (
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      onClick={() => window.open(selectedInterview.meetingLink, '_blank')}
+                    >
+                      <Video className="h-4 w-4" />
+                      Join Meeting
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Schedule Interview Modal */}
+      <AnimatePresence>
+        {showScheduleModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            onClick={() => setShowScheduleModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Schedule Interview</h2>
+                    <p className="text-sm text-gray-500">Set up a new interview with a candidate</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-6">
+                {/* Candidate Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Candidate *</label>
+                  <select
+                    value={scheduleForm.candidateId}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, candidateId: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Select a candidate</option>
+                    {MOCK_CANDIDATES.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.name} - {candidate.job} ({candidate.stage})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date & Time */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                    <input
+                      type="date"
+                      value={scheduleForm.date}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+                    <input
+                      type="time"
+                      value={scheduleForm.time}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Duration & Type */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+                    <select
+                      value={scheduleForm.duration}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, duration: parseInt(e.target.value) })}
+                      className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={45}>45 minutes</option>
+                      <option value={60}>1 hour</option>
+                      <option value={90}>1.5 hours</option>
+                      <option value={120}>2 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Interview Type</label>
+                    <select
+                      value={scheduleForm.type}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, type: e.target.value as InterviewType })}
+                      className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      {Object.entries(TYPE_CONFIG).map(([key, config]) => (
+                        <option key={key} value={key}>{config.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Video Platform Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Meeting Platform</label>
+                  <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
+                    {VIDEO_PLATFORMS.map((platform) => (
+                      <button
+                        key={platform.id}
+                        type="button"
+                        disabled={!platform.connected}
+                        onClick={() => setScheduleForm({ ...scheduleForm, platform: platform.id })}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                          scheduleForm.platform === platform.id
+                            ? 'border-primary bg-primary/5'
+                            : platform.connected
+                            ? 'border-gray-200 hover:border-gray-300'
+                            : 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${platform.color}`}>
+                            <Video className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{platform.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {platform.connected ? 'Connected' : 'Not connected'}
+                            </p>
+                          </div>
+                        </div>
+                        {scheduleForm.platform === platform.id && (
+                          <div className="absolute top-2 right-2">
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location (for in-person) */}
+                {scheduleForm.platform === 'in-person' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={scheduleForm.location}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, location: e.target.value })}
+                      placeholder="e.g. Conference Room A, 5th Floor"
+                      className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                )}
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                  <textarea
+                    value={scheduleForm.notes}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+                    placeholder="Add any notes or instructions for the interview..."
+                    rows={3}
+                    className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                {/* Options */}
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={scheduleForm.sendInvite}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, sendInvite: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-700">Send email invite to candidate</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={scheduleForm.addToCalendar}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, addToCalendar: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-700">Add to interviewer calendars</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Footer */}
               <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
                 <button
-                  onClick={() => setSelectedInterview(null)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Close
+                  Cancel
                 </button>
-                {selectedInterview.status === 'SCHEDULED' && (
-                  <>
-                    <button className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                      Reschedule
-                    </button>
-                    <button className="px-4 py-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
-                      Confirm Interview
-                    </button>
-                  </>
-                )}
-                {selectedInterview.status === 'COMPLETED' && !selectedInterview.feedback && (
-                  <button className="px-4 py-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
-                    Add Feedback
-                  </button>
-                )}
-                {selectedInterview.meetingLink && ['SCHEDULED', 'CONFIRMED'].includes(selectedInterview.status) && (
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-                    onClick={() => window.open(selectedInterview.meetingLink, '_blank')}
-                  >
-                    <Video className="h-4 w-4" />
-                    Join Meeting
-                  </button>
-                )}
+                <button
+                  onClick={handleScheduleInterview}
+                  disabled={scheduling}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {scheduling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scheduling...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Schedule Interview
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {showFeedbackModal && selectedInterview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            onClick={() => setShowFeedbackModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <Star className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Interview Feedback</h2>
+                    <p className="text-sm text-gray-500">
+                      {selectedInterview.application?.candidate.firstName} {selectedInterview.application?.candidate.lastName}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-5">
+                {/* Rating */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Overall Rating *</label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setFeedbackData({ ...feedbackData, rating: star })}
+                        className="p-1 transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`h-8 w-8 ${
+                            star <= feedbackData.rating
+                              ? 'text-amber-500 fill-amber-500'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    {feedbackData.rating > 0 && (
+                      <span className="ml-2 text-lg font-semibold text-gray-900">
+                        {feedbackData.rating}/5
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Strengths */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Strengths</label>
+                  <textarea
+                    value={feedbackData.strengths}
+                    onChange={(e) => setFeedbackData({ ...feedbackData, strengths: e.target.value })}
+                    placeholder="What were the candidate's strengths?"
+                    rows={2}
+                    className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                {/* Concerns */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Areas of Concern</label>
+                  <textarea
+                    value={feedbackData.concerns}
+                    onChange={(e) => setFeedbackData({ ...feedbackData, concerns: e.target.value })}
+                    placeholder="Any concerns or areas for improvement?"
+                    rows={2}
+                    className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                {/* Recommendation */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Recommendation</label>
+                  <div className="flex gap-3">
+                    {[
+                      { value: 'STRONG_HIRE', label: 'Strong Hire', color: 'bg-green-100 text-green-700 border-green-200' },
+                      { value: 'PROCEED', label: 'Proceed', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+                      { value: 'NO_HIRE', label: 'No Hire', color: 'bg-red-100 text-red-700 border-red-200' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setFeedbackData({ ...feedbackData, recommendation: option.value })}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
+                          feedbackData.recommendation === option.value
+                            ? option.color + ' border-current'
+                            : 'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Additional Comments */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional Comments</label>
+                  <textarea
+                    value={feedbackData.comments}
+                    onChange={(e) => setFeedbackData({ ...feedbackData, comments: e.target.value })}
+                    placeholder="Any additional notes or comments..."
+                    rows={3}
+                    className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddFeedback}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Submit Feedback
+                </button>
               </div>
             </motion.div>
           </motion.div>
