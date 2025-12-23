@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -17,7 +17,14 @@ import {
   ArrowUpRight,
   Sparkles,
   Users,
-  Calendar
+  Calendar,
+  Loader2,
+  Wand2,
+  Lightbulb,
+  Target,
+  TrendingUp,
+  X,
+  Send,
 } from 'lucide-react';
 import { getTenantId } from '@/lib/utils';
 
@@ -111,17 +118,40 @@ const demoJobs = [
   }
 ];
 
+const searchSuggestions = [
+  'React developer with 5+ years experience',
+  'Remote frontend jobs',
+  'Senior Python engineer in New York',
+  'Machine learning roles at startups',
+  'Full stack positions with good salary',
+  'DevOps jobs with Kubernetes',
+];
+
 export default function JobBoardPage() {
   const [jobs, setJobs] = useState<any[]>(demoJobs);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAISearch, setIsAISearch] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [locationFilter, setLocationFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
   const tenantId = getTenantId();
 
   useEffect(() => {
+    const token = localStorage.getItem('candidateToken');
+    const id = localStorage.getItem('candidateId');
+    setIsLoggedIn(!!token);
+    setCandidateId(id);
     fetchJobs();
+    if (token && id) {
+      fetchRecommendations(id);
+    }
   }, []);
 
   const fetchJobs = async () => {
@@ -135,10 +165,90 @@ export default function JobBoardPage() {
       }
     } catch (error) {
       console.error('Failed to fetch jobs', error);
-      // Keep demo data on error
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchRecommendations = async (candidateId: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/jobs/recommended?candidateId=${candidateId}&tenantId=${tenantId}&limit=5`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('candidateToken')}`,
+          },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setRecommendations(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recommendations', error);
+    }
+  };
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setSearching(true);
+    setIsAISearch(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/jobs/search`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tenantId,
+            query: searchQuery,
+            candidateId: candidateId || undefined,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setJobs(data.jobs || []);
+        setAiSuggestions(data.suggestions || []);
+      } else {
+        // Demo fallback - filter demo jobs based on query
+        const filtered = demoJobs.filter(job => {
+          const queryLower = searchQuery.toLowerCase();
+          return (
+            job.title.toLowerCase().includes(queryLower) ||
+            job.company.toLowerCase().includes(queryLower) ||
+            job.skills.some(s => s.toLowerCase().includes(queryLower)) ||
+            job.location.toLowerCase().includes(queryLower)
+          );
+        });
+        setJobs(filtered.length > 0 ? filtered : demoJobs);
+        setAiSuggestions(['Try broader search terms', 'Remove location filters']);
+      }
+    } catch (error) {
+      console.error('AI search failed', error);
+      // Demo fallback
+      setJobs(demoJobs);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAISearch();
+      setShowSuggestions(false);
+    }
+  };
+
+  const clearAISearch = () => {
+    setIsAISearch(false);
+    setSearchQuery('');
+    setAiSuggestions([]);
+    setJobs(demoJobs);
+    fetchJobs();
   };
 
   const toggleSaveJob = (jobId: string) => {
@@ -150,21 +260,20 @@ export default function JobBoardPage() {
   };
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = !searchTerm ||
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = locationFilter === 'all' ||
       (locationFilter === 'remote' && job.location?.toLowerCase().includes('remote')) ||
       (locationFilter === 'onsite' && !job.location?.toLowerCase().includes('remote'));
     const matchesType = typeFilter === 'all' || job.type?.toLowerCase() === typeFilter.toLowerCase();
-    return matchesSearch && matchesLocation && matchesType;
+    return matchesLocation && matchesType;
   });
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-gray-600">Loading jobs...</span>
+        </div>
       </div>
     );
   }
@@ -182,48 +291,195 @@ export default function JobBoardPage() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by job title, company, or keywords..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
+      {/* AI-Powered Search */}
+      <div className="rounded-2xl bg-gradient-to-r from-primary/5 via-white to-emerald-50 border border-primary/20 p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Wand2 className="h-4 w-4 text-primary" />
           </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">All Locations</option>
-              <option value="remote">Remote</option>
-              <option value="onsite">On-site</option>
-            </select>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">All Types</option>
-              <option value="full-time">Full-time</option>
-              <option value="part-time">Part-time</option>
-              <option value="contract">Contract</option>
-            </select>
+          <div>
+            <h2 className="font-semibold text-gray-900">AI-Powered Job Search</h2>
+            <p className="text-xs text-gray-500">Describe your ideal job in natural language</p>
           </div>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onKeyPress={handleKeyPress}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            placeholder="Try: 'Senior React developer in San Francisco with 5+ years experience' or 'Remote Python jobs'"
+            className="w-full rounded-xl border border-gray-200 bg-white py-3.5 pl-12 pr-24 text-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <button
+            onClick={handleAISearch}
+            disabled={searching || !searchQuery.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            {searching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Search
+              </>
+            )}
+          </button>
+
+          {/* Search Suggestions Dropdown */}
+          <AnimatePresence>
+            {showSuggestions && searchQuery.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 rounded-xl bg-white border border-gray-200 shadow-lg overflow-hidden z-20"
+              >
+                <div className="p-3 border-b border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+                    <Lightbulb className="h-3.5 w-3.5" />
+                    Try these searches
+                  </p>
+                </div>
+                <div className="p-2">
+                  {searchSuggestions.map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSearchQuery(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Active AI Search Banner */}
+        {isAISearch && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-4 flex items-center justify-between rounded-lg bg-primary/10 px-4 py-2"
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-gray-700">
+                AI search results for: <span className="font-medium text-gray-900">"{searchQuery}"</span>
+              </span>
+            </div>
+            <button
+              onClick={clearAISearch}
+              className="p-1 rounded-lg hover:bg-primary/10 transition-colors"
+            >
+              <X className="h-4 w-4 text-gray-500" />
+            </button>
+          </motion.div>
+        )}
+
+        {/* AI Suggestions */}
+        {aiSuggestions.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {aiSuggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => setSearchQuery(suggestion)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600 hover:border-primary hover:text-primary transition-colors"
+              >
+                <Lightbulb className="h-3 w-3" />
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+          <select
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="all">All Locations</option>
+            <option value="remote">Remote</option>
+            <option value="onsite">On-site</option>
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="all">All Types</option>
+            <option value="full-time">Full-time</option>
+            <option value="part-time">Part-time</option>
+            <option value="contract">Contract</option>
+          </select>
         </div>
       </div>
 
+      {/* AI Recommendations (for logged in users) */}
+      {isLoggedIn && recommendations.length > 0 && !isAISearch && (
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <Target className="h-4 w-4 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">AI Recommended For You</h2>
+              <p className="text-xs text-gray-500">Based on your profile and skills</p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recommendations.slice(0, 3).map((rec: any, index) => (
+              <motion.div
+                key={rec.job?.id || index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="rounded-xl bg-white p-4 border border-emerald-100 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                    {rec.job?.company?.charAt(0) || 'W'}
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                    <TrendingUp className="h-3 w-3" />
+                    {rec.matchScore}%
+                  </div>
+                </div>
+                <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{rec.job?.title}</h3>
+                <p className="text-xs text-gray-500 mt-1">{rec.job?.company}</p>
+                <p className="text-xs text-emerald-600 mt-2 line-clamp-1">{rec.recommendation}</p>
+                <Link
+                  href={`/portal/apply/${rec.job?.id}`}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors"
+                >
+                  Apply Now
+                  <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Featured Jobs */}
-      {filteredJobs.filter(j => j.featured).length > 0 && (
+      {filteredJobs.filter(j => j.featured).length > 0 && !isAISearch && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
+            <Star className="h-5 w-5 text-amber-500" />
             Featured Positions
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
@@ -307,7 +563,7 @@ export default function JobBoardPage() {
                       </span>
                     )}
                     <Link
-                      href={`/apply/${job.id}`}
+                      href={`/portal/apply/${job.id}`}
                       className="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
                     >
                       Apply
@@ -323,7 +579,9 @@ export default function JobBoardPage() {
 
       {/* All Jobs */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">All Positions</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          {isAISearch ? 'Search Results' : 'All Positions'}
+        </h2>
         {filteredJobs.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
@@ -335,11 +593,19 @@ export default function JobBoardPage() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900">No jobs found</h3>
             <p className="text-gray-500 mt-1">Try adjusting your search or filter criteria</p>
+            {isAISearch && (
+              <button
+                onClick={clearAISearch}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
+              >
+                Clear Search
+              </button>
+            )}
           </motion.div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
-              {filteredJobs.filter(j => !j.featured).map((job, index) => {
+              {filteredJobs.filter(j => isAISearch ? true : !j.featured).map((job, index) => {
                 const colors = [
                   'from-blue-500 to-indigo-600',
                   'from-purple-500 to-pink-600',
@@ -395,6 +661,14 @@ export default function JobBoardPage() {
                         {job.title}
                       </h3>
 
+                      {/* Match reason for AI search */}
+                      {job.relevanceReason && (
+                        <p className="text-xs text-emerald-600 mb-3 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          {job.relevanceReason}
+                        </p>
+                      )}
+
                       {/* Meta info */}
                       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-gray-500">
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
@@ -442,7 +716,7 @@ export default function JobBoardPage() {
                           )}
                         </div>
                         <Link
-                          href={`/apply/${job.id}`}
+                          href={`/portal/apply/${job.id}`}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors shadow-sm"
                         >
                           Apply
