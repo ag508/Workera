@@ -17,7 +17,9 @@ import { NaukriService } from './naukri.service';
 import { JobBoardsService } from './job-boards.service';
 import { RecruitmentFormsService } from './recruitment-forms.service';
 import { CandidatePortalService } from './candidate-portal.service';
+import { CandidatePortalEnhancedService } from './candidate-portal-enhanced.service';
 import { IntegrationSettingsService } from './integration-settings.service';
+import { AIResumeParserService } from '../candidates/ai-resume-parser.service';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
@@ -47,7 +49,9 @@ import { AiModule } from '../ai/ai.module';
     JobBoardsService,
     RecruitmentFormsService,
     CandidatePortalService,
+    CandidatePortalEnhancedService,
     IntegrationSettingsService,
+    AIResumeParserService,
   ],
   exports: [
     DatabaseImportService,
@@ -57,6 +61,7 @@ import { AiModule } from '../ai/ai.module';
     JobBoardsService,
     RecruitmentFormsService,
     CandidatePortalService,
+    CandidatePortalEnhancedService,
   ],
 })
 export class IntegrationsModule {}

@@ -6,7 +6,9 @@ import { NaukriService, NaukriConfig } from './naukri.service';
 import { JobBoardsService, JobBoardConfig, JobBoardPlatform } from './job-boards.service';
 import { RecruitmentFormsService, CreateFormDto, SubmitFormDto } from './recruitment-forms.service';
 import { CandidatePortalService, RegisterCandidateDto, LoginCandidateDto, UpdateProfileDto } from './candidate-portal.service';
+import { CandidatePortalEnhancedService } from './candidate-portal-enhanced.service';
 import { IntegrationSettingsService, IntegrationSettings } from './integration-settings.service';
+import { AIResumeParserService, ResumeImportSource, ParsedResumeData } from '../candidates/ai-resume-parser.service';
 import { SubmissionStatus } from '../database/entities/form-submission.entity';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -20,7 +22,9 @@ export class IntegrationsController {
     private readonly jobBoardsService: JobBoardsService,
     private readonly recruitmentFormsService: RecruitmentFormsService,
     private readonly candidatePortalService: CandidatePortalService,
+    private readonly candidatePortalEnhancedService: CandidatePortalEnhancedService,
     private readonly integrationSettingsService: IntegrationSettingsService,
+    private readonly aiResumeParserService: AIResumeParserService,
   ) {}
 
   /**
@@ -730,5 +734,161 @@ export class IntegrationsController {
     @Query('tenantId') tenantId: string,
   ) {
     return this.candidatePortalService.getJobDetails(jobId, tenantId);
+  }
+
+  // ============================================================================
+  // CANDIDATE PORTAL - ENHANCED FEATURES (Resume Import, AI Matching)
+  // ============================================================================
+
+  /**
+   * Parse resume without authentication (for initial application)
+   * POST /integrations/candidate/resume/parse
+   */
+  @Public()
+  @Post('candidate/resume/parse')
+  async parseResume(
+    @Body() body: {
+      source: ResumeImportSource;
+    },
+  ): Promise<ParsedResumeData> {
+    return this.aiResumeParserService.parseResume(body.source);
+  }
+
+  /**
+   * Import and parse resume for authenticated candidate
+   * POST /integrations/candidate/resume/import
+   */
+  @Post('candidate/resume/import')
+  async importResume(
+    @Body() body: {
+      candidateId: string;
+      tenantId: string;
+      source: ResumeImportSource;
+    },
+  ): Promise<ParsedResumeData> {
+    return this.candidatePortalEnhancedService.importAndParseResume(
+      body.candidateId,
+      body.tenantId,
+      body.source,
+    );
+  }
+
+  /**
+   * Get enhanced profile with all parsed data
+   * GET /integrations/candidate/profile/enhanced
+   */
+  @Get('candidate/profile/enhanced')
+  async getEnhancedProfile(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalEnhancedService.getEnhancedProfile(
+      candidateId,
+      tenantId,
+    );
+  }
+
+  /**
+   * Get AI-powered job recommendations
+   * GET /integrations/candidate/jobs/recommended
+   */
+  @Get('candidate/jobs/recommended')
+  async getJobRecommendations(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+    @Query('limit') limit?: number,
+    @Query('location') location?: string,
+    @Query('jobType') jobType?: string,
+  ) {
+    return this.candidatePortalEnhancedService.getJobRecommendations(
+      candidateId,
+      tenantId,
+      {
+        limit: limit ? parseInt(limit.toString()) : 10,
+        location,
+        jobType,
+      },
+    );
+  }
+
+  /**
+   * AI-powered job search
+   * POST /integrations/candidate/jobs/search
+   */
+  @Public()
+  @Post('candidate/jobs/search')
+  async searchJobsWithAI(
+    @Body() body: {
+      tenantId: string;
+      query: string;
+      candidateId?: string;
+    },
+  ) {
+    return this.candidatePortalEnhancedService.searchJobsWithAI(
+      body.tenantId,
+      body.query,
+      body.candidateId,
+    );
+  }
+
+  /**
+   * Get application form template for a job
+   * GET /integrations/candidate/jobs/:id/form-template
+   */
+  @Public()
+  @Get('candidate/jobs/:id/form-template')
+  async getApplicationFormTemplate(
+    @Param('id') jobId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalEnhancedService.getApplicationFormTemplate(
+      jobId,
+      tenantId,
+    );
+  }
+
+  /**
+   * Submit application with form data
+   * POST /integrations/candidate/apply
+   */
+  @Post('candidate/apply')
+  async submitApplication(
+    @Body() body: {
+      candidateId: string;
+      jobId: string;
+      tenantId: string;
+      formData: Record<string, any>;
+      resumeData?: ParsedResumeData;
+    },
+  ) {
+    return this.candidatePortalEnhancedService.submitApplication(
+      body.candidateId,
+      body.jobId,
+      body.tenantId,
+      body.formData,
+      body.resumeData,
+    );
+  }
+
+  /**
+   * Calculate job match score for a resume
+   * POST /integrations/candidate/jobs/:id/match-score
+   */
+  @Public()
+  @Post('candidate/jobs/:id/match-score')
+  async calculateJobMatchScore(
+    @Param('id') jobId: string,
+    @Body() body: {
+      tenantId: string;
+      resumeData: ParsedResumeData;
+    },
+  ) {
+    const job = await this.candidatePortalService.getJobDetails(jobId, body.tenantId);
+    return this.aiResumeParserService.calculateJobMatchScore(
+      body.resumeData,
+      {
+        skills: (job as any).requirements || [],
+      },
+    );
   }
 }
