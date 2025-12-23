@@ -20,7 +20,10 @@ import {
   Eye,
   Edit,
   Copy,
-  Trash2
+  Trash2,
+  Briefcase,
+  ArrowRight,
+  Send
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -331,6 +334,16 @@ export default function RequisitionsPage() {
                         <div className="flex items-center gap-1 text-xs text-gray-500">
                           <span>Level {req.approvalLevel} of {req.totalLevels}</span>
                         </div>
+                      )}
+                      {req.status === 'APPROVED' && (
+                        <Link
+                          href={`/dashboard/jobs/create?requisitionId=${req.id}`}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 text-white text-sm font-medium shadow-sm hover:shadow-md transition-all"
+                        >
+                          <Briefcase className="h-3.5 w-3.5" />
+                          Create Job
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
                       )}
                       <Link
                         href={`/dashboard/requisitions/${req.id}`}

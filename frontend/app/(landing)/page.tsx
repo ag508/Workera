@@ -86,6 +86,177 @@ const workflowAnimation = {
   ]
 };
 
+// Step 1: Post Job Animation - Document with checkmark appearing
+const postJobAnimation = {
+  v: "5.7.4", fr: 60, ip: 0, op: 180, w: 200, h: 200, nm: "PostJob",
+  layers: [
+    // Document shadow
+    { ddd: 0, ind: 1, ty: 4, nm: "Shadow", sr: 1,
+      ks: { o: { a: 0, k: 20 }, p: { a: 0, k: [105, 108, 0] }, s: { a: 0, k: [100, 100, 100] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [100, 120] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 8 } }, { ty: "fl", c: { a: 0, k: [0, 0, 0, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Document body
+    { ddd: 0, ind: 2, ty: 4, nm: "Document", sr: 1,
+      ks: { o: { a: 0, k: 100 }, p: { a: 1, k: [{ t: 0, s: [100, 120, 0] }, { t: 30, s: [100, 100, 0] }] }, s: { a: 1, k: [{ t: 0, s: [0, 0, 100] }, { t: 30, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [100, 120] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 8 } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }, { ty: "st", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 3 } }]
+    },
+    // Line 1
+    { ddd: 0, ind: 3, ty: 4, nm: "Line1", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 30, s: [0] }, { t: 50, s: [100] }] }, p: { a: 0, k: [100, 70, 0] } },
+      shapes: [{ ty: "rc", s: { a: 1, k: [{ t: 30, s: [0, 8] }, { t: 50, s: [60, 8] }] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 40 } }]
+    },
+    // Line 2
+    { ddd: 0, ind: 4, ty: 4, nm: "Line2", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 40, s: [0] }, { t: 60, s: [100] }] }, p: { a: 0, k: [100, 88, 0] } },
+      shapes: [{ ty: "rc", s: { a: 1, k: [{ t: 40, s: [0, 8] }, { t: 60, s: [50, 8] }] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 30 } }]
+    },
+    // Line 3
+    { ddd: 0, ind: 5, ty: 4, nm: "Line3", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 50, s: [0] }, { t: 70, s: [100] }] }, p: { a: 0, k: [100, 106, 0] } },
+      shapes: [{ ty: "rc", s: { a: 1, k: [{ t: 50, s: [0, 8] }, { t: 70, s: [40, 8] }] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 25 } }]
+    },
+    // Checkmark circle
+    { ddd: 0, ind: 6, ty: 4, nm: "CheckCircle", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 80, s: [0] }, { t: 100, s: [100] }] }, p: { a: 0, k: [140, 140, 0] }, s: { a: 1, k: [{ t: 80, s: [0, 0, 100] }, { t: 100, s: [100, 100, 100] }, { t: 110, s: [110, 110, 100] }, { t: 120, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [50, 50] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Checkmark
+    { ddd: 0, ind: 7, ty: 4, nm: "Check", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 100, s: [0] }, { t: 120, s: [100] }] }, p: { a: 0, k: [140, 140, 0] } },
+      shapes: [{ ty: "sh", ks: { a: 0, k: { i: [[0, 0], [0, 0], [0, 0]], o: [[0, 0], [0, 0], [0, 0]], v: [[-10, 0], [-3, 8], [12, -8]], c: false } } }, { ty: "st", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 4 }, lc: 2, lj: 2 }]
+    }
+  ]
+};
+
+// Step 2: AI Screen Animation - Brain with scanning rays
+const aiScreenAnimation = {
+  v: "5.7.4", fr: 60, ip: 0, op: 180, w: 200, h: 200, nm: "AIScreen",
+  layers: [
+    // Outer scan ring
+    { ddd: 0, ind: 1, ty: 4, nm: "ScanRing", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 0, s: [0] }, { t: 30, s: [60] }, { t: 90, s: [0] }, { t: 120, s: [60] }, { t: 180, s: [0] }] }, r: { a: 1, k: [{ t: 0, s: [0] }, { t: 180, s: [360] }] }, p: { a: 0, k: [100, 100, 0] }, s: { a: 1, k: [{ t: 0, s: [80, 80, 100] }, { t: 90, s: [110, 110, 100] }, { t: 180, s: [80, 80, 100] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [140, 140] }, p: { a: 0, k: [0, 0] } }, { ty: "st", c: { a: 0, k: [0.231, 0.51, 0.965, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 3 }, lc: 2, d: [{ n: "d", nm: "dash", v: { a: 0, k: 15 } }, { n: "g", nm: "gap", v: { a: 0, k: 15 } }] }]
+    },
+    // Inner pulse ring
+    { ddd: 0, ind: 2, ty: 4, nm: "PulseRing", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 0, s: [80] }, { t: 45, s: [40] }, { t: 90, s: [80] }, { t: 135, s: [40] }, { t: 180, s: [80] }] }, p: { a: 0, k: [100, 100, 0] }, s: { a: 1, k: [{ t: 0, s: [100, 100, 100] }, { t: 45, s: [95, 95, 100] }, { t: 90, s: [100, 100, 100] }, { t: 135, s: [95, 95, 100] }, { t: 180, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [100, 100] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.231, 0.51, 0.965, 1] }, o: { a: 0, k: 15 } }]
+    },
+    // Brain center
+    { ddd: 0, ind: 3, ty: 4, nm: "BrainCenter", sr: 1,
+      ks: { o: { a: 0, k: 100 }, p: { a: 0, k: [100, 100, 0] }, s: { a: 1, k: [{ t: 0, s: [100, 100, 100] }, { t: 30, s: [105, 105, 100] }, { t: 60, s: [100, 100, 100] }, { t: 90, s: [105, 105, 100] }, { t: 120, s: [100, 100, 100] }, { t: 150, s: [105, 105, 100] }, { t: 180, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [70, 70] }, p: { a: 0, k: [0, 0] } }, { ty: "gf", t: 1, s: { a: 0, k: [0, -35] }, e: { a: 0, k: [0, 35] }, g: { p: 2, k: { a: 0, k: [0, 0.231, 0.51, 0.965, 1, 0.063, 0.725, 0.506] } } }]
+    },
+    // Neural node 1
+    { ddd: 0, ind: 4, ty: 4, nm: "Node1", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 0, s: [100] }, { t: 30, s: [40] }, { t: 60, s: [100] }, { t: 90, s: [40] }, { t: 120, s: [100] }, { t: 150, s: [40] }, { t: 180, s: [100] }] }, p: { a: 0, k: [100, 75, 0] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [12, 12] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Neural node 2
+    { ddd: 0, ind: 5, ty: 4, nm: "Node2", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 15, s: [100] }, { t: 45, s: [40] }, { t: 75, s: [100] }, { t: 105, s: [40] }, { t: 135, s: [100] }, { t: 165, s: [40] }] }, p: { a: 0, k: [78, 90, 0] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [10, 10] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Neural node 3
+    { ddd: 0, ind: 6, ty: 4, nm: "Node3", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 30, s: [100] }, { t: 60, s: [40] }, { t: 90, s: [100] }, { t: 120, s: [40] }, { t: 150, s: [100] }, { t: 180, s: [40] }] }, p: { a: 0, k: [122, 90, 0] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [10, 10] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Neural node 4
+    { ddd: 0, ind: 7, ty: 4, nm: "Node4", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 45, s: [100] }, { t: 75, s: [40] }, { t: 105, s: [100] }, { t: 135, s: [40] }, { t: 165, s: [100] }] }, p: { a: 0, k: [85, 115, 0] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [8, 8] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Neural node 5
+    { ddd: 0, ind: 8, ty: 4, nm: "Node5", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 60, s: [100] }, { t: 90, s: [40] }, { t: 120, s: [100] }, { t: 150, s: [40] }, { t: 180, s: [100] }] }, p: { a: 0, k: [115, 115, 0] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [8, 8] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Scan line
+    { ddd: 0, ind: 9, ty: 4, nm: "ScanLine", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 0, s: [0] }, { t: 20, s: [80] }, { t: 90, s: [0] }, { t: 110, s: [80] }, { t: 180, s: [0] }] }, p: { a: 1, k: [{ t: 0, s: [100, 50, 0] }, { t: 90, s: [100, 150, 0] }, { t: 180, s: [100, 50, 0] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [120, 3] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 2 } }, { ty: "gf", t: 1, s: { a: 0, k: [-60, 0] }, e: { a: 0, k: [60, 0] }, g: { p: 3, k: { a: 0, k: [0, 0.231, 0.51, 0.965, 0.5, 0.231, 0.51, 0.965, 1, 0.231, 0.51, 0.965, 0, 0, 0.5, 1, 1, 0] } } }]
+    }
+  ]
+};
+
+// Step 3: Interview & Hire Animation - Calendar with people connecting
+const interviewHireAnimation = {
+  v: "5.7.4", fr: 60, ip: 0, op: 180, w: 200, h: 200, nm: "InterviewHire",
+  layers: [
+    // Calendar background
+    { ddd: 0, ind: 1, ty: 4, nm: "CalendarBg", sr: 1,
+      ks: { o: { a: 0, k: 100 }, p: { a: 1, k: [{ t: 0, s: [100, 120, 0] }, { t: 30, s: [100, 100, 0] }] }, s: { a: 1, k: [{ t: 0, s: [0, 0, 100] }, { t: 30, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [110, 100] }, p: { a: 0, k: [0, 5] }, r: { a: 0, k: 10 } }, { ty: "fl", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 } }, { ty: "st", c: { a: 0, k: [0.545, 0.361, 0.965, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 3 } }]
+    },
+    // Calendar header
+    { ddd: 0, ind: 2, ty: 4, nm: "CalendarHeader", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 0, s: [0] }, { t: 30, s: [100] }] }, p: { a: 0, k: [100, 65, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [110, 30] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 10 } }, { ty: "fl", c: { a: 0, k: [0.545, 0.361, 0.965, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Calendar rings
+    { ddd: 0, ind: 3, ty: 4, nm: "Ring1", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 30, s: [0] }, { t: 45, s: [100] }] }, p: { a: 0, k: [70, 52, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [8, 20] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.4, 0.4, 0.4, 1] }, o: { a: 0, k: 100 } }]
+    },
+    { ddd: 0, ind: 4, ty: 4, nm: "Ring2", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 35, s: [0] }, { t: 50, s: [100] }] }, p: { a: 0, k: [100, 52, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [8, 20] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.4, 0.4, 0.4, 1] }, o: { a: 0, k: 100 } }]
+    },
+    { ddd: 0, ind: 5, ty: 4, nm: "Ring3", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 40, s: [0] }, { t: 55, s: [100] }] }, p: { a: 0, k: [130, 52, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [8, 20] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.4, 0.4, 0.4, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Calendar date cells
+    { ddd: 0, ind: 6, ty: 4, nm: "Cell1", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 50, s: [0] }, { t: 65, s: [100] }] }, p: { a: 0, k: [70, 95, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [20, 20] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.95, 0.95, 0.97, 1] }, o: { a: 0, k: 100 } }]
+    },
+    { ddd: 0, ind: 7, ty: 4, nm: "Cell2", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 55, s: [0] }, { t: 70, s: [100] }] }, p: { a: 0, k: [95, 95, 0] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [20, 20] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 4 } }, { ty: "fl", c: { a: 0, k: [0.95, 0.95, 0.97, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Highlighted date (interview scheduled)
+    { ddd: 0, ind: 8, ty: 4, nm: "HighlightedCell", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 70, s: [0] }, { t: 90, s: [100] }] }, p: { a: 0, k: [120, 95, 0] }, s: { a: 1, k: [{ t: 70, s: [0, 0, 100] }, { t: 90, s: [100, 100, 100] }, { t: 100, s: [115, 115, 100] }, { t: 110, s: [100, 100, 100] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [24, 24] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 6 } }, { ty: "fl", c: { a: 0, k: [0.545, 0.361, 0.965, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Checkmark on highlighted cell
+    { ddd: 0, ind: 9, ty: 4, nm: "CheckHire", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 100, s: [0] }, { t: 120, s: [100] }] }, p: { a: 0, k: [120, 95, 0] } },
+      shapes: [{ ty: "sh", ks: { a: 0, k: { i: [[0, 0], [0, 0], [0, 0]], o: [[0, 0], [0, 0], [0, 0]], v: [[-6, 0], [-2, 5], [7, -5]], c: false } } }, { ty: "st", c: { a: 0, k: [1, 1, 1, 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: 3 }, lc: 2, lj: 2 }]
+    },
+    // Person icon 1 (left)
+    { ddd: 0, ind: 10, ty: 4, nm: "Person1Head", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 90, s: [0] }, { t: 110, s: [100] }] }, p: { a: 1, k: [{ t: 90, s: [40, 140, 0] }, { t: 130, s: [55, 140, 0] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [18, 18] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 } }]
+    },
+    { ddd: 0, ind: 11, ty: 4, nm: "Person1Body", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 95, s: [0] }, { t: 115, s: [100] }] }, p: { a: 1, k: [{ t: 95, s: [40, 160, 0] }, { t: 135, s: [55, 160, 0] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [24, 18] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 8 } }, { ty: "fl", c: { a: 0, k: [0.063, 0.725, 0.506, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Person icon 2 (right)
+    { ddd: 0, ind: 12, ty: 4, nm: "Person2Head", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 100, s: [0] }, { t: 120, s: [100] }] }, p: { a: 1, k: [{ t: 100, s: [160, 140, 0] }, { t: 140, s: [145, 140, 0] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [18, 18] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.231, 0.51, 0.965, 1] }, o: { a: 0, k: 100 } }]
+    },
+    { ddd: 0, ind: 13, ty: 4, nm: "Person2Body", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 105, s: [0] }, { t: 125, s: [100] }] }, p: { a: 1, k: [{ t: 105, s: [160, 160, 0] }, { t: 145, s: [145, 160, 0] }] } },
+      shapes: [{ ty: "rc", s: { a: 0, k: [24, 18] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 8 } }, { ty: "fl", c: { a: 0, k: [0.231, 0.51, 0.965, 1] }, o: { a: 0, k: 100 } }]
+    },
+    // Connection line between people
+    { ddd: 0, ind: 14, ty: 4, nm: "ConnectionLine", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 140, s: [0] }, { t: 160, s: [100] }] }, p: { a: 0, k: [100, 150, 0] } },
+      shapes: [{ ty: "rc", s: { a: 1, k: [{ t: 140, s: [0, 3] }, { t: 160, s: [50, 3] }] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 2 } }, { ty: "gf", t: 1, s: { a: 0, k: [-25, 0] }, e: { a: 0, k: [25, 0] }, g: { p: 2, k: { a: 0, k: [0, 0.063, 0.725, 0.506, 1, 0.231, 0.51, 0.965] } } }]
+    },
+    // Handshake/success indicator
+    { ddd: 0, ind: 15, ty: 4, nm: "SuccessGlow", sr: 1,
+      ks: { o: { a: 1, k: [{ t: 160, s: [0] }, { t: 170, s: [50] }, { t: 180, s: [0] }] }, p: { a: 0, k: [100, 150, 0] }, s: { a: 1, k: [{ t: 160, s: [0, 0, 100] }, { t: 175, s: [150, 150, 100] }] } },
+      shapes: [{ ty: "el", s: { a: 0, k: [60, 60] }, p: { a: 0, k: [0, 0] } }, { ty: "fl", c: { a: 0, k: [0.545, 0.361, 0.965, 1] }, o: { a: 0, k: 100 } }]
+    }
+  ]
+};
+
 // Animation variants
 const fadeInUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } } };
 const staggerContainer = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } } };
@@ -320,7 +491,9 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-6">
             <p className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-10">Trusted by industry leaders</p>
             <div className="relative">
-              <div className="flex animate-marquee gap-12 items-center">
+              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
+              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
+              <div className="flex animate-marquee gap-8 items-center">
                 {[
                   { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
                   { name: 'Microsoft', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg' },
@@ -330,6 +503,14 @@ export default function Home() {
                   { name: 'Netflix', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg' },
                   { name: 'Spotify', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' },
                   { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg' },
+                  { name: 'Salesforce', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg' },
+                  { name: 'Adobe', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.svg' },
+                  { name: 'IBM', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg' },
+                  { name: 'Oracle', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg' },
+                  { name: 'SAP', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg' },
+                  { name: 'Cisco', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Cisco_logo_blue_2016.svg' },
+                  { name: 'Intel', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg' },
+                  { name: 'Uber', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Uber_logo_2018.svg' },
                   { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
                   { name: 'Microsoft', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg' },
                   { name: 'Amazon', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
@@ -338,10 +519,18 @@ export default function Home() {
                   { name: 'Netflix', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg' },
                   { name: 'Spotify', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' },
                   { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg' },
+                  { name: 'Salesforce', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg' },
+                  { name: 'Adobe', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.svg' },
+                  { name: 'IBM', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg' },
+                  { name: 'Oracle', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg' },
+                  { name: 'SAP', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg' },
+                  { name: 'Cisco', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Cisco_logo_blue_2016.svg' },
+                  { name: 'Intel', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Intel_logo_%282006-2020%29.svg' },
+                  { name: 'Uber', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Uber_logo_2018.svg' },
                 ].map((company, i) => (
-                  <div key={i} className="flex-shrink-0 px-6 py-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 group">
-                    <div className="h-8 w-24 flex items-center justify-center grayscale group-hover:grayscale-0 transition-all duration-300" style={{ filter: 'grayscale(100%) brightness(0.4) sepia(100%) hue-rotate(100deg) saturate(500%)' }}>
-                      <img src={company.logo} alt={company.name} className="h-full w-auto object-contain" />
+                  <div key={i} className="flex-shrink-0 px-8 py-4 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 group">
+                    <div className="h-8 w-28 flex items-center justify-center transition-all duration-300" style={{ filter: 'grayscale(100%) brightness(0.5) sepia(100%) hue-rotate(100deg) saturate(400%)' }}>
+                      <img src={company.logo} alt={company.name} className="h-full w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
                     </div>
                   </div>
                 ))}
@@ -362,42 +551,178 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How It Works */}
-        <section id="how-it-works" className="py-24 bg-white">
+        {/* How It Works - Premium Lottie Animation Section */}
+        <section id="how-it-works" className="py-24 bg-gradient-to-b from-white via-gray-50/50 to-white overflow-hidden">
           <div className="mx-auto max-w-7xl px-6">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-16">
-              <span className="badge badge-primary mb-4">Process</span>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">How Workera Works</h2>
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-20">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6">
+                <Sparkles className="h-4 w-4" />
+                Simple 3-Step Process
+              </span>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">How Workera Works</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">Get started in minutes. Our streamlined process takes you from posting to hiring faster than ever.</p>
             </motion.div>
-            <div className="mb-16">
-              <div className="max-w-2xl mx-auto flex items-center justify-center gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-8 w-8 text-primary" />
+
+            {/* Animated Steps with Lottie */}
+            <div className="relative">
+              {/* Connection Line - Desktop */}
+              <div className="hidden lg:block absolute top-1/2 left-[20%] right-[20%] h-1 -translate-y-1/2">
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.5 }}
+                  className="h-full bg-gradient-to-r from-primary via-blue-500 to-purple-500 rounded-full origin-left"
+                />
+              </div>
+
+              <div className="grid gap-12 lg:gap-8 md:grid-cols-3 relative">
+                {/* Step 1: Post Job */}
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0 }}
+                  className="relative group"
+                >
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group-hover:-translate-y-2">
+                    {/* Step Number Badge */}
+                    <div className="absolute -top-4 left-8 flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/30">1</div>
+                    </div>
+
+                    {/* Lottie Animation */}
+                    <div className="h-48 flex items-center justify-center mb-6 mt-4">
+                      <div className="w-40 h-40 relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-emerald-500/10 rounded-full blur-2xl" />
+                        <Lottie animationData={postJobAnimation} loop={true} className="w-full h-full relative z-10" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">Post or Import</h3>
+                      <p className="text-gray-600 leading-relaxed">Create job posts or import existing descriptions. Our AI optimizes them for better candidate matches.</p>
+                    </div>
+
+                    {/* Features List */}
+                    <div className="mt-6 space-y-2">
+                      {['AI-optimized job descriptions', 'Multi-platform posting', 'Template library'].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                          <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <ArrowRight className="h-6 w-6 text-primary/40" />
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                    <UserCheck className="h-8 w-8 text-blue-600" />
+
+                  {/* Arrow - Mobile/Tablet */}
+                  <div className="flex justify-center my-6 md:hidden">
+                    <ArrowRight className="h-8 w-8 text-primary/40 rotate-90" />
                   </div>
-                  <ArrowRight className="h-6 w-6 text-blue-400/40" />
-                  <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                    <Calendar className="h-8 w-8 text-purple-600" />
+                </motion.div>
+
+                {/* Step 2: AI Screen */}
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="relative group"
+                >
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-500/20 transition-all duration-500 group-hover:-translate-y-2">
+                    {/* Step Number Badge */}
+                    <div className="absolute -top-4 left-8 flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">2</div>
+                    </div>
+
+                    {/* Lottie Animation */}
+                    <div className="h-48 flex items-center justify-center mb-6 mt-4">
+                      <div className="w-40 h-40 relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-full blur-2xl" />
+                        <Lottie animationData={aiScreenAnimation} loop={true} className="w-full h-full relative z-10" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">Source & Screen</h3>
+                      <p className="text-gray-600 leading-relaxed">Candidates flow in from multiple channels. AI automatically parses, ranks, and surfaces top talent.</p>
+                    </div>
+
+                    {/* Features List */}
+                    <div className="mt-6 space-y-2">
+                      {['AI-powered resume parsing', 'Intelligent candidate ranking', 'Automated screening'].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                          <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Arrow - Mobile/Tablet */}
+                  <div className="flex justify-center my-6 md:hidden">
+                    <ArrowRight className="h-8 w-8 text-blue-400/40 rotate-90" />
+                  </div>
+                </motion.div>
+
+                {/* Step 3: Interview & Hire */}
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="relative group"
+                >
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-purple-500/20 transition-all duration-500 group-hover:-translate-y-2">
+                    {/* Step Number Badge */}
+                    <div className="absolute -top-4 left-8 flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">3</div>
+                    </div>
+
+                    {/* Lottie Animation */}
+                    <div className="h-48 flex items-center justify-center mb-6 mt-4">
+                      <div className="w-40 h-40 relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-full blur-2xl" />
+                        <Lottie animationData={interviewHireAnimation} loop={true} className="w-full h-full relative z-10" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">Interview & Hire</h3>
+                      <p className="text-gray-600 leading-relaxed">Schedule interviews, collaborate with your team, and extend offers - all in one platform.</p>
+                    </div>
+
+                    {/* Features List */}
+                    <div className="mt-6 space-y-2">
+                      {['Integrated video interviews', 'Team collaboration tools', 'Seamless offer management'].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                          <CheckCircle2 className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
-            <div className="grid gap-8 md:grid-cols-3">
-              {howItWorks.map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.2 }} className="relative text-center">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-600 text-white shadow-lg shadow-primary/30"><item.icon className="h-10 w-10" /></div>
-                  <div className="text-sm font-bold text-primary mb-2">{item.step}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
-                  {i < howItWorks.length - 1 && <div className="hidden md:block absolute top-10 left-full w-full -translate-x-1/2"><ArrowRight className="mx-auto h-6 w-6 text-gray-300" /></div>}
-                </motion.div>
-              ))}
-            </div>
+
+            {/* Bottom CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="text-center mt-16"
+            >
+              <Link href="/register" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-emerald-600 text-white font-semibold rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300">
+                Start Hiring Today
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <p className="mt-4 text-sm text-gray-500">No credit card required. Free 14-day trial.</p>
+            </motion.div>
           </div>
         </section>
 
