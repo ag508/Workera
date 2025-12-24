@@ -84,36 +84,55 @@ export class NotificationsService {
 
   /**
    * Core email sending function
-   * In production: integrate with SendGrid, AWS SES, or similar
-   * In development: log emails to console
+   * Uses SendGrid in production when SENDGRID_API_KEY is set
+   * Falls back to console logging in development or when API key is missing
    */
   private async sendEmail(to: string, template: EmailTemplate): Promise<boolean> {
     const nodeEnv = this.configService.get<string>('NODE_ENV');
+    const sendgridApiKey = this.configService.get<string>('SENDGRID_API_KEY');
+    const emailFrom = this.configService.get<string>('EMAIL_FROM') || 'noreply@workera.ai';
 
-    if (nodeEnv === 'production') {
-      // TODO: Integrate with actual email service (SendGrid, AWS SES, etc.)
-      // Example with SendGrid:
-      // const sgMail = require('@sendgrid/mail');
-      // sgMail.setApiKey(this.configService.get('SENDGRID_API_KEY'));
-      // await sgMail.send({
-      //   to,
-      //   from: this.configService.get('EMAIL_FROM'),
-      //   subject: template.subject,
-      //   html: template.html,
-      //   text: template.text,
-      // });
+    // Production with SendGrid configured
+    if (nodeEnv === 'production' && sendgridApiKey) {
+      try {
+        // Dynamic import to avoid requiring sendgrid in development
+        const sgMail = require('@sendgrid/mail');
+        sgMail.setApiKey(sendgridApiKey);
 
-      this.logger.warn('Email sending in production not yet configured. Email would be sent to:', to);
-      return true;
-    } else {
-      // Development: log email to console
-      this.logger.log('=== EMAIL NOTIFICATION ===');
-      this.logger.log(`To: ${to}`);
-      this.logger.log(`Subject: ${template.subject}`);
-      this.logger.log(`Body (text): ${template.text}`);
-      this.logger.log('==========================');
+        await sgMail.send({
+          to,
+          from: emailFrom,
+          subject: template.subject,
+          html: template.html,
+          text: template.text,
+        });
+
+        this.logger.log(`Email sent successfully to ${to}`);
+        return true;
+      } catch (error) {
+        this.logger.error(`Failed to send email to ${to}:`, error);
+        return false;
+      }
+    }
+
+    // Production without SendGrid - warn and simulate success for graceful degradation
+    if (nodeEnv === 'production' && !sendgridApiKey) {
+      this.logger.warn(
+        `SENDGRID_API_KEY not configured. Email to ${to} with subject "${template.subject}" was not sent. ` +
+        'Set SENDGRID_API_KEY environment variable to enable email sending.'
+      );
+      // Return true to not block application flow, but log the warning
       return true;
     }
+
+    // Development: log email to console
+    this.logger.log('=== EMAIL NOTIFICATION (DEV MODE) ===');
+    this.logger.log(`To: ${to}`);
+    this.logger.log(`From: ${emailFrom}`);
+    this.logger.log(`Subject: ${template.subject}`);
+    this.logger.log(`Body (text): ${template.text.substring(0, 200)}...`);
+    this.logger.log('=====================================');
+    return true;
   }
 
   /**

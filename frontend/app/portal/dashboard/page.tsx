@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
   Clock,
@@ -17,18 +17,187 @@ import {
   Star,
   ChevronRight,
   Sparkles,
-  Building2
+  Building2,
+  Upload,
+  User,
+  Search,
+  X
 } from 'lucide-react';
 
-const statusColors: Record<string, string> = {
-  'Interviewing': 'bg-purple-100 text-purple-700 border-purple-200',
-  'Applied': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Rejected': 'bg-red-100 text-red-700 border-red-200',
-  'Offer': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  'Pending': 'bg-amber-100 text-amber-700 border-amber-200',
+// Standardized status config - matches applications page
+const statusConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  'APPLIED': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', label: 'Applied' },
+  'SCREENING': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', label: 'Screening' },
+  'INTERVIEW': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200', label: 'Interview' },
+  'INTERVIEWING': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200', label: 'Interviewing' },
+  'OFFER': { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Offer' },
+  'ACCEPTED': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200', label: 'Accepted' },
+  'REJECTED': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', label: 'Rejected' },
+  'PENDING': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', label: 'Pending' },
 };
 
+// Helper to get status styling
+const getStatusStyle = (status: string) => {
+  const upperStatus = status.toUpperCase();
+  return statusConfig[upperStatus] || statusConfig['PENDING'];
+};
+
+// Onboarding steps component
+function OnboardingSection({ onDismiss }: { onDismiss: () => void }) {
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+
+  useEffect(() => {
+    // Load completed steps from localStorage
+    const saved = localStorage.getItem('onboarding_completed');
+    if (saved) {
+      setCompletedSteps(JSON.parse(saved));
+    }
+  }, []);
+
+  const markComplete = (step: number) => {
+    const newCompleted = [...completedSteps, step];
+    setCompletedSteps(newCompleted);
+    localStorage.setItem('onboarding_completed', JSON.stringify(newCompleted));
+  };
+
+  const steps = [
+    {
+      id: 1,
+      title: 'Complete Your Profile',
+      description: 'Add your skills, experience, and education to improve job matches',
+      icon: User,
+      action: '/portal/profile',
+      actionText: 'Edit Profile',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      id: 2,
+      title: 'Upload Your Resume',
+      description: 'Our AI will analyze your resume and find the best matching jobs',
+      icon: Upload,
+      action: '/portal/profile',
+      actionText: 'Upload Resume',
+      color: 'from-emerald-500 to-emerald-600',
+    },
+    {
+      id: 3,
+      title: 'Browse Open Positions',
+      description: 'Discover jobs that match your skills and experience',
+      icon: Search,
+      action: '/portal/jobs',
+      actionText: 'Find Jobs',
+      color: 'from-purple-500 to-purple-600',
+    },
+  ];
+
+  const progress = Math.round((completedSteps.length / steps.length) * 100);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 text-white mb-8 relative overflow-hidden"
+    >
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-blue-500 blur-3xl" />
+      </div>
+
+      <div className="relative z-10">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-yellow-400" />
+              Get Started with Workera
+            </h2>
+            <p className="text-gray-300 mt-1 text-sm">Complete these steps to maximize your job search success</p>
+          </div>
+          <button
+            onClick={onDismiss}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-gray-300">{progress}% Complete</span>
+            <span className="text-gray-400">{completedSteps.length}/{steps.length} steps</span>
+          </div>
+          <div className="h-2 rounded-full bg-gray-700 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full"
+            />
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {steps.map((step) => {
+            const isCompleted = completedSteps.includes(step.id);
+            return (
+              <div
+                key={step.id}
+                className={`relative rounded-xl p-4 transition-all ${
+                  isCompleted
+                    ? 'bg-white/10 border border-white/20'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                }`}
+              >
+                {isCompleted && (
+                  <div className="absolute -top-2 -right-2">
+                    <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                )}
+                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${step.color} flex items-center justify-center mb-3`}>
+                  <step.icon className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-white mb-1">{step.title}</h3>
+                <p className="text-sm text-gray-400 mb-3">{step.description}</p>
+                {!isCompleted ? (
+                  <Link
+                    href={step.action}
+                    onClick={() => markComplete(step.id)}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-emerald-400 transition-colors"
+                  >
+                    {step.actionText}
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="text-sm text-green-400 font-medium">Completed</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function CandidateDashboard() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  useEffect(() => {
+    // Check if user dismissed onboarding
+    const dismissed = localStorage.getItem('onboarding_dismissed');
+    if (dismissed === 'true') {
+      setShowOnboarding(false);
+    }
+  }, []);
+
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('onboarding_dismissed', 'true');
+  };
   // Mock data for demo/preview
   const applications = [
     { id: 1, role: 'Senior Frontend Engineer', company: 'Workera', status: 'Interviewing', date: '2023-10-24', location: 'Remote', logo: 'W', matchScore: 95 },
@@ -50,6 +219,13 @@ export default function CandidateDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Onboarding Section */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingSection onDismiss={dismissOnboarding} />
+        )}
+      </AnimatePresence>
+
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -136,9 +312,14 @@ export default function CandidateDashboard() {
                             </span>
                           </div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${statusColors[app.status]}`}>
-                          {app.status}
-                        </span>
+                        {(() => {
+                          const style = getStatusStyle(app.status);
+                          return (
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
+                              {style.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-4 text-xs text-gray-500">

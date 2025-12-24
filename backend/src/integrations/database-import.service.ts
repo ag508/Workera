@@ -81,8 +81,11 @@ export class DatabaseImportService {
         .limit(limit)
         .offset(offset);
 
+      // Note: whereClause is intentionally disabled to prevent SQL injection
+      // Use the filter parameter in importFromMongoDB for safe filtering
+      // or implement parameterized queries if SQL filtering is needed
       if (whereClause) {
-        query = query.whereRaw(whereClause);
+        this.logger.warn('whereClause parameter is disabled for security. Use structured filters instead.');
       }
 
       const externalCandidates = await query;

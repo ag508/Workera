@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmailCampaign, CampaignStatus, CampaignType, Candidate } from '../database/entities';
@@ -101,7 +101,7 @@ export class CampaignsService {
 
     // Don't allow updates to sent campaigns
     if (campaign.status === CampaignStatus.SENT) {
-      throw new Error('Cannot update sent campaign');
+      throw new BadRequestException('Cannot update sent campaign');
     }
 
     Object.assign(campaign, updates);
@@ -192,7 +192,7 @@ export class CampaignsService {
   async sendCampaign(id: string, tenantId: string): Promise<SendResult> {
     const campaign = await this.getCampaignById(id, tenantId);
     if (!campaign) {
-      throw new Error('Campaign not found');
+      throw new NotFoundException('Campaign not found');
     }
 
     // Update status to sending
@@ -285,7 +285,7 @@ export class CampaignsService {
     }
 
     if (campaign.status !== CampaignStatus.SENDING) {
-      throw new Error('Can only pause sending campaigns');
+      throw new BadRequestException('Can only pause sending campaigns');
     }
 
     campaign.status = CampaignStatus.PAUSED;
@@ -302,7 +302,7 @@ export class CampaignsService {
     }
 
     if (campaign.status === CampaignStatus.SENT) {
-      throw new Error('Cannot cancel sent campaign');
+      throw new BadRequestException('Cannot cancel sent campaign');
     }
 
     campaign.status = CampaignStatus.CANCELLED;
@@ -378,7 +378,7 @@ export class CampaignsService {
     }
 
     if (campaign.status === CampaignStatus.SENDING) {
-      throw new Error('Cannot delete campaign that is currently sending');
+      throw new BadRequestException('Cannot delete campaign that is currently sending');
     }
 
     await this.campaignRepository.delete(id);

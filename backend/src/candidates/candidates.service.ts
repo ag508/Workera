@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Candidate, Resume, Application, ApplicationStatus } from '../database/entities';
@@ -50,7 +50,7 @@ export class CandidatesService {
   async uploadResume(candidateId: string, resumeText: string, tenantId: string) {
     const candidate = await this.getCandidateById(candidateId, tenantId);
     if (!candidate) {
-      throw new Error('Candidate not found');
+      throw new NotFoundException('Candidate not found');
     }
 
     // Parse the resume
@@ -172,7 +172,7 @@ export class CandidatesService {
     });
 
     if (!candidate || !candidate.resumes || candidate.resumes.length === 0) {
-      throw new Error('Candidate or resume not found');
+      throw new NotFoundException('Candidate or resume not found');
     }
 
     const latestResume = candidate.resumes[candidate.resumes.length - 1];
@@ -195,7 +195,7 @@ export class CandidatesService {
     });
 
     if (!application || application.job.tenantId !== tenantId) {
-      throw new Error('Application not found');
+      throw new NotFoundException('Application not found');
     }
 
     // Update status
@@ -221,7 +221,7 @@ export class CandidatesService {
   }) {
     const candidate = await this.getCandidateById(data.candidateId, data.tenantId);
     if (!candidate) {
-      throw new Error('Candidate not found');
+      throw new NotFoundException('Candidate not found');
     }
 
     const application = this.applicationRepository.create({

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '../database/entities/job.entity';
@@ -95,7 +95,7 @@ export class JobBoardsService {
     });
 
     if (!job) {
-      throw new Error('Job not found');
+      throw new NotFoundException('Job not found');
     }
 
     const successful: string[] = [];

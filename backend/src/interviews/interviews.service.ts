@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Interview, InterviewStatus, InterviewType, Application } from '../database/entities';
@@ -32,7 +32,7 @@ export class InterviewsService {
     });
 
     if (!application || application.job.tenantId !== data.tenantId) {
-      throw new Error('Application not found');
+      throw new NotFoundException('Application not found');
     }
 
     // Create interview
