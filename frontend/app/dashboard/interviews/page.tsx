@@ -193,9 +193,6 @@ export default function InterviewsPage() {
 
     setScheduling(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
       // Generate meeting link based on platform
       const meetingLinks: Record<string, string> = {
         zoom: `https://zoom.us/j/${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
@@ -205,7 +202,19 @@ export default function InterviewsPage() {
         'in-person': '',
       };
 
+      const scheduledAt = new Date(`${scheduleForm.date}T${scheduleForm.time}`).toISOString();
       const selectedCandidate = MOCK_CANDIDATES.find(c => c.id === scheduleForm.candidateId);
+
+      // Call real API
+      await interviewsService.schedule({
+        applicationId: scheduleForm.candidateId,
+        type: scheduleForm.type,
+        scheduledAt,
+        durationMinutes: scheduleForm.duration,
+        meetingLink: scheduleForm.platform !== 'in-person' ? meetingLinks[scheduleForm.platform] : undefined,
+        location: scheduleForm.platform === 'in-person' ? scheduleForm.location : undefined,
+        notes: scheduleForm.notes,
+      });
 
       alert(`Interview scheduled successfully!
 
@@ -242,22 +251,24 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
 
   const handleConfirmInterview = async (interview: Interview) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await interviewsService.updateStatus(interview.id, 'CONFIRMED');
       alert(`Interview with ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName} confirmed!`);
       fetchInterviews();
     } catch (error) {
       console.error('Failed to confirm interview:', error);
+      alert('Failed to confirm interview. Please try again.');
     }
   };
 
   const handleCancelInterview = async (interview: Interview) => {
     if (!confirm('Are you sure you want to cancel this interview?')) return;
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await interviewsService.updateStatus(interview.id, 'CANCELLED');
       alert('Interview cancelled. Candidate will be notified.');
       fetchInterviews();
     } catch (error) {
       console.error('Failed to cancel interview:', error);
+      alert('Failed to cancel interview. Please try again.');
     }
   };
 
@@ -267,8 +278,16 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       return;
     }
 
+    if (!selectedInterview) return;
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await interviewsService.submitFeedback(selectedInterview.id, {
+        rating: feedbackData.rating,
+        strengths: feedbackData.strengths ? feedbackData.strengths.split(',').map(s => s.trim()) : [],
+        concerns: feedbackData.concerns ? feedbackData.concerns.split(',').map(s => s.trim()) : [],
+        recommendation: feedbackData.recommendation,
+        comments: feedbackData.comments,
+      });
       alert('Feedback submitted successfully!');
       setShowFeedbackModal(false);
       setFeedbackData({
@@ -282,12 +301,13 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       fetchInterviews();
     } catch (error) {
       console.error('Failed to submit feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
     }
   };
 
   const handleSendReminder = async (interview: Interview) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // For now, just show success - in production this would call a reminder API
       alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
     } catch (error) {
       console.error('Failed to send reminder:', error);

@@ -37,6 +37,14 @@ export class SubmitFeedbackDto {
 export class InterviewsController {
   constructor(private readonly interviewsService: InterviewsService) {}
 
+  @Get()
+  async getAllInterviews(@Query('tenantId') tenantId: string) {
+    const interviews = await this.interviewsService.getAllInterviews(
+      tenantId || 'default-tenant'
+    );
+    return interviews;
+  }
+
   @Post()
   async scheduleInterview(@Body() dto: ScheduleInterviewDto) {
     const interview = await this.interviewsService.scheduleInterview({

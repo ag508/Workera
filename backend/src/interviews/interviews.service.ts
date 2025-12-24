@@ -165,4 +165,14 @@ export class InterviewsService {
       i => i.application.job.tenantId === tenantId && i.scheduledAt > now
     );
   }
+
+  async getAllInterviews(tenantId: string): Promise<Interview[]> {
+    const interviews = await this.interviewRepository.find({
+      relations: ['application', 'application.job', 'application.job.tenant', 'application.candidate', 'interviewer'],
+      order: { scheduledAt: 'DESC' },
+    });
+
+    // Filter by tenant
+    return interviews.filter(i => i.application?.job?.tenantId === tenantId);
+  }
 }
