@@ -10,6 +10,23 @@ export class CreateCandidateDto {
   tenantId: string; // In production, this would come from auth context
 }
 
+export class UpdateCandidateDto {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  summary?: string;
+  experience?: any[];
+  education?: any[];
+  certifications?: string[];
+  projects?: any[];
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  tenantId: string;
+}
+
 export class UploadResumeDto {
   resumeText: string;
   tenantId: string; // In production, this would come from auth context
@@ -109,6 +126,22 @@ export class CandidatesController {
     @Query('tenantId') tenantId: string
   ) {
     const candidate = await this.candidatesService.getCandidateById(id, tenantId || 'default-tenant');
+    return {
+      success: !!candidate,
+      data: candidate,
+    };
+  }
+
+  @Put(':id')
+  async updateCandidate(
+    @Param('id') id: string,
+    @Body() dto: UpdateCandidateDto
+  ) {
+    const candidate = await this.candidatesService.updateCandidate(
+      id,
+      dto,
+      dto.tenantId || 'default-tenant'
+    );
     return {
       success: !!candidate,
       data: candidate,

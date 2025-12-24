@@ -38,6 +38,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { jobsService } from '@/lib/services/jobs';
 
 // Company Templates
 const companyTemplates = [
@@ -251,17 +252,68 @@ function CreateJobContent() {
   };
 
   const handleSaveDraft = async () => {
+    if (!jobDetails.title) {
+      alert('Please enter a job title');
+      return;
+    }
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setSaving(false);
-    alert('Draft saved successfully!');
+    try {
+      const fullDescription = [
+        jobDetails.description,
+        jobDetails.requirements ? `\n\n## Requirements\n${jobDetails.requirements}` : '',
+        jobDetails.benefits ? `\n\n## Benefits\n${jobDetails.benefits}` : '',
+      ].join('');
+
+      await jobsService.create({
+        title: jobDetails.title,
+        description: fullDescription,
+        company: jobDetails.department || undefined,
+        requirements: [],
+      });
+      alert('Draft saved successfully!');
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('Failed to save draft. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePublish = async () => {
+    if (!jobDetails.title) {
+      alert('Please enter a job title');
+      return;
+    }
+    if (selectedPlatforms.length === 0) {
+      alert('Please select at least one platform');
+      return;
+    }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setLoading(false);
-    router.push('/dashboard/jobs?published=true');
+    try {
+      const fullDescription = [
+        jobDetails.description,
+        jobDetails.requirements ? `\n\n## Requirements\n${jobDetails.requirements}` : '',
+        jobDetails.benefits ? `\n\n## Benefits\n${jobDetails.benefits}` : '',
+      ].join('');
+
+      // Create the job first
+      const job = await jobsService.create({
+        title: jobDetails.title,
+        description: fullDescription,
+        company: jobDetails.department || undefined,
+        requirements: [],
+      });
+
+      // Then post it to selected platforms
+      await jobsService.post(job.id, selectedPlatforms);
+
+      router.push('/dashboard/jobs?published=true');
+    } catch (error) {
+      console.error('Failed to publish job:', error);
+      alert('Failed to publish job. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const steps = [

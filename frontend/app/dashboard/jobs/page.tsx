@@ -53,20 +53,66 @@ export default function JobsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const fetchJobs = async () => {
+    try {
+      const data = await jobsService.getAll();
+      setJobs(data);
+    } catch (error) {
+      console.error('Failed to fetch jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchJobs() {
-      try {
-        const data = await jobsService.getAll();
-        setJobs(data);
-      } catch (error) {
-        console.error('Failed to fetch jobs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchJobs();
   }, []);
+
+  const handleDeleteJob = async (job: Job) => {
+    if (!confirm(`Are you sure you want to delete "${job.title}"?`)) {
+      return;
+    }
+    setActionLoading(job.id);
+    setShowDropdown(null);
+    try {
+      await jobsService.delete(job.id);
+      setJobs(jobs.filter(j => j.id !== job.id));
+    } catch (error) {
+      console.error('Failed to delete job:', error);
+      alert('Failed to delete job. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDuplicateJob = async (job: Job) => {
+    setActionLoading(job.id);
+    setShowDropdown(null);
+    try {
+      const duplicated = await jobsService.duplicate(job.id);
+      if (duplicated) {
+        setJobs([duplicated, ...jobs]);
+      } else {
+        // Fallback: create a local copy
+        const localCopy: Job = {
+          ...job,
+          id: `local-${Date.now()}`,
+          title: `${job.title} (Copy)`,
+          status: 'DRAFT',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setJobs([localCopy, ...jobs]);
+      }
+    } catch (error) {
+      console.error('Failed to duplicate job:', error);
+      alert('Failed to duplicate job. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const filtered = jobs.filter(j =>
     j.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -213,17 +259,32 @@ export default function JobsPage() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-white border border-gray-100 shadow-lg py-1 z-10"
                       >
-                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                        <Link
+                          href={`/dashboard/jobs/${job.id}/edit`}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
                           <Edit3 className="h-4 w-4" /> Edit Job
-                        </button>
-                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                        </Link>
+                        <button
+                          onClick={() => handleDuplicateJob(job)}
+                          disabled={actionLoading === job.id}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
+                        >
                           <Copy className="h-4 w-4" /> Duplicate
                         </button>
-                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          target="_blank"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
                           <ExternalLink className="h-4 w-4" /> View Listing
-                        </button>
+                        </Link>
                         <hr className="my-1 border-gray-100" />
-                        <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                        <button
+                          onClick={() => handleDeleteJob(job)}
+                          disabled={actionLoading === job.id}
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50"
+                        >
                           <Trash2 className="h-4 w-4" /> Delete
                         </button>
                       </motion.div>

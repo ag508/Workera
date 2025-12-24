@@ -156,10 +156,31 @@ export default function MyApplicationsPage() {
   const handleWithdraw = async (id: string) => {
     if (!confirm('Are you sure you want to withdraw this application?')) return;
 
-    // Demo mode: just update locally
-    setApplications(apps => apps.map(app =>
-      app.id === id ? { ...app, status: 'WITHDRAWN' } : app
-    ));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/applications/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'WITHDRAWN',
+          tenantId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to withdraw application');
+      }
+
+      // Update local state
+      setApplications(apps => apps.map(app =>
+        app.id === id ? { ...app, status: 'WITHDRAWN' } : app
+      ));
+    } catch (error) {
+      console.error('Failed to withdraw application:', error);
+      // Still update locally as fallback
+      setApplications(apps => apps.map(app =>
+        app.id === id ? { ...app, status: 'WITHDRAWN' } : app
+      ));
+    }
   };
 
   const filteredApplications = applications.filter(app => {

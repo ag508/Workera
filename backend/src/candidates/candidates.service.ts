@@ -47,6 +47,53 @@ export class CandidatesService {
     });
   }
 
+  async updateCandidate(
+    id: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      location?: string;
+      skills?: string[];
+      summary?: string;
+      experience?: any[];
+      education?: any[];
+      certifications?: string[];
+      projects?: any[];
+      linkedin?: string;
+      github?: string;
+      portfolio?: string;
+    },
+    tenantId: string
+  ) {
+    const candidate = await this.getCandidateById(id, tenantId);
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    // Update allowed fields
+    if (data.firstName !== undefined) candidate.firstName = data.firstName;
+    if (data.lastName !== undefined) candidate.lastName = data.lastName;
+    if (data.phone !== undefined) candidate.phone = data.phone;
+    if (data.location !== undefined) candidate.location = data.location;
+    if (data.skills !== undefined) candidate.skills = data.skills;
+
+    // Store additional profile data as JSON in a field (or use a separate profile table)
+    // For now, we'll store in metadata
+    (candidate as any).metadata = {
+      summary: data.summary,
+      experience: data.experience,
+      education: data.education,
+      certifications: data.certifications,
+      projects: data.projects,
+      linkedin: data.linkedin,
+      github: data.github,
+      portfolio: data.portfolio,
+    };
+
+    return await this.candidateRepository.save(candidate);
+  }
+
   async uploadResume(candidateId: string, resumeText: string, tenantId: string) {
     const candidate = await this.getCandidateById(candidateId, tenantId);
     if (!candidate) {

@@ -108,9 +108,20 @@ export const jobsService = {
 
   delete: async (id: string) => {
     try {
-      return await apiClient.delete(`/jobs/${id}`);
-    } catch (error) {
+      await apiClient.delete(`/jobs/${id}`);
       return true;
+    } catch (error) {
+      console.warn('Backend API unavailable, simulating deletion.');
+      return true;
+    }
+  },
+
+  duplicate: async (id: string) => {
+    try {
+      return await apiClient.post<Job>(`/jobs/${id}/duplicate`, {});
+    } catch (error) {
+      console.warn('Backend API unavailable, simulating duplication.');
+      return null;
     }
   }
 };

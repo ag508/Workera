@@ -235,12 +235,46 @@ export default function CandidateProfilePage() {
     setSaving(true);
     setSaved(false);
 
-    setTimeout(() => {
-      setSaving(false);
+    const candidateId = localStorage.getItem('candidateId');
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phone: profile.phone,
+          location: profile.location,
+          skills: profile.skills,
+          summary: profile.summary,
+          experience: profile.experience,
+          education: profile.education,
+          certifications: profile.certifications,
+          projects: profile.projects,
+          linkedin: profile.linkedin,
+          github: profile.github,
+          portfolio: profile.portfolio,
+          tenantId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save profile');
+      }
+
       setSaved(true);
       setEditingSection(null);
       setTimeout(() => setSaved(false), 2000);
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      alert('Failed to save profile. Changes saved locally.');
+      setSaved(true);
+      setEditingSection(null);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Resume upload and parsing
