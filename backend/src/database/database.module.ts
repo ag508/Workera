@@ -9,6 +9,8 @@ import {
   JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
   HiringTeamMember, BudgetReservation,
 } from './entities';
+import { SeederService } from './seeder.service';
+import { SeederController } from './seeder.controller';
 
 // All entities array for TypeORM
 const allEntities = [
@@ -23,6 +25,7 @@ const allEntities = [
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,6 +56,10 @@ const allEntities = [
         };
       },
     }),
+    TypeOrmModule.forFeature(allEntities),
   ],
+  controllers: [SeederController],
+  providers: [SeederService],
+  exports: [TypeOrmModule, SeederService],
 })
 export class DatabaseModule {}
