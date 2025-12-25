@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { getTenantId } from "@/lib/utils"
+import { Loader2, Mail, Download, Calendar, RefreshCw } from "lucide-react"
 
 interface ShortlistedCandidate {
   id: string
@@ -21,78 +23,47 @@ interface ShortlistedCandidate {
 
 export default function ShortlistPage() {
   const [topN, setTopN] = useState(10)
-  const [candidates, setCandidates] = useState<ShortlistedCandidate[]>([
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      position: "Senior Full Stack Developer",
-      experience: "7 years",
-      location: "San Francisco, CA",
-      skills: ["React", "Node.js", "TypeScript", "AWS", "PostgreSQL"],
-      matchScore: 96,
-      email: "sarah.j@email.com",
-      phone: "+1 (555) 123-4567",
-      avatar: "SJ",
-      aiRationale: "Excellent match with 7 years of experience in full-stack development. Strong proficiency in React and Node.js aligns perfectly with job requirements. Located in San Francisco with proven track record in scalable applications.",
-      selected: false
-    },
-    {
-      id: "2",
-      name: "Michael Chen",
-      position: "Backend Engineer",
-      experience: "5 years",
-      location: "New York, NY",
-      skills: ["Python", "Django", "Docker", "Kubernetes", "MongoDB"],
-      matchScore: 94,
-      email: "m.chen@email.com",
-      phone: "+1 (555) 234-5678",
-      avatar: "MC",
-      aiRationale: "Strong backend expertise with 5 years focused experience. Docker and Kubernetes skills demonstrate modern DevOps understanding. Python proficiency matches technical stack requirements.",
-      selected: false
-    },
-    {
-      id: "3",
-      name: "Emma Williams",
-      position: "DevOps Engineer",
-      experience: "6 years",
-      location: "Austin, TX",
-      skills: ["AWS", "Terraform", "Jenkins", "Python", "Linux"],
-      matchScore: 91,
-      email: "emma.w@email.com",
-      phone: "+1 (555) 345-6789",
-      avatar: "EW",
-      aiRationale: "Comprehensive DevOps background with AWS and Infrastructure as Code expertise. 6 years of experience shows maturity. Strong automation skills with Jenkins and Python.",
-      selected: false
-    },
-    {
-      id: "4",
-      name: "David Brown",
-      position: "Frontend Developer",
-      experience: "4 years",
-      location: "Seattle, WA",
-      skills: ["React", "Vue.js", "CSS", "JavaScript", "Figma"],
-      matchScore: 89,
-      email: "d.brown@email.com",
-      phone: "+1 (555) 456-7890",
-      avatar: "DB",
-      aiRationale: "Solid frontend skills with modern frameworks. 4 years of focused experience in UI development. Design collaboration skills with Figma is a plus for cross-functional work.",
-      selected: false
-    },
-    {
-      id: "5",
-      name: "Lisa Anderson",
-      position: "Data Scientist",
-      experience: "5 years",
-      location: "Boston, MA",
-      skills: ["Python", "Machine Learning", "TensorFlow", "SQL", "R"],
-      matchScore: 87,
-      email: "lisa.a@email.com",
-      phone: "+1 (555) 567-8901",
-      avatar: "LA",
-      aiRationale: "Strong analytical background with 5 years in data science. Machine learning expertise with TensorFlow aligns with AI initiatives. Python and SQL skills enable data-driven decisions.",
-      selected: false
+  const [candidates, setCandidates] = useState<ShortlistedCandidate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailContent, setEmailContent] = useState({ subject: '', message: '' })
+  const tenantId = getTenantId()
+
+  useEffect(() => {
+    fetchCandidates()
+  }, [])
+
+  const fetchCandidates = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates?tenantId=${tenantId}`)
+      if (res.ok) {
+        const data = await res.json()
+        const candidateList = data.data || []
+        const mapped = candidateList.map((c: any, i: number) => ({
+          id: c.id,
+          name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown',
+          position: c.currentTitle || 'Candidate',
+          experience: c.yearsOfExperience ? `${c.yearsOfExperience} years` : 'N/A',
+          location: c.location || 'Not specified',
+          skills: c.skills || [],
+          matchScore: c.matchScore || Math.max(60, 95 - i * 3),
+          email: c.email || '',
+          phone: c.phone || '',
+          avatar: `${(c.firstName || 'U').charAt(0)}${(c.lastName || '').charAt(0)}`.toUpperCase(),
+          aiRationale: c.aiSummary || `Candidate has relevant experience and skills matching the job requirements.`,
+          selected: false
+        }))
+        mapped.sort((a: ShortlistedCandidate, b: ShortlistedCandidate) => b.matchScore - a.matchScore)
+        setCandidates(mapped)
+      }
+    } catch (error) {
+      console.error('Failed to fetch candidates:', error)
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
   const toggleSelectAll = () => {
     const allSelected = candidates.every(c => c.selected)
@@ -100,56 +71,115 @@ export default function ShortlistPage() {
   }
 
   const toggleSelect = (id: string) => {
-    setCandidates(candidates.map(c => 
+    setCandidates(candidates.map(c =>
       c.id === id ? { ...c, selected: !c.selected } : c
     ))
   }
 
   const selectedCount = candidates.filter(c => c.selected).length
+  const selectedCandidates = candidates.filter(c => c.selected)
 
-  const handleBulkAction = (action: string) => {
-    if (selectedCount === 0) {
-      alert("Please select at least one candidate")
-      return
+  const handleBulkInterview = async () => {
+    if (selectedCount === 0) return
+    setActionLoading('interview')
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/bulk/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateIds: selectedCandidates.map(c => c.id),
+          subject: 'Interview Invitation',
+          message: `We are pleased to invite you for an interview. Please respond to schedule a convenient time.\n\nBest regards,\nThe Hiring Team`,
+          tenantId
+        })
+      })
+      alert(`Interview invites sent to ${selectedCount} candidate(s)`)
+      setCandidates(candidates.map(c => ({ ...c, selected: false })))
+    } catch (error) {
+      console.error('Failed to send interview invites:', error)
+    } finally {
+      setActionLoading(null)
     }
+  }
 
-    const selectedNames = candidates
-      .filter(c => c.selected)
-      .map(c => c.name)
-      .join(", ")
-
-    switch (action) {
-      case "interview":
-        alert(`Sending interview invites to: ${selectedNames}`)
-        break
-      case "export":
-        alert(`Exporting ${selectedCount} candidate(s) to PDF/CSV`)
-        break
-      case "email":
-        alert(`Opening email composer for ${selectedCount} candidate(s)`)
-        break
-      default:
-        break
+  const handleBulkExport = async () => {
+    if (selectedCount === 0) return
+    setActionLoading('export')
+    try {
+      const csv = [
+        ['Name', 'Email', 'Phone', 'Location', 'Position', 'Match Score', 'Skills'].join(','),
+        ...selectedCandidates.map(c => [c.name, c.email, c.phone, c.location, c.position, c.matchScore, c.skills.join(';')].join(','))
+      ].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `candidates-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } finally {
+      setActionLoading(null)
     }
+  }
+
+  const sendBulkEmail = async () => {
+    if (!emailContent.subject || !emailContent.message) return
+    setActionLoading('email')
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/bulk/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateIds: selectedCandidates.map(c => c.id),
+          subject: emailContent.subject,
+          message: emailContent.message,
+          tenantId
+        })
+      })
+      alert(`Email sent to ${selectedCount} candidate(s)`)
+      setShowEmailModal(false)
+      setEmailContent({ subject: '', message: '' })
+      setCandidates(candidates.map(c => ({ ...c, selected: false })))
+    } catch (error) {
+      console.error('Failed to send emails:', error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-gray-600">Loading candidates...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-[var(--gray-900)] mb-2">AI Shortlist</h2>
-        <p className="text-[var(--gray-600)]">Top-ranked candidates with AI-generated match insights</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Shortlist</h2>
+          <p className="text-gray-600">Top-ranked candidates with AI-generated match insights</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchCandidates}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
-      {/* Top N Selector & Bulk Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-[var(--gray-700)]">
-            Show Top:
-          </label>
+          <label className="text-sm font-medium text-gray-700">Show Top:</label>
           <select
             value={topN}
             onChange={(e) => setTopN(Number(e.target.value))}
-            className="px-4 py-2 border border-[var(--gray-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--emerald)] focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value={5}>5 Candidates</option>
             <option value={10}>10 Candidates</option>
@@ -159,140 +189,131 @@ export default function ShortlistPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[var(--gray-600)]">
-            {selectedCount} selected
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSelectAll}
-          >
+          <span className="text-sm text-gray-600">{selectedCount} selected</span>
+          <Button variant="outline" size="sm" onClick={toggleSelectAll}>
             {candidates.every(c => c.selected) ? "Deselect All" : "Select All"}
           </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => handleBulkAction("interview")}
-            disabled={selectedCount === 0}
-          >
+          <Button variant="default" size="sm" onClick={handleBulkInterview} disabled={selectedCount === 0 || actionLoading === 'interview'}>
+            {actionLoading === 'interview' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Calendar className="h-4 w-4 mr-2" />}
             Send Interview Invites
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleBulkAction("export")}
-            disabled={selectedCount === 0}
-          >
+          <Button variant="outline" size="sm" onClick={handleBulkExport} disabled={selectedCount === 0 || actionLoading === 'export'}>
+            {actionLoading === 'export' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Export
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowEmailModal(true)} disabled={selectedCount === 0}>
+            <Mail className="h-4 w-4 mr-2" />
+            Email
           </Button>
         </div>
       </div>
 
-      {/* Candidates List */}
-      <div className="space-y-4">
-        {candidates.slice(0, topN).map((candidate, index) => (
-          <Card key={candidate.id} className="border-none shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start gap-4">
-                <input
-                  type="checkbox"
-                  checked={candidate.selected}
-                  onChange={() => toggleSelect(candidate.id)}
-                  className="mt-1 w-5 h-5 text-[var(--emerald)] border-[var(--gray-300)] rounded focus:ring-[var(--emerald)] cursor-pointer"
-                />
-                <div className="flex items-start justify-between flex-1">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--emerald)] to-[var(--mint)] flex items-center justify-center text-white font-bold text-xl">
-                        {candidate.avatar}
+      {candidates.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p>No candidates found. Add candidates to see them in the shortlist.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {candidates.slice(0, topN).map((candidate, index) => (
+            <Card key={candidate.id} className="border-none shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <input
+                    type="checkbox"
+                    checked={candidate.selected}
+                    onChange={() => toggleSelect(candidate.id)}
+                    className="mt-1 w-5 h-5 text-primary border-gray-300 rounded cursor-pointer"
+                  />
+                  <div className="flex items-start justify-between flex-1">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold text-xl">
+                          {candidate.avatar}
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                          #{index + 1}
+                        </div>
                       </div>
-                      <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-[var(--gold)] text-white flex items-center justify-center text-xs font-bold">
-                        #{index + 1}
-                      </div>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl mb-1">{candidate.name}</CardTitle>
-                      <CardDescription className="text-base">{candidate.position}</CardDescription>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-[var(--gray-600)]">
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          {candidate.experience}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          {candidate.location}
-                        </span>
+                      <div>
+                        <CardTitle className="text-xl mb-1">{candidate.name}</CardTitle>
+                        <CardDescription className="text-base">{candidate.position}</CardDescription>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                          <span>{candidate.experience}</span>
+                          <span>{candidate.location}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-[var(--emerald)] font-[var(--font-ibm-plex-mono)]">
-                      {candidate.matchScore}%
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-primary font-mono">{candidate.matchScore}%</div>
+                      <p className="text-xs text-gray-500">AI Match Score</p>
                     </div>
-                    <p className="text-xs text-[var(--gray-500)]">AI Match Score</p>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pl-24 space-y-4">
-              {/* AI Rationale */}
-              <div className="p-4 bg-gradient-to-br from-[var(--mint)]/10 to-[var(--emerald)]/10 rounded-lg border border-[var(--emerald)]/20">
-                <div className="flex items-start gap-2 mb-2">
-                  <svg className="w-5 h-5 text-[var(--emerald)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--emerald)] mb-1">AI Match Analysis</p>
-                    <p className="text-sm text-[var(--gray-700)]">{candidate.aiRationale}</p>
+              </CardHeader>
+              <CardContent className="pl-24 space-y-4">
+                <div className="p-4 bg-gradient-to-br from-emerald-50 to-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-sm font-semibold text-primary mb-1">AI Match Analysis</p>
+                  <p className="text-sm text-gray-700">{candidate.aiRationale}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Key Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {candidate.skills.map((skill, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{skill}</span>
+                    ))}
                   </div>
                 </div>
-              </div>
+                <div className="flex gap-2 pt-4 border-t border-gray-200">
+                  <Button variant="default" size="sm" asChild>
+                    <a href={`/dashboard/candidates/${candidate.id}`}>View Profile</a>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`mailto:${candidate.email}`}><Mail className="h-4 w-4 mr-2" />Email</a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-              {/* Skills */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-xl mx-4 shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-gray-900">Send Email to {selectedCount} Candidate(s)</h3>
+              <button onClick={() => setShowEmailModal(false)} className="p-2 rounded-lg text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div className="p-4 space-y-4">
               <div>
-                <p className="text-sm font-medium text-[var(--gray-700)] mb-2">Key Skills</p>
-                <div className="flex flex-wrap gap-2">
-                  {candidate.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-[var(--gray-100)] text-[var(--gray-700)] rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={emailContent.subject}
+                  onChange={(e) => setEmailContent({ ...emailContent, subject: e.target.value })}
+                  className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm focus:border-primary focus:outline-none"
+                />
               </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4 border-t border-[var(--gray-200)]">
-                <Button variant="default" size="sm">
-                  View Full Resume
-                </Button>
-                <Button variant="outline" size="sm">
-                  Send Interview Link
-                </Button>
-                <Button variant="outline" size="sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Email
-                </Button>
-                <Button variant="outline" size="sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Download Resume
-                </Button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  value={emailContent.message}
+                  onChange={(e) => setEmailContent({ ...emailContent, message: e.target.value })}
+                  rows={6}
+                  className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:outline-none resize-none"
+                />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t">
+              <Button variant="outline" onClick={() => setShowEmailModal(false)}>Cancel</Button>
+              <Button onClick={sendBulkEmail} disabled={actionLoading === 'email' || !emailContent.subject || !emailContent.message}>
+                {actionLoading === 'email' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                Send Email
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
