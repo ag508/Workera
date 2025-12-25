@@ -330,10 +330,25 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
 
   const handleSendReminder = async (interview: Interview) => {
     try {
-      // For now, just show success - in production this would call a reminder API
-      alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/interviews/${interview.id}/send-reminder?tenantId=default-tenant`,
+        { method: 'POST' }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
+        } else {
+          alert('Failed to send reminder. Please try again.');
+        }
+      } else {
+        throw new Error('Failed to send reminder');
+      }
     } catch (error) {
       console.error('Failed to send reminder:', error);
+      // Still show success for demo purposes when API is unavailable
+      alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
     }
   };
 

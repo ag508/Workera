@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
   EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  Message,
   // Requisition Management Entities
   BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
   JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
@@ -17,6 +18,7 @@ const allEntities = [
   // Core Entities
   Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
   EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  Message,
   // Requisition Management Entities
   BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
   JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
