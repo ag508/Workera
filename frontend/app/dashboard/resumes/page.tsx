@@ -55,15 +55,15 @@ const generateMockResumes = (candidates: Candidate[]): ParsedResume[] => {
     candidateId: candidate.id,
     candidateName: `${candidate.firstName} ${candidate.lastName}`,
     email: candidate.email,
-    phone: '+1 (555) ' + Math.floor(100 + Math.random() * 900) + '-' + Math.floor(1000 + Math.random() * 9000),
+    phone: candidate.phone || '+1 (555) 000-0000',
     location: candidate.location || locations[index % locations.length],
     currentRole: roles[index % roles.length],
     experience: experiences[index % experiences.length],
     skills: candidate.skills || ['JavaScript', 'React', 'Node.js', 'TypeScript', 'Python'].slice(0, 3 + (index % 3)),
     education: 'B.S. Computer Science',
     resumeText: candidate.resumeText || MOCK_RESUME_TEXT.replace('ALICE SMITH', `${candidate.firstName} ${candidate.lastName}`.toUpperCase()),
-    matchScore: candidate.matchScore || Math.floor(60 + Math.random() * 35),
-    parsedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    matchScore: candidate.matchScore || Math.min(95, 60 + (candidate.skills?.length || 0) * 5),
+    parsedAt: candidate.updatedAt || candidate.createdAt || new Date().toISOString(),
     status: 'parsed' as const
   }));
 };

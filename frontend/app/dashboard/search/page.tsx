@@ -499,7 +499,7 @@ export default function CandidateSearchPage() {
             experience: c.yearsOfExperience ? `${c.yearsOfExperience} years` : 'N/A',
             location: c.location || 'Remote',
             skills: c.skills || [],
-            matchScore: Math.floor(Math.random() * 30) + 70, // API should provide this
+            matchScore: c.matchScore || Math.min(95, 70 + (c.skills?.length || 0) * 3), // Calculate based on skills
             email: c.email,
             phone: c.phone || '',
             avatar: `https://i.pravatar.cc/100?u=${c.email}`,

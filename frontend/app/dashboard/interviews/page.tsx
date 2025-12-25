@@ -216,12 +216,13 @@ export default function InterviewsPage() {
 
     setScheduling(true);
     try {
-      // Generate meeting link based on platform
+      // Generate meeting link based on platform (using timestamp for unique ID)
+      const meetingId = Date.now().toString(36) + scheduleForm.candidateId.substring(0, 4);
       const meetingLinks: Record<string, string> = {
-        zoom: `https://zoom.us/j/${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-        teams: `https://teams.microsoft.com/l/meetup-join/${Math.random().toString(36).substring(7)}`,
-        webex: `https://webex.com/meet/${Math.random().toString(36).substring(7)}`,
-        meet: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
+        zoom: `https://zoom.us/j/${meetingId}`,
+        teams: `https://teams.microsoft.com/l/meetup-join/${meetingId}`,
+        webex: `https://webex.com/meet/${meetingId}`,
+        meet: `https://meet.google.com/${meetingId}`,
         'in-person': '',
       };
 

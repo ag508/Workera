@@ -417,7 +417,7 @@ export default function JobsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Eye className="h-4 w-4 text-gray-400" />
-                        <span className="font-semibold text-gray-900">{Math.floor(Math.random() * 200) + 50}</span>
+                        <span className="font-semibold text-gray-900">{job.viewCount || (job.applicantCount || 0) * 8 + 50}</span>
                         <span className="text-gray-500">views</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">

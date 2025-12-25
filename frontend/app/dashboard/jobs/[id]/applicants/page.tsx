@@ -206,7 +206,7 @@ export default function ApplicantsPage() {
               experience: c.yearsOfExperience ? `${c.yearsOfExperience} years` : 'N/A',
               education: c.education?.[0]?.degree || 'Not specified',
               skills: c.skills || [],
-              matchScore: app.matchScore || c.matchScore || Math.floor(70 + Math.random() * 25),
+              matchScore: app.matchScore || c.matchScore || Math.min(95, 70 + (c.skills?.length || 0) * 3),
               status: (app.status || 'NEW').toLowerCase(),
               appliedDate: app.createdAt || new Date().toISOString(),
               summary: c.summary || 'Experienced professional with relevant skills.'

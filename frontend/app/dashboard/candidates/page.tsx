@@ -131,7 +131,7 @@ export default function CandidatesPage() {
         {filteredCandidates.map((candidate, index) => {
           const fullName = `${candidate.firstName} ${candidate.lastName}`;
           const avatarUrl = `https://i.pravatar.cc/100?u=${candidate.id}`;
-          const score = candidate.matchScore || Math.floor(Math.random() * 40) + 60;
+          const score = candidate.matchScore || Math.min(95, 60 + (candidate.skills?.length || 0) * 5);
           const status = candidate.status || 'Screening';
 
           return (

@@ -161,7 +161,7 @@ export default function DashboardPage() {
       id: job.id,
       title: job.title,
       applicants: job.applications?.length || 0,
-      views: Math.floor(Math.random() * 200) + 50, // Placeholder for views
+      views: job.viewCount || (job.applications?.length || 0) * 8 + 50, // Estimate based on applications
       status: 'Active',
     }));
 
