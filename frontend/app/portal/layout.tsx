@@ -17,6 +17,7 @@ import {
   Search,
   ChevronDown
 } from 'lucide-react';
+import { getTenantId } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -31,6 +32,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [userName, setUserName] = useState({ firstName: '', lastName: '', email: '' });
+  const tenantId = getTenantId();
 
   useEffect(() => {
     setMounted(true);
@@ -38,7 +43,51 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (!token && !pathname.includes('/login') && !pathname.includes('/register')) {
       router.push('/portal/login');
     }
+
+    // Fetch user profile
+    const candidateId = localStorage.getItem('candidateId');
+    if (candidateId && token) {
+      fetchUserProfile(candidateId);
+    }
   }, [pathname, router]);
+
+  const fetchUserProfile = async (candidateId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}?tenantId=${tenantId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const profile = data.data || data;
+        setUserName({
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          email: profile.email || '',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/portal/jobs?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const getInitials = () => {
+    if (userName.firstName && userName.lastName) {
+      return `${userName.firstName.charAt(0)}${userName.lastName.charAt(0)}`.toUpperCase();
+    }
+    return 'U';
+  };
+
+  const getDisplayName = () => {
+    if (userName.firstName && userName.lastName) {
+      return `${userName.firstName} ${userName.lastName}`;
+    }
+    return 'User';
+  };
 
   if (!mounted) return null;
 
@@ -105,22 +154,69 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             {/* Right Section */}
             <div className="flex items-center gap-3">
               {/* Search */}
-              <div className="hidden lg:flex items-center">
+              <form onSubmit={handleSearch} className="hidden lg:flex items-center">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search jobs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64 rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
-              </div>
+              </form>
 
               {/* Notifications */}
-              <button className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowNotifications(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white border border-gray-100 shadow-lg py-2 z-20"
+                      >
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <h3 className="font-semibold text-gray-900">Notifications</h3>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                          <div className="px-4 py-3 hover:bg-gray-50">
+                            <p className="text-sm text-gray-700">Your application for <span className="font-medium">Senior React Developer</span> has been reviewed.</p>
+                            <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                          </div>
+                          <div className="px-4 py-3 hover:bg-gray-50">
+                            <p className="text-sm text-gray-700">New job matching your profile: <span className="font-medium">Full Stack Engineer</span></p>
+                            <p className="text-xs text-gray-500 mt-1">1 day ago</p>
+                          </div>
+                        </div>
+                        <div className="px-4 py-2 border-t border-gray-100">
+                          <Link
+                            href="/portal/dashboard"
+                            onClick={() => setShowNotifications(false)}
+                            className="text-sm text-primary font-medium hover:underline"
+                          >
+                            View all notifications
+                          </Link>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* User Menu */}
               <div className="relative">
@@ -129,10 +225,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white text-sm font-semibold">
-                    JD
+                    {getInitials()}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <div className="text-sm font-medium text-gray-900">John Doe</div>
+                    <div className="text-sm font-medium text-gray-900">{getDisplayName()}</div>
                     <div className="text-xs text-gray-500">Candidate</div>
                   </div>
                   <ChevronDown className="hidden sm:block h-4 w-4 text-gray-400" />
@@ -152,8 +248,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-white border border-gray-100 shadow-lg py-1 z-20"
                       >
                         <div className="px-4 py-3 border-b border-gray-100">
-                          <div className="text-sm font-medium text-gray-900">John Doe</div>
-                          <div className="text-xs text-gray-500">john.doe@example.com</div>
+                          <div className="text-sm font-medium text-gray-900">{getDisplayName()}</div>
+                          <div className="text-xs text-gray-500">{userName.email || 'candidate@workera.ai'}</div>
                         </div>
                         <Link
                           href="/portal/profile"

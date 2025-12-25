@@ -891,4 +891,63 @@ export class IntegrationsController {
       },
     );
   }
+
+  /**
+   * Get saved jobs for a candidate
+   * GET /integrations/candidate/saved-jobs
+   */
+  @Public()
+  @Get('candidate/saved-jobs')
+  async getSavedJobs(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    const savedJobs = await this.candidatePortalService.getSavedJobs(
+      candidateId,
+      tenantId || 'default-tenant',
+    );
+    return { savedJobs };
+  }
+
+  /**
+   * Save a job for a candidate
+   * POST /integrations/candidate/saved-jobs
+   */
+  @Public()
+  @Post('candidate/saved-jobs')
+  async saveJob(
+    @Body() body: {
+      candidateId: string;
+      jobId: string;
+      tenantId: string;
+    },
+  ) {
+    const result = await this.candidatePortalService.saveJob(
+      body.candidateId,
+      body.jobId,
+      body.tenantId || 'default-tenant',
+    );
+    return { success: true, saved: result };
+  }
+
+  /**
+   * Remove a saved job for a candidate
+   * DELETE /integrations/candidate/saved-jobs
+   */
+  @Public()
+  @Delete('candidate/saved-jobs')
+  async unsaveJob(
+    @Body() body: {
+      candidateId: string;
+      jobId: string;
+      tenantId: string;
+    },
+  ) {
+    const result = await this.candidatePortalService.unsaveJob(
+      body.candidateId,
+      body.jobId,
+      body.tenantId || 'default-tenant',
+    );
+    return { success: true, removed: result };
+  }
 }

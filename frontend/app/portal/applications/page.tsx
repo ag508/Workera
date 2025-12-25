@@ -382,9 +382,12 @@ export default function MyApplicationsPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                      <button className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
+                      <Link
+                        href={`/portal/apply/${app.application?.job?.id || app.id}`}
+                        className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-center"
+                      >
                         View Details
-                      </button>
+                      </Link>
                       {!['REJECTED', 'WITHDRAWN', 'ACCEPTED'].includes(app.status) && (
                         <button
                           onClick={() => handleWithdraw(app.id)}

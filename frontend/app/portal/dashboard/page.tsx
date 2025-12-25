@@ -210,6 +210,8 @@ export default function CandidateDashboard() {
   const [applications, setApplications] = useState<any[]>(demoApplications);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>(demoRecommendedJobs);
   const [upcomingInterviews, setUpcomingInterviews] = useState<any[]>(demoUpcomingInterviews);
+  const [userName, setUserName] = useState('');
+  const [profileStrength, setProfileStrength] = useState(75);
   const [stats, setStats] = useState({
     activeApplications: 12,
     pendingInterviews: 4,
@@ -232,6 +234,30 @@ export default function CandidateDashboard() {
     const candidateId = localStorage.getItem('candidateId');
 
     try {
+      // Fetch user profile for name and profile strength
+      if (candidateId) {
+        const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}?tenantId=${tenantId}`);
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          const profile = profileData.data || profileData;
+          if (profile.firstName) {
+            setUserName(profile.firstName);
+          }
+          // Calculate profile strength based on completeness
+          let strength = 0;
+          if (profile.firstName) strength += 10;
+          if (profile.lastName) strength += 10;
+          if (profile.email) strength += 10;
+          if (profile.phone) strength += 10;
+          if (profile.location) strength += 10;
+          if (profile.skills && profile.skills.length > 0) strength += 15;
+          if (profile.experience && profile.experience.length > 0) strength += 15;
+          if (profile.education && profile.education.length > 0) strength += 10;
+          if (profile.summary) strength += 10;
+          setProfileStrength(strength);
+        }
+      }
+
       // Fetch applications
       if (candidateId) {
         const appsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/applications?candidateId=${candidateId}&tenantId=${tenantId}`);
@@ -305,6 +331,7 @@ export default function CandidateDashboard() {
                 minute: '2-digit',
               }),
               type: interview.type || 'Interview',
+              meetingLink: interview.meetingLink,
             }));
           if (upcoming.length > 0) {
             setUpcomingInterviews(upcoming);
@@ -336,7 +363,7 @@ export default function CandidateDashboard() {
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, John!</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back{userName ? `, ${userName}` : ''}!</h1>
           <p className="text-gray-500 mt-1">Here's what's happening with your job search</p>
         </div>
         <Link
@@ -440,13 +467,19 @@ export default function CandidateDashboard() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+                          <Link
+                            href={`/portal/applications`}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                          >
                             View Details
-                          </button>
-                          {app.status === 'Interviewing' && (
-                            <button className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-white hover:bg-primary/90 transition-colors">
+                          </Link>
+                          {(app.status === 'Interviewing' || app.status === 'INTERVIEW') && (
+                            <Link
+                              href="/portal/interviews"
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+                            >
                               Prepare
-                            </button>
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -484,9 +517,23 @@ export default function CandidateDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-gray-900">{interview.date}</div>
-                    <button className="text-xs text-primary font-medium hover:underline mt-1">
-                      Join Meeting
-                    </button>
+                    {interview.meetingLink ? (
+                      <a
+                        href={interview.meetingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary font-medium hover:underline mt-1 inline-block"
+                      >
+                        Join Meeting
+                      </a>
+                    ) : (
+                      <Link
+                        href="/portal/interviews"
+                        className="text-xs text-primary font-medium hover:underline mt-1 inline-block"
+                      >
+                        View Details
+                      </Link>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -500,10 +547,10 @@ export default function CandidateDashboard() {
           <div className="rounded-2xl bg-gradient-to-br from-primary to-emerald-600 p-5 text-white">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold">Profile Strength</h3>
-              <span className="text-2xl font-bold">75%</span>
+              <span className="text-2xl font-bold">{profileStrength}%</span>
             </div>
             <div className="h-2 bg-white/20 rounded-full overflow-hidden mb-4">
-              <div className="h-full w-3/4 bg-white rounded-full" />
+              <div className="h-full bg-white rounded-full" style={{ width: `${profileStrength}%` }} />
             </div>
             <p className="text-sm text-white/80 mb-4">
               Complete your profile to increase visibility to recruiters
@@ -556,9 +603,12 @@ export default function CandidateDashboard() {
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-xs font-medium text-gray-700">{job.salary}</span>
-                    <button className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+                    <Link
+                      href={`/portal/apply/${job.id}`}
+                      className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                    >
                       Apply <ArrowUpRight className="h-3 w-3" />
-                    </button>
+                    </Link>
                   </div>
                 </motion.div>
               ))}

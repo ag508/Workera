@@ -392,6 +392,66 @@ export class CandidatePortalService {
   }
 
   /**
+   * Get saved jobs for a candidate
+   */
+  async getSavedJobs(candidateId: string, tenantId: string): Promise<Job[]> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate || !candidate.savedJobIds || candidate.savedJobIds.length === 0) {
+      return [];
+    }
+
+    const jobs = await this.jobRepository.find({
+      where: candidate.savedJobIds.map(id => ({ id, tenantId, status: JobStatus.POSTED })),
+    });
+
+    return jobs;
+  }
+
+  /**
+   * Save a job for a candidate
+   */
+  async saveJob(candidateId: string, jobId: string, tenantId: string): Promise<boolean> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      return false;
+    }
+
+    const savedJobIds = candidate.savedJobIds || [];
+    if (!savedJobIds.includes(jobId)) {
+      savedJobIds.push(jobId);
+      candidate.savedJobIds = savedJobIds;
+      await this.candidateUserRepository.save(candidate);
+    }
+
+    return true;
+  }
+
+  /**
+   * Remove a saved job for a candidate
+   */
+  async unsaveJob(candidateId: string, jobId: string, tenantId: string): Promise<boolean> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      return false;
+    }
+
+    const savedJobIds = candidate.savedJobIds || [];
+    candidate.savedJobIds = savedJobIds.filter(id => id !== jobId);
+    await this.candidateUserRepository.save(candidate);
+
+    return true;
+  }
+
+  /**
    * Verify email
    */
   async verifyEmail(token: string, tenantId: string): Promise<void> {
