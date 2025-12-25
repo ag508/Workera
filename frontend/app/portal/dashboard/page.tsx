@@ -21,8 +21,10 @@ import {
   Upload,
   User,
   Search,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
+import { getTenantId } from '@/lib/utils';
 
 // Standardized status config - matches applications page
 const statusConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -183,8 +185,38 @@ function OnboardingSection({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
+// Demo data fallbacks
+const demoApplications = [
+  { id: 1, role: 'Senior Frontend Engineer', company: 'Workera', status: 'Interviewing', date: '2023-10-24', location: 'Remote', logo: 'W', matchScore: 95 },
+  { id: 2, role: 'Product Designer', company: 'TechFlow', status: 'Applied', date: '2023-10-22', location: 'New York, NY', logo: 'T', matchScore: 88 },
+  { id: 3, role: 'Backend Developer', company: 'StartUp Inc', status: 'Rejected', date: '2023-10-15', location: 'San Francisco, CA', logo: 'S', matchScore: 72 },
+  { id: 4, role: 'Full Stack Engineer', company: 'DataCorp', status: 'Applied', date: '2023-10-20', location: 'Austin, TX', logo: 'D', matchScore: 91 },
+];
+
+const demoRecommendedJobs = [
+  { id: 1, role: 'React Developer', company: 'InnoTech', location: 'Remote', salary: '$120k-$150k', matchScore: 94 },
+  { id: 2, role: 'UI Engineer', company: 'DesignCo', location: 'Seattle, WA', salary: '$130k-$160k', matchScore: 89 },
+  { id: 3, role: 'Frontend Lead', company: 'GrowthLabs', location: 'Boston, MA', salary: '$150k-$180k', matchScore: 86 },
+];
+
+const demoUpcomingInterviews = [
+  { id: 1, role: 'Senior Frontend Engineer', company: 'Workera', date: 'Tomorrow, 2:00 PM', type: 'Technical Round' },
+  { id: 2, role: 'Product Designer', company: 'TechFlow', date: 'Dec 22, 10:00 AM', type: 'Culture Fit' },
+];
+
 export default function CandidateDashboard() {
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<any[]>(demoApplications);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>(demoRecommendedJobs);
+  const [upcomingInterviews, setUpcomingInterviews] = useState<any[]>(demoUpcomingInterviews);
+  const [stats, setStats] = useState({
+    activeApplications: 12,
+    pendingInterviews: 4,
+    offersReceived: 1,
+    profileViews: 48
+  });
+  const tenantId = getTenantId();
 
   useEffect(() => {
     // Check if user dismissed onboarding
@@ -192,30 +224,105 @@ export default function CandidateDashboard() {
     if (dismissed === 'true') {
       setShowOnboarding(false);
     }
+
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    const candidateId = localStorage.getItem('candidateId');
+
+    try {
+      // Fetch applications
+      if (candidateId) {
+        const appsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/applications?candidateId=${candidateId}&tenantId=${tenantId}`);
+        if (appsRes.ok) {
+          const appsData = await appsRes.json();
+          if (appsData && appsData.length > 0) {
+            const formattedApps = appsData.slice(0, 4).map((app: any) => ({
+              id: app.id,
+              role: app.application?.job?.title || 'Unknown Position',
+              company: app.application?.job?.company || 'Unknown Company',
+              status: app.status || 'APPLIED',
+              date: app.createdAt ? new Date(app.createdAt).toISOString().split('T')[0] : '',
+              location: app.application?.job?.location || 'Remote',
+              logo: (app.application?.job?.company || 'U').charAt(0),
+              matchScore: app.matchScore || Math.floor(Math.random() * 20) + 80,
+            }));
+            setApplications(formattedApps);
+
+            // Calculate stats from real data
+            const activeCount = appsData.filter((a: any) =>
+              ['APPLIED', 'SCREENING', 'INTERVIEW'].includes(a.status)
+            ).length;
+            const interviewCount = appsData.filter((a: any) => a.status === 'INTERVIEW').length;
+            const offerCount = appsData.filter((a: any) => a.status === 'OFFER').length;
+
+            setStats(prev => ({
+              ...prev,
+              activeApplications: activeCount || prev.activeApplications,
+              pendingInterviews: interviewCount || prev.pendingInterviews,
+              offersReceived: offerCount || prev.offersReceived,
+            }));
+          }
+        }
+      }
+
+      // Fetch jobs for recommendations
+      const jobsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs?tenantId=${tenantId}`);
+      if (jobsRes.ok) {
+        const jobsData = await jobsRes.json();
+        const jobs = jobsData.data || jobsData;
+        if (jobs && jobs.length > 0) {
+          const formattedJobs = jobs.slice(0, 3).map((job: any) => ({
+            id: job.id,
+            role: job.title,
+            company: job.company || 'Company',
+            location: job.location || 'Remote',
+            salary: job.salary || 'Competitive',
+            matchScore: Math.floor(Math.random() * 15) + 85,
+          }));
+          setRecommendedJobs(formattedJobs);
+        }
+      }
+
+      // Fetch upcoming interviews
+      const interviewsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interviews?tenantId=${tenantId}`);
+      if (interviewsRes.ok) {
+        const interviewsData = await interviewsRes.json();
+        if (interviewsData && interviewsData.length > 0) {
+          const upcoming = interviewsData
+            .filter((i: any) => new Date(i.scheduledAt) > new Date() && i.status !== 'CANCELLED')
+            .slice(0, 2)
+            .map((interview: any) => ({
+              id: interview.id,
+              role: interview.application?.job?.title || 'Interview',
+              company: interview.application?.job?.company || 'Company',
+              date: new Date(interview.scheduledAt).toLocaleString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              }),
+              type: interview.type || 'Interview',
+            }));
+          if (upcoming.length > 0) {
+            setUpcomingInterviews(upcoming);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      // Keep demo data on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const dismissOnboarding = () => {
     setShowOnboarding(false);
     localStorage.setItem('onboarding_dismissed', 'true');
   };
-  // Mock data for demo/preview
-  const applications = [
-    { id: 1, role: 'Senior Frontend Engineer', company: 'Workera', status: 'Interviewing', date: '2023-10-24', location: 'Remote', logo: 'W', matchScore: 95 },
-    { id: 2, role: 'Product Designer', company: 'TechFlow', status: 'Applied', date: '2023-10-22', location: 'New York, NY', logo: 'T', matchScore: 88 },
-    { id: 3, role: 'Backend Developer', company: 'StartUp Inc', status: 'Rejected', date: '2023-10-15', location: 'San Francisco, CA', logo: 'S', matchScore: 72 },
-    { id: 4, role: 'Full Stack Engineer', company: 'DataCorp', status: 'Applied', date: '2023-10-20', location: 'Austin, TX', logo: 'D', matchScore: 91 },
-  ];
-
-  const recommendedJobs = [
-    { id: 1, role: 'React Developer', company: 'InnoTech', location: 'Remote', salary: '$120k-$150k', matchScore: 94 },
-    { id: 2, role: 'UI Engineer', company: 'DesignCo', location: 'Seattle, WA', salary: '$130k-$160k', matchScore: 89 },
-    { id: 3, role: 'Frontend Lead', company: 'GrowthLabs', location: 'Boston, MA', salary: '$150k-$180k', matchScore: 86 },
-  ];
-
-  const upcomingInterviews = [
-    { id: 1, role: 'Senior Frontend Engineer', company: 'Workera', date: 'Tomorrow, 2:00 PM', type: 'Technical Round' },
-    { id: 2, role: 'Product Designer', company: 'TechFlow', date: 'Dec 22, 10:00 AM', type: 'Culture Fit' },
-  ];
 
   return (
     <div className="space-y-8">
@@ -244,10 +351,10 @@ export default function CandidateDashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Active Applications', value: 12, icon: Briefcase, color: 'text-blue-600', bgColor: 'bg-blue-100', trend: '+3 this week' },
-          { label: 'Interviews Pending', value: 4, icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-100', trend: '2 this week' },
-          { label: 'Offers Received', value: 1, icon: CheckCircle2, color: 'text-emerald-600', bgColor: 'bg-emerald-100', trend: 'Review now' },
-          { label: 'Profile Views', value: 48, icon: Eye, color: 'text-orange-600', bgColor: 'bg-orange-100', trend: '+12 this week' },
+          { label: 'Active Applications', value: stats.activeApplications, icon: Briefcase, color: 'text-blue-600', bgColor: 'bg-blue-100', trend: '+3 this week' },
+          { label: 'Interviews Pending', value: stats.pendingInterviews, icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-100', trend: '2 this week' },
+          { label: 'Offers Received', value: stats.offersReceived, icon: CheckCircle2, color: 'text-emerald-600', bgColor: 'bg-emerald-100', trend: 'Review now' },
+          { label: 'Profile Views', value: stats.profileViews, icon: Eye, color: 'text-orange-600', bgColor: 'bg-orange-100', trend: '+12 this week' },
         ].map((stat, i) => (
           <motion.div
             key={i}

@@ -147,4 +147,19 @@ export class InterviewsController {
       data: interview,
     };
   }
+
+  @Post(':id/send-reminder')
+  async sendReminder(
+    @Param('id') id: string,
+    @Query('tenantId') tenantId: string
+  ) {
+    const result = await this.interviewsService.sendReminder(
+      id,
+      tenantId || 'default-tenant'
+    );
+    return {
+      success: result,
+      message: result ? 'Reminder sent successfully' : 'Failed to send reminder',
+    };
+  }
 }

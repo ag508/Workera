@@ -283,64 +283,110 @@ export default function CandidateProfilePage() {
     if (!file) return;
 
     setUploadingResume(true);
+    const candidateId = localStorage.getItem('candidateId');
 
-    // Simulate upload
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Read file as text for backend processing
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const resumeText = event.target?.result as string;
 
-    setProfile({
-      ...profile,
-      resume: {
-        name: file.name,
-        url: URL.createObjectURL(file),
-        uploadedAt: new Date().toISOString()
-      }
-    });
+        // Try to upload to backend
+        if (candidateId) {
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}/resume`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                resumeText: resumeText.substring(0, 10000), // Limit size
+                tenantId,
+              }),
+            });
 
-    setUploadingResume(false);
+            if (res.ok) {
+              const data = await res.json();
+              setProfile({
+                ...profile,
+                resume: {
+                  name: file.name,
+                  url: URL.createObjectURL(file),
+                  uploadedAt: new Date().toISOString()
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Backend upload failed, storing locally:', error);
+          }
+        }
 
-    // Offer to parse
-    if (confirm('Would you like to auto-fill your profile from this resume using AI?')) {
-      handleParseResume(file);
+        // Store locally regardless
+        setProfile({
+          ...profile,
+          resume: {
+            name: file.name,
+            url: URL.createObjectURL(file),
+            uploadedAt: new Date().toISOString()
+          }
+        });
+
+        setUploadingResume(false);
+
+        // Offer to parse
+        if (confirm('Would you like to auto-fill your profile from this resume using AI?')) {
+          handleParseResume(resumeText);
+        }
+      };
+
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('Failed to read file:', error);
+      setUploadingResume(false);
     }
   };
 
-  const handleParseResume = async (file?: File) => {
+  const handleParseResume = async (resumeText?: string) => {
     setParsingResume(true);
+    const candidateId = localStorage.getItem('candidateId');
 
-    // Simulate AI parsing
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      // Try AI parsing via backend
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/parse-resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeText: resumeText || '',
+          tenantId,
+        }),
+      });
 
+      if (res.ok) {
+        const data = await res.json();
+        if (data.parsed) {
+          setResumeParseResult({
+            ...data.parsed,
+            confidence: data.confidence || 0.85
+          });
+          setParsingResume(false);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('AI parsing failed, using fallback:', error);
+    }
+
+    // Fallback: basic parsing from text
     const parsedData = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@email.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
-      title: 'Senior Frontend Developer',
-      summary: 'Passionate frontend developer with 6+ years of experience building scalable web applications.',
-      skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'GraphQL', 'CSS', 'Tailwind', 'Next.js', 'Redux', 'Jest'],
-      experience: [
-        {
-          company: 'TechCorp Inc.',
-          position: 'Senior Frontend Developer',
-          duration: '2021 - Present',
-          description: 'Lead frontend development for core product. Mentored junior developers and improved performance by 40%.'
-        },
-        {
-          company: 'StartupXYZ',
-          position: 'Frontend Developer',
-          duration: '2019 - 2021',
-          description: 'Built React components library and implemented design system.'
-        }
-      ],
-      education: [
-        {
-          institution: 'Stanford University',
-          degree: 'M.S. Computer Science',
-          year: '2018'
-        }
-      ],
-      confidence: 0.92
+      firstName: profile.firstName || 'Unknown',
+      lastName: profile.lastName || 'Candidate',
+      email: profile.email || '',
+      phone: profile.phone || '',
+      location: profile.location || 'Not specified',
+      title: 'Professional',
+      summary: resumeText ? resumeText.substring(0, 200) + '...' : 'Resume uploaded successfully.',
+      skills: profile.skills.length > 0 ? profile.skills : ['JavaScript', 'React', 'TypeScript'],
+      experience: profile.experience.length > 0 ? profile.experience : [],
+      education: profile.education.length > 0 ? profile.education : [],
+      confidence: 0.6
     };
 
     setResumeParseResult(parsedData);

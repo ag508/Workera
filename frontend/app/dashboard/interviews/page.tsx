@@ -62,12 +62,10 @@ const VIDEO_PLATFORMS = [
   { id: 'in-person', name: 'In-Person', color: 'bg-gray-50 text-gray-600 border-gray-200', connected: true },
 ];
 
-// Mock candidates for scheduling
-const MOCK_CANDIDATES = [
+// Fallback candidates for scheduling if API fails
+const FALLBACK_CANDIDATES = [
   { id: '1', name: 'John Smith', email: 'john.smith@email.com', job: 'Senior Software Engineer', stage: 'Technical Round' },
   { id: '2', name: 'Sarah Johnson', email: 'sarah.j@email.com', job: 'Product Manager', stage: 'Final Round' },
-  { id: '3', name: 'Mike Chen', email: 'mike.chen@email.com', job: 'UX Designer', stage: 'Phone Screen' },
-  { id: '4', name: 'Emily Davis', email: 'emily.d@email.com', job: 'DevOps Engineer', stage: 'Technical Round' },
 ];
 
 interface ScheduleFormData {
@@ -91,6 +89,7 @@ export default function InterviewsPage() {
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduling, setScheduling] = useState(false);
+  const [candidates, setCandidates] = useState<Array<{ id: string; name: string; email: string; job: string; stage: string }>>(FALLBACK_CANDIDATES);
   const [scheduleForm, setScheduleForm] = useState<ScheduleFormData>({
     candidateId: '',
     date: '',
@@ -115,7 +114,31 @@ export default function InterviewsPage() {
 
   useEffect(() => {
     fetchInterviews();
+    fetchCandidates();
   }, [viewMode]);
+
+  const fetchCandidates = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates?tenantId=default-tenant`);
+      if (res.ok) {
+        const data = await res.json();
+        const candidateList = data.data || data;
+        if (candidateList && candidateList.length > 0) {
+          const formatted = candidateList.map((c: any) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`,
+            email: c.email,
+            job: c.applications?.[0]?.job?.title || 'Open Position',
+            stage: c.applications?.[0]?.status || 'Applied',
+          }));
+          setCandidates(formatted);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch candidates:', error);
+      // Keep fallback candidates
+    }
+  };
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -203,7 +226,7 @@ export default function InterviewsPage() {
       };
 
       const scheduledAt = new Date(`${scheduleForm.date}T${scheduleForm.time}`).toISOString();
-      const selectedCandidate = MOCK_CANDIDATES.find(c => c.id === scheduleForm.candidateId);
+      const selectedCandidate = candidates.find(c => c.id === scheduleForm.candidateId);
 
       // Call real API
       await interviewsService.schedule({
@@ -812,7 +835,7 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                     className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select a candidate</option>
-                    {MOCK_CANDIDATES.map((candidate) => (
+                    {candidates.map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>
                         {candidate.name} - {candidate.job} ({candidate.stage})
                       </option>

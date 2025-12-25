@@ -175,4 +175,28 @@ export class InterviewsService {
     // Filter by tenant
     return interviews.filter(i => i.application?.job?.tenantId === tenantId);
   }
+
+  async sendReminder(id: string, tenantId: string): Promise<boolean> {
+    const interview = await this.getInterviewById(id, tenantId);
+    if (!interview || !interview.application?.candidate) {
+      return false;
+    }
+
+    try {
+      await this.notificationsService.sendInterviewReminder({
+        to: interview.application.candidate.email,
+        candidateName: `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`,
+        jobTitle: interview.application.job?.title || 'Position',
+        companyName: interview.application.job?.company || 'Company',
+        interviewDate: interview.scheduledAt.toISOString(),
+        interviewType: interview.type,
+        meetingLink: interview.meetingLink,
+        location: interview.location,
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to send interview reminder:', error);
+      return false;
+    }
+  }
 }

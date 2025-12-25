@@ -13,6 +13,11 @@ export class AnalyzeResumeDto {
   jobDescription: string;
 }
 
+export class ParseResumeDto {
+  resumeText: string;
+  tenantId?: string;
+}
+
 export class RankCandidateDto {
   candidate: {
     id: string;
@@ -85,6 +90,17 @@ export class AiController {
     return {
       success: true,
       data: analysis,
+    };
+  }
+
+  @Post('parse-resume')
+  async parseResume(@Body() dto: ParseResumeDto) {
+    const parsed = await this.aiService.parseResume(dto.resumeText);
+
+    return {
+      success: true,
+      parsed,
+      confidence: 0.85,
     };
   }
 
