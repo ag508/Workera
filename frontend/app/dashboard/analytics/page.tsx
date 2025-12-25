@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
@@ -34,9 +34,10 @@ import {
   Timer,
   Building2,
   UserPlus,
-  TrendingDown as TrendDown
+  TrendingDown as TrendDown,
+  Loader2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTenantId } from '@/lib/utils';
 
 // Demo data for analytics
 const statsCards = [
@@ -176,14 +177,104 @@ const quarterlyTrends = [
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('This Month');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dashboardMetrics, setDashboardMetrics] = useState<any>(null);
+  const [hiringFunnel, setHiringFunnel] = useState<any[]>(pipelineData);
+  const [jobPerformance, setJobPerformance] = useState<any[]>(topJobs);
+  const tenantId = getTenantId();
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    setLoading(true);
+    try {
+      // Fetch dashboard metrics
+      const [dashboardRes, funnelRes, jobsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/dashboard?tenantId=${tenantId}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/hiring-funnel?tenantId=${tenantId}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/job-performance?tenantId=${tenantId}&limit=5`),
+      ]);
+
+      if (dashboardRes.ok) {
+        const data = await dashboardRes.json();
+        setDashboardMetrics(data.data);
+      }
+
+      if (funnelRes.ok) {
+        const data = await funnelRes.json();
+        if (data.data && data.data.length > 0) {
+          const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500', 'bg-emerald-500', 'bg-green-500'];
+          setHiringFunnel(data.data.map((item: any, i: number) => ({
+            stage: item.status || item.stage,
+            count: item.count || 0,
+            color: colors[i % colors.length],
+          })));
+        }
+      }
+
+      if (jobsRes.ok) {
+        const data = await jobsRes.json();
+        if (data.data && data.data.length > 0) {
+          setJobPerformance(data.data.map((job: any) => ({
+            title: job.title,
+            applications: job.applicationCount || job.applications || 0,
+            status: job.status === 'POSTED' ? 'Active' : job.status,
+            daysOpen: job.daysOpen || Math.floor((Date.now() - new Date(job.createdAt).getTime()) / 86400000),
+          })));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    fetchAnalytics().finally(() => setIsRefreshing(false));
   };
 
+  // Dynamic stats cards based on real data
+  const dynamicStatsCards = dashboardMetrics ? [
+    {
+      title: 'Total Applications',
+      value: dashboardMetrics.totalApplications?.toLocaleString() || statsCards[0].value,
+      change: dashboardMetrics.applicationsChange || statsCards[0].change,
+      trend: 'up',
+      icon: FileText,
+      color: 'bg-blue-500'
+    },
+    {
+      title: 'Active Jobs',
+      value: dashboardMetrics.activeJobs?.toString() || statsCards[1].value,
+      change: dashboardMetrics.jobsChange || statsCards[1].change,
+      trend: 'up',
+      icon: Briefcase,
+      color: 'bg-emerald-500'
+    },
+    {
+      title: 'Time to Hire',
+      value: dashboardMetrics.avgTimeToHire ? `${dashboardMetrics.avgTimeToHire} days` : statsCards[2].value,
+      change: dashboardMetrics.timeToHireChange || statsCards[2].change,
+      trend: 'up',
+      icon: Clock,
+      color: 'bg-purple-500'
+    },
+    {
+      title: 'Offer Acceptance',
+      value: dashboardMetrics.offerAcceptanceRate ? `${dashboardMetrics.offerAcceptanceRate}%` : statsCards[3].value,
+      change: dashboardMetrics.acceptanceChange || statsCards[3].change,
+      trend: 'up',
+      icon: Target,
+      color: 'bg-amber-500'
+    }
+  ] : statsCards;
+
   const maxApplications = Math.max(...weeklyData.map(d => d.applications));
-  const maxPipeline = Math.max(...pipelineData.map(d => d.count));
+  const maxPipeline = Math.max(...hiringFunnel.map(d => d.count), 1);
 
   return (
     <div className="space-y-8">
@@ -217,7 +308,7 @@ export default function AnalyticsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((stat, index) => (
+        {dynamicStatsCards.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -306,7 +397,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
           <div className="space-y-4">
-            {pipelineData.map((stage, i) => (
+            {hiringFunnel.map((stage, i) => (
               <motion.div
                 key={stage.stage}
                 initial={{ opacity: 0, x: -20 }}
@@ -388,7 +479,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
           <div className="space-y-4">
-            {topJobs.map((job, i) => (
+            {jobPerformance.map((job, i) => (
               <motion.div
                 key={job.title}
                 initial={{ opacity: 0, y: 10 }}
