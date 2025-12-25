@@ -33,24 +33,11 @@ export default function CandidateLoginPage() {
         localStorage.setItem('candidateId', data.candidate.id);
         router.push('/portal/dashboard');
       } else {
-        // Mock login fallback for DEMO purposes if backend is not running
-        if (email === 'demo@workera.ai') {
-          localStorage.setItem('candidateToken', 'mock-token');
-          localStorage.setItem('candidateId', 'mock-candidate-id');
-          router.push('/portal/dashboard');
-          return;
-        }
-        setError('Invalid email or password');
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.message || 'Invalid email or password');
       }
     } catch (err) {
-      // Mock login fallback for DEMO purposes
-      if (email === 'demo@workera.ai') {
-        localStorage.setItem('candidateToken', 'mock-token');
-        localStorage.setItem('candidateId', 'mock-candidate-id');
-        router.push('/portal/dashboard');
-        return;
-      }
-      setError('An error occurred during login');
+      setError('Unable to connect to server. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -230,13 +217,6 @@ export default function CandidateLoginPage() {
                   </>
                 )}
               </button>
-
-              {/* Demo Hint */}
-              <div className="rounded-xl bg-primary/5 border border-primary/20 px-4 py-4 text-center">
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold text-primary">Demo Login:</span> demo@workera.ai / any password
-                </p>
-              </div>
 
               <div className="text-center pt-3">
                 <span className="text-base text-gray-600">Don't have an account? </span>
