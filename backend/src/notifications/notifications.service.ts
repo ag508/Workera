@@ -22,7 +22,7 @@ export interface NotificationPayload {
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   /**
    * Send application status update email
@@ -37,6 +37,17 @@ export class NotificationsService {
    */
   async sendInterviewInvitation(payload: NotificationPayload): Promise<boolean> {
     const template = this.getInterviewInvitationTemplate(payload);
+    return this.sendEmail(payload.to, template);
+  }
+
+  /**
+   * Send interview reminder email
+   */
+  async sendInterviewReminder(payload: NotificationPayload): Promise<boolean> {
+    // Reuse invitation template but with Reminder subject could be done, 
+    // or create a new template. For now, adapting invitation template.
+    const template = this.getInterviewInvitationTemplate(payload);
+    template.subject = `Reminder: Interview for ${payload.jobTitle} at ${payload.companyName}`;
     return this.sendEmail(payload.to, template);
   }
 

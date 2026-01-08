@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Candidate } from '../database/entities/candidate.entity';
 import { Resume } from '../database/entities/resume.entity';
 import { Job } from '../database/entities/job.entity';
@@ -34,15 +35,13 @@ import { AiModule } from '../ai/ai.module';
       CandidateUser,
       Tenant,
     ]),
-    JwtModule.register({
-      secret: (() => {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-          throw new Error('JWT_SECRET environment variable is required');
-        }
-        return secret;
-      })(),
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '7d' },
+      }),
+      inject: [ConfigService],
     }),
     AiModule,
   ],
@@ -70,4 +69,4 @@ import { AiModule } from '../ai/ai.module';
     CandidatePortalEnhancedService,
   ],
 })
-export class IntegrationsModule {}
+export class IntegrationsModule { }

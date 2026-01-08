@@ -12,7 +12,7 @@ export class InterviewsService {
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async scheduleInterview(data: {
     applicationId: string;
@@ -188,10 +188,12 @@ export class InterviewsService {
         candidateName: `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`,
         jobTitle: interview.application.job?.title || 'Position',
         companyName: interview.application.job?.company || 'Company',
-        interviewDate: interview.scheduledAt.toISOString(),
-        interviewType: interview.type,
-        meetingLink: interview.meetingLink,
-        location: interview.location,
+        interviewDate: interview.scheduledAt,
+        interviewLink: interview.meetingLink,
+        additionalInfo: {
+          interviewType: interview.type,
+          location: interview.location,
+        },
       });
       return true;
     } catch (error) {

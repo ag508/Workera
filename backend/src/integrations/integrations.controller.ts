@@ -25,7 +25,7 @@ export class IntegrationsController {
     private readonly candidatePortalEnhancedService: CandidatePortalEnhancedService,
     private readonly integrationSettingsService: IntegrationSettingsService,
     private readonly aiResumeParserService: AIResumeParserService,
-  ) {}
+  ) { }
 
   /**
    * Get integration settings
@@ -904,7 +904,7 @@ export class IntegrationsController {
   ) {
     const savedJobs = await this.candidatePortalService.getSavedJobs(
       candidateId,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
     return { savedJobs };
   }
@@ -925,7 +925,7 @@ export class IntegrationsController {
     const result = await this.candidatePortalService.saveJob(
       body.candidateId,
       body.jobId,
-      body.tenantId || 'default-tenant',
+      body.tenantId || '11111111-1111-1111-1111-111111111111',
     );
     return { success: true, saved: result };
   }
@@ -946,7 +946,7 @@ export class IntegrationsController {
     const result = await this.candidatePortalService.unsaveJob(
       body.candidateId,
       body.jobId,
-      body.tenantId || 'default-tenant',
+      body.tenantId || '11111111-1111-1111-1111-111111111111',
     );
     return { success: true, removed: result };
   }

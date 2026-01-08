@@ -26,7 +26,7 @@ export class ReplyMessageDto {
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(private readonly messagesService: MessagesService) { }
 
   @Get()
   async getMessages(
@@ -49,7 +49,7 @@ export class MessagesController {
     };
 
     const result = await this.messagesService.getMessages(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userEmail || 'recruiter@workera.ai',
       filters,
     );
@@ -67,7 +67,7 @@ export class MessagesController {
     @Query('userEmail') userEmail: string,
   ) {
     const count = await this.messagesService.getUnreadCount(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userEmail || 'recruiter@workera.ai',
     );
 
@@ -84,7 +84,7 @@ export class MessagesController {
   ) {
     const message = await this.messagesService.getMessageById(
       id,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {
@@ -96,7 +96,7 @@ export class MessagesController {
   @Post()
   async sendMessage(@Body() dto: SendMessageDto) {
     const message = await this.messagesService.sendMessage({
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
       senderName: dto.senderName,
       senderEmail: dto.senderEmail,
       senderAvatar: dto.senderAvatar,
@@ -124,7 +124,7 @@ export class MessagesController {
     // Get parent message to get recipient info
     const parent = await this.messagesService.getMessageById(
       id,
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     if (!parent) {
@@ -135,7 +135,7 @@ export class MessagesController {
     }
 
     const reply = await this.messagesService.replyToMessage(id, {
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
       senderName: dto.senderName,
       senderEmail: dto.senderEmail,
       senderAvatar: dto.senderAvatar,
@@ -162,7 +162,7 @@ export class MessagesController {
   ) {
     const message = await this.messagesService.markAsRead(
       id,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {
@@ -177,7 +177,7 @@ export class MessagesController {
     @Query('userEmail') userEmail: string,
   ) {
     const count = await this.messagesService.markAllAsRead(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userEmail || 'recruiter@workera.ai',
     );
 
@@ -195,7 +195,7 @@ export class MessagesController {
   ) {
     const message = await this.messagesService.toggleStar(
       id,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {

@@ -866,7 +866,6 @@ export class CandidatePortalEnhancedService {
       where: {
         jobId,
         candidateId: candidate.id,
-        tenantId,
       },
     });
 
@@ -888,7 +887,6 @@ export class CandidatePortalEnhancedService {
     const application = this.applicationRepository.create({
       jobId,
       candidateId: candidate.id,
-      tenantId,
       status: ApplicationStatus.APPLIED,
       matchScore,
       aiAnalysis: resumeData ? {
@@ -898,7 +896,7 @@ export class CandidatePortalEnhancedService {
       } : undefined,
     });
 
-    const savedApplication = await this.applicationRepository.save(application);
+    const savedApplication = await this.applicationRepository.save(application) as Application;
 
     // Store form submission data
     const submission = this.formSubmissionRepository.create({

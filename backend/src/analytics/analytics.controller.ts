@@ -1,14 +1,16 @@
 import { Controller, Get, Query, Param } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private readonly analyticsService: AnalyticsService) { }
 
+  @Public()
   @Get('dashboard')
   async getDashboardMetrics(@Query('tenantId') tenantId: string) {
     const metrics = await this.analyticsService.getDashboardMetrics(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -16,10 +18,11 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('application-status')
   async getApplicationStatusDistribution(@Query('tenantId') tenantId: string) {
     const distribution = await this.analyticsService.getApplicationStatusDistribution(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -27,13 +30,14 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('hiring-funnel')
   async getHiringFunnelMetrics(
     @Query('tenantId') tenantId: string,
     @Query('jobId') jobId?: string
   ) {
     const funnel = await this.analyticsService.getHiringFunnelMetrics(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       jobId
     );
     return {
@@ -42,13 +46,14 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('top-skills')
   async getTopSkills(
     @Query('tenantId') tenantId: string,
     @Query('limit') limit?: string
   ) {
     const skills = await this.analyticsService.getTopSkills(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       limit ? parseInt(limit) : 10
     );
     return {
@@ -57,10 +62,11 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('interview-metrics')
   async getInterviewMetrics(@Query('tenantId') tenantId: string) {
     const metrics = await this.analyticsService.getInterviewMetrics(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -68,13 +74,14 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('job-performance')
   async getJobPerformance(
     @Query('tenantId') tenantId: string,
     @Query('limit') limit?: string
   ) {
     const performance = await this.analyticsService.getJobPerformance(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       limit ? parseInt(limit) : 10
     );
     return {
@@ -83,10 +90,11 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('time-to-hire')
   async getTimeToHire(@Query('tenantId') tenantId: string) {
     const timeToHire = await this.analyticsService.getTimeToHire(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -94,13 +102,14 @@ export class AnalyticsController {
     };
   }
 
+  @Public()
   @Get('application-trends')
   async getApplicationTrends(
     @Query('tenantId') tenantId: string,
     @Query('days') days?: string
   ) {
     const trends = await this.analyticsService.getApplicationTrends(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       days ? parseInt(days) : 30
     );
     return {

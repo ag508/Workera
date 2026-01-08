@@ -13,7 +13,7 @@ export class DeleteDataDto {
 
 @Controller('gdpr')
 export class GDPRController {
-  constructor(private readonly gdprService: GDPRService) {}
+  constructor(private readonly gdprService: GDPRService) { }
 
   @Get('export/:candidateId')
   async exportCandidateData(
@@ -22,7 +22,7 @@ export class GDPRController {
   ) {
     const data = await this.gdprService.exportCandidateData(
       candidateId,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -37,7 +37,7 @@ export class GDPRController {
   ) {
     const report = await this.gdprService.deleteCandidateData(
       candidateId,
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       {
         hardDelete: dto.hardDelete,
         keepApplicationHistory: dto.keepApplicationHistory,
@@ -52,7 +52,7 @@ export class GDPRController {
   @Get('retention-report')
   async getDataRetentionReport(@Query('tenantId') tenantId: string) {
     const report = await this.gdprService.getDataRetentionReport(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -67,7 +67,7 @@ export class GDPRController {
   ) {
     const candidate = await this.gdprService.findCandidateByEmail(
       email,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: !!candidate,
@@ -82,7 +82,7 @@ export class GDPRController {
   ) {
     const consent = await this.gdprService.verifyConsent(
       candidateId,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,

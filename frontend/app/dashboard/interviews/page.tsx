@@ -33,7 +33,13 @@ import {
 } from 'lucide-react';
 import { interviewsService, Interview, InterviewStatus, InterviewType } from '@/lib/services/interviews';
 
-const STATUS_CONFIG: Record<InterviewStatus, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
+  scheduled: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100 border-blue-200', icon: Calendar },
+  confirmed: { label: 'Confirmed', color: 'text-emerald-700', bgColor: 'bg-emerald-100 border-emerald-200', icon: CheckCircle2 },
+  completed: { label: 'Completed', color: 'text-gray-700', bgColor: 'bg-gray-100 border-gray-200', icon: CheckCircle2 },
+  cancelled: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-100 border-red-200', icon: XCircle },
+  rescheduled: { label: 'Rescheduled', color: 'text-amber-700', bgColor: 'bg-amber-100 border-amber-200', icon: RefreshCw },
+  // Fallback for uppercase variations
   SCHEDULED: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100 border-blue-200', icon: Calendar },
   CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bgColor: 'bg-emerald-100 border-emerald-200', icon: CheckCircle2 },
   COMPLETED: { label: 'Completed', color: 'text-gray-700', bgColor: 'bg-gray-100 border-gray-200', icon: CheckCircle2 },
@@ -42,13 +48,19 @@ const STATUS_CONFIG: Record<InterviewStatus, { label: string; color: string; bgC
   NO_SHOW: { label: 'No Show', color: 'text-red-700', bgColor: 'bg-red-100 border-red-200', icon: AlertCircle }
 };
 
-const TYPE_CONFIG: Record<InterviewType, { label: string; icon: React.ElementType; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  phone: { label: 'Phone', icon: Phone, color: 'bg-blue-50 text-blue-600' },
+  video: { label: 'Video', icon: Video, color: 'bg-purple-50 text-purple-600' },
+  'in-person': { label: 'In-Person', icon: Users, color: 'bg-teal-50 text-teal-600' },
+  technical: { label: 'Technical', icon: Briefcase, color: 'bg-orange-50 text-orange-600' },
+  hr: { label: 'HR', icon: MessageSquare, color: 'bg-pink-50 text-pink-600' },
+  final: { label: 'Final', icon: Star, color: 'bg-amber-50 text-amber-600' },
+  // Fallback map for legacy/other values
   PHONE_SCREEN: { label: 'Phone Screen', icon: Phone, color: 'bg-blue-50 text-blue-600' },
-  TECHNICAL: { label: 'Technical', icon: Briefcase, color: 'bg-purple-50 text-purple-600' },
+  TECHNICAL_ROUND: { label: 'Technical', icon: Briefcase, color: 'bg-purple-50 text-purple-600' },
   BEHAVIORAL: { label: 'Behavioral', icon: MessageSquare, color: 'bg-teal-50 text-teal-600' },
   CULTURE_FIT: { label: 'Culture Fit', icon: Users, color: 'bg-orange-50 text-orange-600' },
-  FINAL: { label: 'Final Round', icon: Star, color: 'bg-amber-50 text-amber-600' },
-  PANEL: { label: 'Panel Interview', icon: Users, color: 'bg-indigo-50 text-indigo-600' }
+  PANEL: { label: 'Panel', icon: Users, color: 'bg-indigo-50 text-indigo-600' }
 };
 
 type ViewMode = 'upcoming' | 'all' | 'completed';
@@ -414,8 +426,8 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
               key={key}
               onClick={() => setViewMode(key as ViewMode)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${viewMode === key
-                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
               {label}
@@ -460,10 +472,13 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       {!loading && interviews.length > 0 && (
         <div className="space-y-4">
           {interviews.map((interview, index) => {
-            const status = STATUS_CONFIG[interview.status];
-            const type = TYPE_CONFIG[interview.type];
-            const StatusIcon = status.icon;
-            const TypeIcon = type.icon;
+            const status = STATUS_CONFIG[interview.status] || STATUS_CONFIG.scheduled || STATUS_CONFIG.SCHEDULED;
+            const typeKey = interview.type as string; // Cast to allow string indexing
+            const type = TYPE_CONFIG[typeKey] || TYPE_CONFIG.technical || TYPE_CONFIG.TECHNICAL;
+
+            const StatusIcon = status?.icon || Calendar;
+            const TypeIcon = type?.icon || Briefcase;
+
             const isPast = new Date(interview.scheduledAt) < new Date();
             const candidateName = interview.application
               ? `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`
@@ -686,8 +701,8 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                           <Star
                             key={star}
                             className={`h-5 w-5 ${star <= selectedInterview.feedback!.rating!
-                                ? 'text-amber-500 fill-amber-500'
-                                : 'text-gray-300'
+                              ? 'text-amber-500 fill-amber-500'
+                              : 'text-gray-300'
                               }`}
                           />
                         ))}
@@ -923,13 +938,12 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                         type="button"
                         disabled={!platform.connected}
                         onClick={() => setScheduleForm({ ...scheduleForm, platform: platform.id })}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          scheduleForm.platform === platform.id
-                            ? 'border-primary bg-primary/5'
-                            : platform.connected
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${scheduleForm.platform === platform.id
+                          ? 'border-primary bg-primary/5'
+                          : platform.connected
                             ? 'border-gray-200 hover:border-gray-300'
                             : 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${platform.color}`}>
@@ -1089,11 +1103,10 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                         className="p-1 transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`h-8 w-8 ${
-                            star <= feedbackData.rating
-                              ? 'text-amber-500 fill-amber-500'
-                              : 'text-gray-300'
-                          }`}
+                          className={`h-8 w-8 ${star <= feedbackData.rating
+                            ? 'text-amber-500 fill-amber-500'
+                            : 'text-gray-300'
+                            }`}
                         />
                       </button>
                     ))}
@@ -1141,11 +1154,10 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                       <button
                         key={option.value}
                         onClick={() => setFeedbackData({ ...feedbackData, recommendation: option.value })}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
-                          feedbackData.recommendation === option.value
-                            ? option.color + ' border-current'
-                            : 'bg-gray-50 text-gray-600 border-gray-200'
-                        }`}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${feedbackData.recommendation === option.value
+                          ? option.color + ' border-current'
+                          : 'bg-gray-50 text-gray-600 border-gray-200'
+                          }`}
                       >
                         {option.label}
                       </button>

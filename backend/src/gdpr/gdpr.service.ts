@@ -69,7 +69,7 @@ export class GDPRService {
     private resumeRepository: Repository<Resume>,
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
-  ) {}
+  ) { }
 
   /**
    * Export all personal data for a candidate (GDPR Article 15 - Right of Access)
@@ -351,7 +351,7 @@ export class GDPRService {
 
     // Check if candidate has any applications (active consent through action)
     const applicationCount = await this.applicationRepository.count({
-      where: { candidateId, tenantId },
+      where: { candidateId },
     });
 
     if (applicationCount > 0) {

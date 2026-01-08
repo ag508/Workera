@@ -22,67 +22,13 @@ import {
   EmploymentType,
   WorkModel,
 } from '../database/entities/requisitions';
+import { CreateRequisitionDto, UpdateRequisitionDto } from './requisitions.service';
 
 // ============================================================================
 // DTOs
 // ============================================================================
 
-export class CreateRequisitionDto {
-  jobTitle: string;
-  departmentId: string;
-  hiringManagerId: string;
-  hiringManagerName: string;
-  headcount: number;
-  employmentType: EmploymentType;
-  workModel: WorkModel;
-  businessUnitId: string;
-  locationId: string;
-  costCenterId: string;
-  jobGradeId: string;
-  positionId?: string;
-  salaryMin: number;
-  salaryMax: number;
-  currency?: string;
-  justification?: string;
-  jobDescription?: string;
-  requirements?: string;
-  preferredQualifications?: string;
-  responsibilities?: string;
-  targetStartDate: Date;
-  priority?: RequisitionPriority;
-  recruiterId?: string;
-  recruiterName?: string;
-  internalOnly?: boolean;
-  isConfidential?: boolean;
-  tenantId?: string;
-  createdBy?: string;
-}
 
-export class UpdateRequisitionDto {
-  jobTitle?: string;
-  departmentId?: string;
-  headcount?: number;
-  employmentType?: EmploymentType;
-  workModel?: WorkModel;
-  locationId?: string;
-  costCenterId?: string;
-  jobGradeId?: string;
-  salaryMin?: number;
-  salaryMax?: number;
-  justification?: string;
-  jobDescription?: string;
-  requirements?: string;
-  preferredQualifications?: string;
-  responsibilities?: string;
-  targetStartDate?: Date;
-  priority?: RequisitionPriority;
-  recruiterId?: string;
-  recruiterName?: string;
-  internalOnly?: boolean;
-  isConfidential?: boolean;
-  tenantId?: string;
-  updatedBy?: string;
-}
 
 export class ApprovalDecisionDto {
   decision: 'APPROVE' | 'REJECT' | 'SEND_BACK' | 'DELEGATE';
@@ -152,7 +98,7 @@ export class RequisitionsController {
 
   @Get()
   async getRequisitions(@Query() query: RequisitionQueryDto) {
-    const tenantId = query.tenantId || 'default-tenant';
+    const tenantId = query.tenantId || '11111111-1111-1111-1111-111111111111';
     const page = query.page || 1;
     const limit = query.limit || 20;
 
@@ -190,7 +136,7 @@ export class RequisitionsController {
   @Get('stats')
   async getStatistics(@Query('tenantId') tenantId?: string) {
     const stats = await this.requisitionsService.getStats(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {
@@ -205,7 +151,7 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
   ) {
     const requisition = await this.requisitionsService.findById(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
     );
 
@@ -217,7 +163,7 @@ export class RequisitionsController {
 
   @Post()
   async createRequisition(@Body(ValidationPipe) dto: CreateRequisitionDto) {
-    const tenantId = dto.tenantId || 'default-tenant';
+    const tenantId = dto.tenantId || '11111111-1111-1111-1111-111111111111';
     const createdBy = dto.createdBy || 'system';
 
     // Validate salary band if job grade is provided
@@ -264,7 +210,7 @@ export class RequisitionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(ValidationPipe) dto: UpdateRequisitionDto,
   ) {
-    const tenantId = dto.tenantId || 'default-tenant';
+    const tenantId = dto.tenantId || '11111111-1111-1111-1111-111111111111';
     const updatedBy = dto.updatedBy || 'system';
 
     const requisition = await this.requisitionsService.update(
@@ -287,7 +233,7 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     await this.requisitionsService.delete(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       userId || 'system',
     );
@@ -304,7 +250,7 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     const requisition = await this.requisitionsService.submit(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       userId || 'system',
     );
@@ -321,7 +267,7 @@ export class RequisitionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(ValidationPipe) dto: ApprovalDecisionDto,
   ) {
-    const tenantId = dto.tenantId || 'default-tenant';
+    const tenantId = dto.tenantId || '11111111-1111-1111-1111-111111111111';
     const userId = dto.userId || 'system';
 
     let requisition;
@@ -362,7 +308,7 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: CancelRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.cancel(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       dto.userId || 'system',
       dto.reason,
@@ -381,7 +327,7 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: HoldRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.hold(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       dto.userId || 'system',
       dto.reason,
@@ -401,7 +347,7 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     const requisition = await this.requisitionsService.resume(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       userId || 'system',
     );
@@ -419,7 +365,7 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: PostRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.postToJob(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       dto.userId || 'system',
       dto.channels,
@@ -438,7 +384,7 @@ export class RequisitionsController {
     @Body(ValidationPipe) dto: FillRequisitionDto,
   ) {
     const requisition = await this.requisitionsService.markFilled(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       id,
       dto.userId || 'system',
       dto.count,
@@ -473,7 +419,7 @@ export class RequisitionsController {
     @Query('userId') userId?: string,
   ) {
     const pending = await this.approvalWorkflowService.getPendingApprovalsForUser(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userId || 'system',
     );
 
@@ -493,7 +439,7 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
   ) {
     const reservations = await this.budgetValidationService.getReservationsForRequisition(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
     );
 
@@ -509,7 +455,7 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
   ) {
     const summary = await this.budgetValidationService.getBudgetSummary(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       costCenterId,
     );
 
@@ -529,7 +475,7 @@ export class RequisitionsController {
     @Query('tenantId') tenantId?: string,
   ) {
     const audit = await this.auditService.getAuditTrail(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       id,
     );
 
@@ -545,7 +491,7 @@ export class RequisitionsController {
     @Query('limit') limit?: number,
   ) {
     const activity = await this.auditService.getRecentActivity(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       limit || 20,
     );
 
@@ -562,7 +508,7 @@ export class RequisitionsController {
     @Query('limit') limit?: number,
   ) {
     const logs = await this.auditService.getAuditLogsForUser(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userId,
       limit || 50,
     );
@@ -580,7 +526,7 @@ export class RequisitionsController {
   @Get('sla/breaches')
   async checkSLABreaches(@Query('tenantId') tenantId?: string) {
     const escalations = await this.approvalWorkflowService.checkSLABreaches(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {

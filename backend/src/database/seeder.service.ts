@@ -31,7 +31,7 @@ export class SeederService implements OnModuleInit {
     @InjectRepository(ActivityFeed)
     private activityRepository: Repository<ActivityFeed>,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     // Auto-seed in development mode
@@ -49,7 +49,7 @@ export class SeederService implements OnModuleInit {
     try {
       // Check if already seeded
       const existingTenant = await this.tenantRepository.findOne({
-        where: { name: 'default-tenant' },
+        where: { id: '11111111-1111-1111-1111-111111111111' },
       });
 
       if (existingTenant) {
@@ -85,10 +85,9 @@ export class SeederService implements OnModuleInit {
       throw error;
     }
   }
-
   private async createTenant(): Promise<Tenant> {
     const tenant = this.tenantRepository.create({
-      id: 'default-tenant',
+      id: '11111111-1111-1111-1111-111111111111',
       name: 'Workera Demo',
       domain: 'demo.workera.ai',
       logo: '/images/brand/Workera_logo_icon.png',
@@ -350,7 +349,7 @@ export class SeederService implements OnModuleInit {
 
     const schedules = [
       { date: tomorrow, type: InterviewType.VIDEO, status: InterviewStatus.SCHEDULED },
-      { date: dayAfterTomorrow, type: InterviewType.PANEL, status: InterviewStatus.CONFIRMED },
+      { date: dayAfterTomorrow, type: InterviewType.TECHNICAL, status: InterviewStatus.CONFIRMED },
       { date: nextWeek, type: InterviewType.TECHNICAL, status: InterviewStatus.SCHEDULED },
     ];
 
@@ -360,11 +359,7 @@ export class SeederService implements OnModuleInit {
         type: schedules[i].type,
         status: schedules[i].status,
         scheduledAt: schedules[i].date,
-        duration: 60,
-        interviewers: [
-          { name: 'Sarah Jenkins', email: 'sarah@workera.ai', role: 'Hiring Manager' },
-          { name: 'Mike Chen', email: 'mike@workera.ai', role: 'Technical Lead' },
-        ],
+        durationMinutes: 60,
         location: 'Google Meet',
         notes: 'Please prepare for technical questions and a coding exercise.',
       });
@@ -376,7 +371,7 @@ export class SeederService implements OnModuleInit {
     const activities = [
       {
         tenantId,
-        activityType: ActivityType.CANDIDATE_STATUS_CHANGED,
+        activityType: ActivityType.APPLICATION_STATUS_CHANGED,
         actorName: 'Sarah Jenkins',
         actorEmail: 'sarah@workera.ai',
         entityType: 'candidate',
@@ -419,7 +414,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         tenantId,
-        activityType: ActivityType.CANDIDATE_APPLIED,
+        activityType: ActivityType.APPLICATION_CREATED,
         actorName: 'System',
         entityType: 'application',
         entityId: candidates[2].id,
@@ -429,7 +424,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         tenantId,
-        activityType: ActivityType.OFFER_EXTENDED,
+        activityType: ActivityType.APPLICATION_STATUS_CHANGED,
         actorName: 'Sarah Jenkins',
         actorEmail: 'sarah@workera.ai',
         entityType: 'candidate',

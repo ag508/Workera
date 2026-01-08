@@ -10,7 +10,7 @@ export class JobsService {
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async createJob(
     title: string,
@@ -105,7 +105,6 @@ export class JobsService {
       description: job.description,
       company: job.company,
       location: job.location,
-      type: job.type,
       salary: job.salary,
       tenantId: job.tenantId,
       requirements: job.requirements || [],

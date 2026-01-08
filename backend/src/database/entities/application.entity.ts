@@ -43,9 +43,13 @@ export class Application {
 
   @Column({ type: 'simple-json', nullable: true })
   aiAnalysis: {
-    strengths: string[];
-    gaps: string[];
-    recommendation: string;
+    strengths?: string[];
+    gaps?: string[];
+    recommendation?: string;
+    parsed?: boolean;
+    experience?: number;
+    skills?: any;
+    [key: string]: any;
   };
 
   @Column({ type: 'text', nullable: true })

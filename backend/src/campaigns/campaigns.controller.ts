@@ -38,14 +38,14 @@ export class ScheduleCampaignDto {
 
 @Controller('campaigns')
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignsService) {}
+  constructor(private readonly campaignsService: CampaignsService) { }
 
   @Post()
   async createCampaign(@Body() dto: CreateCampaignDto) {
     const campaign = await this.campaignsService.createCampaign({
       ...dto,
       scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
     });
 
     return {
@@ -57,7 +57,7 @@ export class CampaignsController {
   @Get()
   async getAllCampaigns(@Query('tenantId') tenantId: string) {
     const campaigns = await this.campaignsService.getAllCampaigns(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -69,7 +69,7 @@ export class CampaignsController {
   @Get('stats')
   async getCampaignStats(@Query('tenantId') tenantId: string) {
     const stats = await this.campaignsService.getCampaignStats(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -85,7 +85,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.getCampaignById(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -101,7 +101,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.getCampaignById(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     if (!campaign) {
@@ -129,7 +129,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.updateCampaign(
       id,
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       dto
     );
 
@@ -146,7 +146,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.scheduleCampaign(
       id,
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       new Date(dto.scheduledAt)
     );
 
@@ -163,7 +163,7 @@ export class CampaignsController {
   ) {
     const result = await this.campaignsService.sendCampaign(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -179,7 +179,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.pauseCampaign(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -195,7 +195,7 @@ export class CampaignsController {
   ) {
     const campaign = await this.campaignsService.cancelCampaign(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {

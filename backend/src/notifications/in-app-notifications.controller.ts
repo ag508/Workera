@@ -4,7 +4,7 @@ import { NotificationType } from '../database/entities/notification.entity';
 
 @Controller('notifications')
 export class InAppNotificationsController {
-  constructor(private readonly notificationsService: InAppNotificationsService) {}
+  constructor(private readonly notificationsService: InAppNotificationsService) { }
 
   @Get()
   async getNotifications(
@@ -15,7 +15,7 @@ export class InAppNotificationsController {
     @Query('offset') offset?: string,
   ) {
     const result = await this.notificationsService.getNotifications(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userId,
       {
         unreadOnly: unreadOnly === 'true',
@@ -36,7 +36,7 @@ export class InAppNotificationsController {
   async createNotification(@Body() dto: CreateNotificationDto) {
     const notification = await this.notificationsService.create({
       ...dto,
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
     });
 
     return {
@@ -52,7 +52,7 @@ export class InAppNotificationsController {
   ) {
     const notification = await this.notificationsService.markAsRead(
       id,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {
@@ -67,7 +67,7 @@ export class InAppNotificationsController {
     @Query('userId') userId?: string,
   ) {
     const count = await this.notificationsService.markAllAsRead(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       userId,
     );
 
@@ -85,7 +85,7 @@ export class InAppNotificationsController {
   ) {
     const result = await this.notificationsService.delete(
       id,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
     );
 
     return {
@@ -100,7 +100,7 @@ export class InAppNotificationsController {
     @Query('daysOld') daysOld?: string,
   ) {
     const count = await this.notificationsService.deleteOldNotifications(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       daysOld ? parseInt(daysOld, 10) : 30,
     );
 

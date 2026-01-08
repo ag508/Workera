@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { AiService } from '../ai/ai.service';
+import { JobStatus, Job } from '../database/entities';
+import { Public } from '../auth/decorators/public.decorator';
 
 export class CreateJobDto {
   title: string;
@@ -33,23 +35,25 @@ export class JobsController {
   constructor(
     private readonly jobsService: JobsService,
     private readonly aiService: AiService,
-  ) {}
+  ) { }
 
+  @Public()
   @Get()
   async getAllJobs(@Query('tenantId') tenantId?: string) {
-    const jobs = await this.jobsService.getAllJobs(tenantId || 'default-tenant');
+    const jobs = await this.jobsService.getAllJobs(tenantId || '11111111-1111-1111-1111-111111111111');
     return {
       success: true,
       data: jobs,
     };
   }
 
+  @Public()
   @Get(':id')
   async getJob(
     @Param('id') id: string,
     @Query('tenantId') tenantId?: string
   ) {
-    const job = await this.jobsService.getJobById(id, tenantId || 'default-tenant');
+    const job = await this.jobsService.getJobById(id, tenantId || '11111111-1111-1111-1111-111111111111');
     return {
       success: !!job,
       data: job,
@@ -71,7 +75,7 @@ export class JobsController {
     const job = await this.jobsService.createJob(
       dto.title,
       description || '',
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       dto.company,
       dto.requirements,
     );
@@ -86,7 +90,7 @@ export class JobsController {
   async postJob(@Param('id') id: string, @Body() dto: PostJobDto) {
     const job = await this.jobsService.postJob(
       id,
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       dto.channels
     );
 
@@ -99,10 +103,17 @@ export class JobsController {
   @Put(':id')
   async updateJob(@Param('id') id: string, @Body() dto: UpdateJobDto) {
     const { tenantId, ...updates } = dto;
+
+    // Cast string status to JobStatus enum if present
+    const jobUpdates: Partial<Job> = { ...updates } as any;
+    if (updates.status) {
+      jobUpdates.status = updates.status as JobStatus;
+    }
+
     const job = await this.jobsService.updateJob(
       id,
-      tenantId || 'default-tenant',
-      updates
+      tenantId || '11111111-1111-1111-1111-111111111111',
+      jobUpdates
     );
 
     return {
@@ -118,7 +129,7 @@ export class JobsController {
   ) {
     const success = await this.jobsService.deleteJob(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {
@@ -133,7 +144,7 @@ export class JobsController {
   ) {
     const job = await this.jobsService.duplicateJob(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
 
     return {

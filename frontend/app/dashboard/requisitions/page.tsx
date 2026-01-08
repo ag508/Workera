@@ -306,7 +306,7 @@ export default function RequisitionsPage() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <img
-                          src={`https://i.pravatar.cc/100?img=${Math.floor(Math.random() * 70)}`}
+                          src={`https://i.pravatar.cc/100?img=${(req.hiringManager.length * 3) % 70}`}
                           alt={req.hiringManager}
                           className="h-6 w-6 rounded-full"
                         />
@@ -317,7 +317,7 @@ export default function RequisitionsPage() {
                           <span className="text-gray-300">→</span>
                           <div className="flex items-center gap-2">
                             <img
-                              src={`https://i.pravatar.cc/100?img=${Math.floor(Math.random() * 70)}`}
+                              src={`https://i.pravatar.cc/100?img=${(req.recruiter.length * 5) % 70}`}
                               alt={req.recruiter}
                               className="h-6 w-6 rounded-full"
                             />
