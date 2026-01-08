@@ -10,12 +10,18 @@ import { ApplicationForm } from '../database/entities/application-form.entity';
 import { FormSubmission } from '../database/entities/form-submission.entity';
 import { CandidateUser } from '../database/entities/candidate-user.entity';
 import { Tenant } from '../database/entities/tenant.entity';
+import { Interview } from '../database/entities/interview.entity';
 import { IntegrationsController } from './integrations.controller';
+import { OAuthCallbackController } from './oauth-callback.controller';
 import { DatabaseImportService } from './database-import.service';
 import { LinkedInService } from './linkedin.service';
+import { LinkedInOAuthService } from './linkedin-oauth.service';
 import { WorkdayService } from './workday.service';
 import { NaukriService } from './naukri.service';
+import { IndeedService } from './indeed.service';
 import { JobBoardsService } from './job-boards.service';
+import { GoogleCalendarService } from './google-calendar.service';
+import { EmailService } from './email.service';
 import { RecruitmentFormsService } from './recruitment-forms.service';
 import { CandidatePortalService } from './candidate-portal.service';
 import { CandidatePortalEnhancedService } from './candidate-portal-enhanced.service';
@@ -34,6 +40,7 @@ import { AiModule } from '../ai/ai.module';
       FormSubmission,
       CandidateUser,
       Tenant,
+      Interview,
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -45,13 +52,20 @@ import { AiModule } from '../ai/ai.module';
     }),
     AiModule,
   ],
-  controllers: [IntegrationsController],
+  controllers: [
+    IntegrationsController,
+    OAuthCallbackController,
+  ],
   providers: [
     DatabaseImportService,
     LinkedInService,
+    LinkedInOAuthService,
     WorkdayService,
     NaukriService,
+    IndeedService,
     JobBoardsService,
+    GoogleCalendarService,
+    EmailService,
     RecruitmentFormsService,
     CandidatePortalService,
     CandidatePortalEnhancedService,
@@ -61,12 +75,17 @@ import { AiModule } from '../ai/ai.module';
   exports: [
     DatabaseImportService,
     LinkedInService,
+    LinkedInOAuthService,
     WorkdayService,
     NaukriService,
+    IndeedService,
     JobBoardsService,
+    GoogleCalendarService,
+    EmailService,
     RecruitmentFormsService,
     CandidatePortalService,
     CandidatePortalEnhancedService,
+    IntegrationSettingsService,
   ],
 })
 export class IntegrationsModule { }

@@ -950,4 +950,29 @@ export class IntegrationsController {
     );
     return { success: true, removed: result };
   }
+
+  // ============================================================================
+  // CONNECTION TESTING & STATUS
+  // ============================================================================
+
+  /**
+   * Get integration status for all providers
+   * GET /integrations/status
+   */
+  @Get('status')
+  async getIntegrationStatus(@Query('tenantId') tenantId: string) {
+    return this.integrationSettingsService.getIntegrationStatus(tenantId);
+  }
+
+  /**
+   * Test connection for a specific provider
+   * POST /integrations/settings/test
+   */
+  @Post('settings/test')
+  async testProviderConnection(
+    @Query('tenantId') tenantId: string,
+    @Query('provider') provider: string,
+  ) {
+    return this.integrationSettingsService.testConnection(tenantId, provider);
+  }
 }
