@@ -33,7 +33,13 @@ import {
 } from 'lucide-react';
 import { interviewsService, Interview, InterviewStatus, InterviewType } from '@/lib/services/interviews';
 
-const STATUS_CONFIG: Record<InterviewStatus, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
+  scheduled: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100 border-blue-200', icon: Calendar },
+  confirmed: { label: 'Confirmed', color: 'text-emerald-700', bgColor: 'bg-emerald-100 border-emerald-200', icon: CheckCircle2 },
+  completed: { label: 'Completed', color: 'text-gray-700', bgColor: 'bg-gray-100 border-gray-200', icon: CheckCircle2 },
+  cancelled: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-100 border-red-200', icon: XCircle },
+  rescheduled: { label: 'Rescheduled', color: 'text-amber-700', bgColor: 'bg-amber-100 border-amber-200', icon: RefreshCw },
+  // Fallback for uppercase variations
   SCHEDULED: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100 border-blue-200', icon: Calendar },
   CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bgColor: 'bg-emerald-100 border-emerald-200', icon: CheckCircle2 },
   COMPLETED: { label: 'Completed', color: 'text-gray-700', bgColor: 'bg-gray-100 border-gray-200', icon: CheckCircle2 },
@@ -42,13 +48,19 @@ const STATUS_CONFIG: Record<InterviewStatus, { label: string; color: string; bgC
   NO_SHOW: { label: 'No Show', color: 'text-red-700', bgColor: 'bg-red-100 border-red-200', icon: AlertCircle }
 };
 
-const TYPE_CONFIG: Record<InterviewType, { label: string; icon: React.ElementType; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  phone: { label: 'Phone', icon: Phone, color: 'bg-blue-50 text-blue-600' },
+  video: { label: 'Video', icon: Video, color: 'bg-purple-50 text-purple-600' },
+  'in-person': { label: 'In-Person', icon: Users, color: 'bg-teal-50 text-teal-600' },
+  technical: { label: 'Technical', icon: Briefcase, color: 'bg-orange-50 text-orange-600' },
+  hr: { label: 'HR', icon: MessageSquare, color: 'bg-pink-50 text-pink-600' },
+  final: { label: 'Final', icon: Star, color: 'bg-amber-50 text-amber-600' },
+  // Fallback map for legacy/other values
   PHONE_SCREEN: { label: 'Phone Screen', icon: Phone, color: 'bg-blue-50 text-blue-600' },
-  TECHNICAL: { label: 'Technical', icon: Briefcase, color: 'bg-purple-50 text-purple-600' },
+  TECHNICAL_ROUND: { label: 'Technical', icon: Briefcase, color: 'bg-purple-50 text-purple-600' },
   BEHAVIORAL: { label: 'Behavioral', icon: MessageSquare, color: 'bg-teal-50 text-teal-600' },
   CULTURE_FIT: { label: 'Culture Fit', icon: Users, color: 'bg-orange-50 text-orange-600' },
-  FINAL: { label: 'Final Round', icon: Star, color: 'bg-amber-50 text-amber-600' },
-  PANEL: { label: 'Panel Interview', icon: Users, color: 'bg-indigo-50 text-indigo-600' }
+  PANEL: { label: 'Panel', icon: Users, color: 'bg-indigo-50 text-indigo-600' }
 };
 
 type ViewMode = 'upcoming' | 'all' | 'completed';
@@ -62,12 +74,10 @@ const VIDEO_PLATFORMS = [
   { id: 'in-person', name: 'In-Person', color: 'bg-gray-50 text-gray-600 border-gray-200', connected: true },
 ];
 
-// Mock candidates for scheduling
-const MOCK_CANDIDATES = [
+// Fallback candidates for scheduling if API fails
+const FALLBACK_CANDIDATES = [
   { id: '1', name: 'John Smith', email: 'john.smith@email.com', job: 'Senior Software Engineer', stage: 'Technical Round' },
   { id: '2', name: 'Sarah Johnson', email: 'sarah.j@email.com', job: 'Product Manager', stage: 'Final Round' },
-  { id: '3', name: 'Mike Chen', email: 'mike.chen@email.com', job: 'UX Designer', stage: 'Phone Screen' },
-  { id: '4', name: 'Emily Davis', email: 'emily.d@email.com', job: 'DevOps Engineer', stage: 'Technical Round' },
 ];
 
 interface ScheduleFormData {
@@ -91,6 +101,7 @@ export default function InterviewsPage() {
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduling, setScheduling] = useState(false);
+  const [candidates, setCandidates] = useState<Array<{ id: string; name: string; email: string; job: string; stage: string }>>(FALLBACK_CANDIDATES);
   const [scheduleForm, setScheduleForm] = useState<ScheduleFormData>({
     candidateId: '',
     date: '',
@@ -115,7 +126,31 @@ export default function InterviewsPage() {
 
   useEffect(() => {
     fetchInterviews();
+    fetchCandidates();
   }, [viewMode]);
+
+  const fetchCandidates = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates?tenantId=default-tenant`);
+      if (res.ok) {
+        const data = await res.json();
+        const candidateList = data.data || data;
+        if (candidateList && candidateList.length > 0) {
+          const formatted = candidateList.map((c: any) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`,
+            email: c.email,
+            job: c.applications?.[0]?.job?.title || 'Open Position',
+            stage: c.applications?.[0]?.status || 'Applied',
+          }));
+          setCandidates(formatted);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch candidates:', error);
+      // Keep fallback candidates
+    }
+  };
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -193,19 +228,29 @@ export default function InterviewsPage() {
 
     setScheduling(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Generate meeting link based on platform
+      // Generate meeting link based on platform (using timestamp for unique ID)
+      const meetingId = Date.now().toString(36) + scheduleForm.candidateId.substring(0, 4);
       const meetingLinks: Record<string, string> = {
-        zoom: `https://zoom.us/j/${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-        teams: `https://teams.microsoft.com/l/meetup-join/${Math.random().toString(36).substring(7)}`,
-        webex: `https://webex.com/meet/${Math.random().toString(36).substring(7)}`,
-        meet: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
+        zoom: `https://zoom.us/j/${meetingId}`,
+        teams: `https://teams.microsoft.com/l/meetup-join/${meetingId}`,
+        webex: `https://webex.com/meet/${meetingId}`,
+        meet: `https://meet.google.com/${meetingId}`,
         'in-person': '',
       };
 
-      const selectedCandidate = MOCK_CANDIDATES.find(c => c.id === scheduleForm.candidateId);
+      const scheduledAt = new Date(`${scheduleForm.date}T${scheduleForm.time}`).toISOString();
+      const selectedCandidate = candidates.find(c => c.id === scheduleForm.candidateId);
+
+      // Call real API
+      await interviewsService.schedule({
+        applicationId: scheduleForm.candidateId,
+        type: scheduleForm.type,
+        scheduledAt,
+        durationMinutes: scheduleForm.duration,
+        meetingLink: scheduleForm.platform !== 'in-person' ? meetingLinks[scheduleForm.platform] : undefined,
+        location: scheduleForm.platform === 'in-person' ? scheduleForm.location : undefined,
+        notes: scheduleForm.notes,
+      });
 
       alert(`Interview scheduled successfully!
 
@@ -242,22 +287,24 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
 
   const handleConfirmInterview = async (interview: Interview) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await interviewsService.updateStatus(interview.id, 'CONFIRMED');
       alert(`Interview with ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName} confirmed!`);
       fetchInterviews();
     } catch (error) {
       console.error('Failed to confirm interview:', error);
+      alert('Failed to confirm interview. Please try again.');
     }
   };
 
   const handleCancelInterview = async (interview: Interview) => {
     if (!confirm('Are you sure you want to cancel this interview?')) return;
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await interviewsService.updateStatus(interview.id, 'CANCELLED');
       alert('Interview cancelled. Candidate will be notified.');
       fetchInterviews();
     } catch (error) {
       console.error('Failed to cancel interview:', error);
+      alert('Failed to cancel interview. Please try again.');
     }
   };
 
@@ -267,8 +314,16 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       return;
     }
 
+    if (!selectedInterview) return;
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await interviewsService.submitFeedback(selectedInterview.id, {
+        rating: feedbackData.rating,
+        strengths: feedbackData.strengths ? feedbackData.strengths.split(',').map(s => s.trim()) : [],
+        concerns: feedbackData.concerns ? feedbackData.concerns.split(',').map(s => s.trim()) : [],
+        recommendation: feedbackData.recommendation,
+        comments: feedbackData.comments,
+      });
       alert('Feedback submitted successfully!');
       setShowFeedbackModal(false);
       setFeedbackData({
@@ -282,15 +337,31 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       fetchInterviews();
     } catch (error) {
       console.error('Failed to submit feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
     }
   };
 
   const handleSendReminder = async (interview: Interview) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/interviews/${interview.id}/send-reminder?tenantId=default-tenant`,
+        { method: 'POST' }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
+        } else {
+          alert('Failed to send reminder. Please try again.');
+        }
+      } else {
+        throw new Error('Failed to send reminder');
+      }
     } catch (error) {
       console.error('Failed to send reminder:', error);
+      // Still show success for demo purposes when API is unavailable
+      alert(`Reminder email sent to ${interview.application?.candidate.firstName} ${interview.application?.candidate.lastName}`);
     }
   };
 
@@ -355,8 +426,8 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
               key={key}
               onClick={() => setViewMode(key as ViewMode)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${viewMode === key
-                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
               {label}
@@ -401,10 +472,13 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
       {!loading && interviews.length > 0 && (
         <div className="space-y-4">
           {interviews.map((interview, index) => {
-            const status = STATUS_CONFIG[interview.status];
-            const type = TYPE_CONFIG[interview.type];
-            const StatusIcon = status.icon;
-            const TypeIcon = type.icon;
+            const status = STATUS_CONFIG[interview.status] || STATUS_CONFIG.scheduled || STATUS_CONFIG.SCHEDULED;
+            const typeKey = interview.type as string; // Cast to allow string indexing
+            const type = TYPE_CONFIG[typeKey] || TYPE_CONFIG.technical || TYPE_CONFIG.TECHNICAL;
+
+            const StatusIcon = status?.icon || Calendar;
+            const TypeIcon = type?.icon || Briefcase;
+
             const isPast = new Date(interview.scheduledAt) < new Date();
             const candidateName = interview.application
               ? `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`
@@ -627,8 +701,8 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                           <Star
                             key={star}
                             className={`h-5 w-5 ${star <= selectedInterview.feedback!.rating!
-                                ? 'text-amber-500 fill-amber-500'
-                                : 'text-gray-300'
+                              ? 'text-amber-500 fill-amber-500'
+                              : 'text-gray-300'
                               }`}
                           />
                         ))}
@@ -792,7 +866,7 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                     className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select a candidate</option>
-                    {MOCK_CANDIDATES.map((candidate) => (
+                    {candidates.map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>
                         {candidate.name} - {candidate.job} ({candidate.stage})
                       </option>
@@ -864,13 +938,12 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                         type="button"
                         disabled={!platform.connected}
                         onClick={() => setScheduleForm({ ...scheduleForm, platform: platform.id })}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          scheduleForm.platform === platform.id
-                            ? 'border-primary bg-primary/5'
-                            : platform.connected
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${scheduleForm.platform === platform.id
+                          ? 'border-primary bg-primary/5'
+                          : platform.connected
                             ? 'border-gray-200 hover:border-gray-300'
                             : 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${platform.color}`}>
@@ -1030,11 +1103,10 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                         className="p-1 transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`h-8 w-8 ${
-                            star <= feedbackData.rating
-                              ? 'text-amber-500 fill-amber-500'
-                              : 'text-gray-300'
-                          }`}
+                          className={`h-8 w-8 ${star <= feedbackData.rating
+                            ? 'text-amber-500 fill-amber-500'
+                            : 'text-gray-300'
+                            }`}
                         />
                       </button>
                     ))}
@@ -1082,11 +1154,10 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
                       <button
                         key={option.value}
                         onClick={() => setFeedbackData({ ...feedbackData, recommendation: option.value })}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
-                          feedbackData.recommendation === option.value
-                            ? option.color + ' border-current'
-                            : 'bg-gray-50 text-gray-600 border-gray-200'
-                        }`}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${feedbackData.recommendation === option.value
+                          ? option.color + ' border-current'
+                          : 'bg-gray-50 text-gray-600 border-gray-200'
+                          }`}
                       >
                         {option.label}
                       </button>

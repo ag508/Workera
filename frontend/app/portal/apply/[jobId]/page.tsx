@@ -133,6 +133,8 @@ export default function WorkdayStyleApplyPage() {
   const [parsingResume, setParsingResume] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [draftSaved, setDraftSaved] = useState(false);
 
   const [job, setJob] = useState<Job | null>(null);
   const [matchScore, setMatchScore] = useState<number | null>(null);
@@ -144,14 +146,79 @@ export default function WorkdayStyleApplyPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [candidateId, setCandidateId] = useState<string | null>(null);
 
+  // Load draft from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem('candidateToken');
     const id = localStorage.getItem('candidateId');
     setIsLoggedIn(!!token);
     setCandidateId(id);
+
+    // Load draft if exists
+    const draftKey = `application_draft_${jobId}`;
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.formData) setFormData(draft.formData);
+        if (draft.resumeData) setResumeData(draft.resumeData);
+        if (draft.currentStep) setCurrentStep(draft.currentStep);
+      } catch (e) {
+        console.error('Failed to load draft', e);
+      }
+    }
+
     fetchJobDetails();
     fetchFormTemplate();
   }, [jobId]);
+
+  // Auto-save draft when form data changes
+  useEffect(() => {
+    if (Object.keys(formData).length > 0 || resumeData) {
+      const draftKey = `application_draft_${jobId}`;
+      const draft = { formData, resumeData, currentStep, savedAt: new Date().toISOString() };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [formData, resumeData, currentStep, jobId]);
+
+  // Validate form fields
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Required fields validation
+    if (!formData.whyInterested?.trim()) {
+      errors.whyInterested = 'Please tell us why you are interested in this role';
+    }
+    if (!formData.startDate) {
+      errors.startDate = 'Please select your availability';
+    }
+    if (!formData.workAuthorization) {
+      errors.workAuthorization = 'Please confirm your work authorization status';
+    }
+    if (!formData.privacyConsent) {
+      errors.privacyConsent = 'You must accept the Privacy Policy and Terms of Service';
+    }
+    if (!formData.dataProcessingConsent) {
+      errors.dataProcessingConsent = 'You must consent to data processing';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Save draft manually
+  const saveDraft = () => {
+    const draftKey = `application_draft_${jobId}`;
+    const draft = { formData, resumeData, currentStep, savedAt: new Date().toISOString() };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+    setDraftSaved(true);
+    setTimeout(() => setDraftSaved(false), 2000);
+  };
+
+  // Clear draft after submission
+  const clearDraft = () => {
+    const draftKey = `application_draft_${jobId}`;
+    localStorage.removeItem(draftKey);
+  };
 
   const fetchJobDetails = async () => {
     try {
@@ -431,6 +498,12 @@ export default function WorkdayStyleApplyPage() {
   };
 
   const handleSubmit = async () => {
+    // Validate form before submission
+    if (!validateForm()) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
 
@@ -455,17 +528,21 @@ export default function WorkdayStyleApplyPage() {
         );
 
         if (res.ok) {
+          clearDraft();
           setSubmitted(true);
         } else {
           // Demo fallback
+          clearDraft();
           setSubmitted(true);
         }
       } else {
         // Demo mode
+        clearDraft();
         setSubmitted(true);
       }
     } catch (error) {
       console.error('Submit error', error);
+      clearDraft();
       setSubmitted(true); // Demo fallback
     } finally {
       setSubmitting(false);
@@ -518,19 +595,20 @@ export default function WorkdayStyleApplyPage() {
                 <span className="font-medium">{matchScore}% match with this role</span>
               </div>
             )}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="space-y-3">
               <Link
                 href="/portal/applications"
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
               >
-                View My Applications
+                <CheckCircle2 className="h-4 w-4" />
+                Track Application Status
               </Link>
-              <Link
-                href="/portal/jobs"
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Browse More Jobs
-              </Link>
+              <p className="text-sm text-gray-500">
+                or{' '}
+                <Link href="/portal/jobs" className="text-primary hover:underline font-medium">
+                  browse more jobs
+                </Link>
+              </p>
             </div>
           </div>
         </motion.div>
@@ -1205,16 +1283,51 @@ export default function WorkdayStyleApplyPage() {
           )}
         </AnimatePresence>
 
+        {/* Validation Errors */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-red-800">Please fix the following errors:</p>
+                <ul className="mt-2 text-sm text-red-600 list-disc list-inside">
+                  {Object.values(validationErrors).map((error, i) => (
+                    <li key={i}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-          <button
-            onClick={prevStep}
-            disabled={currentStep === 0}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={prevStep}
+              disabled={currentStep === 0}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back
+            </button>
+            <button
+              onClick={saveDraft}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              {draftSaved ? (
+                <>
+                  <Check className="h-4 w-4 text-green-500" />
+                  Saved!
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4" />
+                  Save Draft
+                </>
+              )}
+            </button>
+          </div>
 
           {currentStep < steps.length - 1 ? (
             <button

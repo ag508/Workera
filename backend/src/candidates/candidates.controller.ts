@@ -10,6 +10,23 @@ export class CreateCandidateDto {
   tenantId: string; // In production, this would come from auth context
 }
 
+export class UpdateCandidateDto {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  summary?: string;
+  experience?: any[];
+  education?: any[];
+  certifications?: string[];
+  projects?: any[];
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  tenantId: string;
+}
+
 export class UploadResumeDto {
   resumeText: string;
   tenantId: string; // In production, this would come from auth context
@@ -82,7 +99,7 @@ export class BulkDeleteCandidatesDto {
 
 @Controller('candidates')
 export class CandidatesController {
-  constructor(private readonly candidatesService: CandidatesService) {}
+  constructor(private readonly candidatesService: CandidatesService) { }
 
   @Post()
   async createCandidate(@Body() dto: CreateCandidateDto) {
@@ -96,7 +113,7 @@ export class CandidatesController {
   @Get()
   async getAllCandidates(@Query('tenantId') tenantId: string) {
     // In production, tenantId comes from authenticated user context
-    const candidates = await this.candidatesService.getAllCandidates(tenantId || 'default-tenant');
+    const candidates = await this.candidatesService.getAllCandidates(tenantId || '11111111-1111-1111-1111-111111111111');
     return {
       success: true,
       data: candidates,
@@ -108,7 +125,23 @@ export class CandidatesController {
     @Param('id') id: string,
     @Query('tenantId') tenantId: string
   ) {
-    const candidate = await this.candidatesService.getCandidateById(id, tenantId || 'default-tenant');
+    const candidate = await this.candidatesService.getCandidateById(id, tenantId || '11111111-1111-1111-1111-111111111111');
+    return {
+      success: !!candidate,
+      data: candidate,
+    };
+  }
+
+  @Put(':id')
+  async updateCandidate(
+    @Param('id') id: string,
+    @Body() dto: UpdateCandidateDto
+  ) {
+    const candidate = await this.candidatesService.updateCandidate(
+      id,
+      dto,
+      dto.tenantId || '11111111-1111-1111-1111-111111111111'
+    );
     return {
       success: !!candidate,
       data: candidate,
@@ -123,7 +156,7 @@ export class CandidatesController {
     const resume = await this.candidatesService.uploadResume(
       id,
       dto.resumeText,
-      dto.tenantId || 'default-tenant'
+      dto.tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -136,7 +169,7 @@ export class CandidatesController {
     const result = await this.candidatesService.searchCandidates({
       skills: dto.skills,
       location: dto.location,
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
       page: dto.page,
       limit: dto.limit,
       sortBy: dto.sortBy,
@@ -159,7 +192,7 @@ export class CandidatesController {
     const result = await this.candidatesService.analyzeCandidate(
       id,
       body.jobDescription,
-      body.tenantId || 'default-tenant'
+      body.tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,

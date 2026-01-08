@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Interview, InterviewStatus, InterviewType, Application } from '../database/entities';
@@ -12,7 +12,7 @@ export class InterviewsService {
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async scheduleInterview(data: {
     applicationId: string;
@@ -32,7 +32,7 @@ export class InterviewsService {
     });
 
     if (!application || application.job.tenantId !== data.tenantId) {
-      throw new Error('Application not found');
+      throw new NotFoundException('Application not found');
     }
 
     // Create interview
@@ -164,5 +164,41 @@ export class InterviewsService {
     return interviews.filter(
       i => i.application.job.tenantId === tenantId && i.scheduledAt > now
     );
+  }
+
+  async getAllInterviews(tenantId: string): Promise<Interview[]> {
+    const interviews = await this.interviewRepository.find({
+      relations: ['application', 'application.job', 'application.job.tenant', 'application.candidate', 'interviewer'],
+      order: { scheduledAt: 'DESC' },
+    });
+
+    // Filter by tenant
+    return interviews.filter(i => i.application?.job?.tenantId === tenantId);
+  }
+
+  async sendReminder(id: string, tenantId: string): Promise<boolean> {
+    const interview = await this.getInterviewById(id, tenantId);
+    if (!interview || !interview.application?.candidate) {
+      return false;
+    }
+
+    try {
+      await this.notificationsService.sendInterviewReminder({
+        to: interview.application.candidate.email,
+        candidateName: `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`,
+        jobTitle: interview.application.job?.title || 'Position',
+        companyName: interview.application.job?.company || 'Company',
+        interviewDate: interview.scheduledAt,
+        interviewLink: interview.meetingLink,
+        additionalInfo: {
+          interviewType: interview.type,
+          location: interview.location,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to send interview reminder:', error);
+      return false;
+    }
   }
 }

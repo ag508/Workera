@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getTenantId } from '@/lib/utils';
 import {
   Mail,
   Bell,
@@ -36,7 +37,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 interface Message {
-  id: number;
+  id: string;
   type: 'message';
   from: string;
   email: string;
@@ -54,7 +55,7 @@ interface Message {
 }
 
 interface Reply {
-  id: number;
+  id: string;
   from: string;
   content: string;
   time: string;
@@ -73,9 +74,10 @@ interface Notification {
   actionLabel?: string;
 }
 
-const initialMessages: Message[] = [
+// Fallback demo messages when API is unavailable
+const fallbackMessages: Message[] = [
   {
-    id: 1,
+    id: '1',
     type: 'message',
     from: 'John Smith',
     email: 'john.smith@email.com',
@@ -86,18 +88,7 @@ const initialMessages: Message[] = [
 
 I wanted to share my thoughts on the interview we conducted yesterday with Sarah Chen for the Senior Software Engineer position.
 
-Overall, I was very impressed with her technical skills and problem-solving abilities. She demonstrated strong knowledge of system design and was able to articulate her thought process clearly.
-
-Key Strengths:
-- Excellent communication skills
-- Deep understanding of distributed systems
-- Strong coding abilities in TypeScript and Python
-
-Areas to explore further:
-- Experience with our specific tech stack
-- Team leadership experience
-
-I would recommend moving her to the next round.
+Overall, I was very impressed with her technical skills and problem-solving abilities.
 
 Best,
 John Smith`,
@@ -110,7 +101,7 @@ John Smith`,
     replies: [],
   },
   {
-    id: 2,
+    id: '2',
     type: 'message',
     from: 'Emily Davis',
     email: 'emily.davis@company.com',
@@ -119,13 +110,7 @@ John Smith`,
     preview: 'Thanks for the update. I have reviewed the job description and...',
     content: `Hi,
 
-Thanks for the update. I have reviewed the job description and it looks great. I have a few suggestions:
-
-1. We should emphasize the digital marketing experience requirement
-2. Consider adding a salary range to attract better candidates
-3. The benefits section could include our remote work policy
-
-Let me know if you'd like to discuss these changes.
+Thanks for the update. I have reviewed the job description and it looks great.
 
 Best,
 Emily`,
@@ -133,69 +118,7 @@ Emily`,
     timestamp: new Date(Date.now() - 60 * 60 * 1000),
     unread: true,
     starred: true,
-    replies: [
-      {
-        id: 1,
-        from: 'You',
-        content: 'Great suggestions Emily! I will incorporate these changes.',
-        time: '45 mins ago',
-      },
-    ],
-  },
-  {
-    id: 3,
-    type: 'message',
-    from: 'Mike Chen (Candidate)',
-    email: 'mike.chen@gmail.com',
-    avatar: 'https://i.pravatar.cc/100?img=34',
-    subject: 'Question about Data Analyst position',
-    preview: 'Hello, I recently applied for the Data Analyst position and wanted to ask...',
-    content: `Hello,
-
-I recently applied for the Data Analyst position at your company and wanted to follow up with a few questions:
-
-1. What is the expected timeline for the interview process?
-2. Is remote work available for this position?
-3. Could you share more details about the team I would be working with?
-
-Thank you for your time. I'm very excited about this opportunity!
-
-Best regards,
-Mike Chen`,
-    time: '3 hours ago',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    unread: false,
-    starred: false,
-    candidateId: 'mike-chen',
-    jobTitle: 'Data Analyst',
     replies: [],
-  },
-  {
-    id: 4,
-    type: 'message',
-    from: 'Lisa Park',
-    email: 'lisa.park@company.com',
-    avatar: 'https://i.pravatar.cc/100?img=45',
-    subject: 'UX Designer candidate shortlist',
-    preview: 'Here are the top 5 candidates I recommend for the UX Designer role...',
-    content: `Hi Team,
-
-After reviewing all applications, here are my top 5 candidates for the UX Designer position:
-
-1. **Alex Johnson** - 7 years experience, strong portfolio
-2. **Maria Garcia** - 5 years experience, excellent Figma skills
-3. **David Kim** - 4 years experience, fintech background
-4. **Sophie Turner** - 6 years experience, design leadership
-5. **James Lee** - 3 years experience, fresh perspective
-
-I've attached their portfolios for review. Let me know if you'd like to schedule interviews.
-
-Best,
-Lisa`,
-    time: '5 hours ago',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    unread: false,
-    starred: false,
   },
 ];
 
@@ -274,13 +197,16 @@ const initialNotifications: Notification[] = [
 
 export default function InboxPage() {
   const [activeTab, setActiveTab] = useState<'messages' | 'notifications'>('notifications');
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(fallbackMessages);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const tenantId = getTenantId();
+  const userEmail = 'recruiter@workera.ai'; // In production, get from auth context
 
   const [composeForm, setComposeForm] = useState({
     to: '',
@@ -288,6 +214,66 @@ export default function InboxPage() {
     content: '',
     sendEmailNotification: true,
   });
+
+  // Fetch messages from API
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/messages?tenantId=${tenantId}&userEmail=${userEmail}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data && data.data.length > 0) {
+          const formattedMessages = data.data.map((m: any) => ({
+            id: m.id,
+            type: 'message' as const,
+            from: m.senderName,
+            email: m.senderEmail,
+            avatar: m.senderAvatar || `https://i.pravatar.cc/100?u=${m.senderEmail}`,
+            subject: m.subject,
+            preview: m.preview || m.content.substring(0, 100),
+            content: m.content,
+            time: formatTimeAgo(new Date(m.createdAt)),
+            timestamp: new Date(m.createdAt),
+            unread: m.unread,
+            starred: m.starred,
+            candidateId: m.candidateId,
+            jobTitle: m.jobTitle,
+            replies: m.replies?.map((r: any) => ({
+              id: r.id,
+              from: r.senderName === userEmail ? 'You' : r.senderName,
+              content: r.content,
+              time: formatTimeAgo(new Date(r.createdAt)),
+            })) || [],
+          }));
+          setMessages(formattedMessages);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+      // Keep fallback messages on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to format time ago
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   const unreadMessages = messages.filter(m => m.unread).length;
   const unreadNotifications = notifications.filter(n => n.unread).length;
@@ -303,29 +289,61 @@ export default function InboxPage() {
     n.message.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     if (activeTab === 'messages') {
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/messages/mark-all-read?tenantId=${tenantId}&userEmail=${userEmail}`,
+          { method: 'PUT' }
+        );
+      } catch (error) {
+        console.error('Failed to mark all as read:', error);
+      }
       setMessages(messages.map(m => ({ ...m, unread: false })));
     } else {
       setNotifications(notifications.map(n => ({ ...n, unread: false })));
     }
   };
 
-  const handleToggleStar = (id: number) => {
+  const handleToggleStar = async (id: string) => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/messages/${id}/star?tenantId=${tenantId}`,
+        { method: 'PUT' }
+      );
+    } catch (error) {
+      console.error('Failed to toggle star:', error);
+    }
     setMessages(messages.map(m =>
       m.id === id ? { ...m, starred: !m.starred } : m
     ));
   };
 
-  const handleArchive = (id: number) => {
+  const handleArchive = async (id: string) => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/messages/${id}/archive?tenantId=${tenantId}`,
+        { method: 'PUT' }
+      );
+    } catch (error) {
+      console.error('Failed to archive message:', error);
+    }
     setMessages(messages.filter(m => m.id !== id));
     if (selectedMessage?.id === id) {
       setSelectedMessage(null);
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this message?')) {
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/messages/${id}?tenantId=${tenantId}`,
+          { method: 'DELETE' }
+        );
+      } catch (error) {
+        console.error('Failed to delete message:', error);
+      }
       setMessages(messages.filter(m => m.id !== id));
       if (selectedMessage?.id === id) {
         setSelectedMessage(null);
@@ -341,19 +359,36 @@ export default function InboxPage() {
 
     setSending(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      alert(`Message sent to ${composeForm.to}${composeForm.sendEmailNotification ? '\nEmail notification will be sent to the recipient.' : ''}`);
-
-      setShowComposeModal(false);
-      setComposeForm({
-        to: '',
-        subject: '',
-        content: '',
-        sendEmailNotification: true,
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: composeForm.to,
+          subject: composeForm.subject,
+          content: composeForm.content,
+          senderName: 'Recruiter',
+          senderEmail: userEmail,
+          sendEmailNotification: composeForm.sendEmailNotification,
+          tenantId,
+        }),
       });
+
+      if (res.ok) {
+        alert(`Message sent to ${composeForm.to}${composeForm.sendEmailNotification ? '\nEmail notification will be sent to the recipient.' : ''}`);
+        setShowComposeModal(false);
+        setComposeForm({
+          to: '',
+          subject: '',
+          content: '',
+          sendEmailNotification: true,
+        });
+        fetchMessages(); // Refresh messages
+      } else {
+        throw new Error('Failed to send message');
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
     } finally {
       setSending(false);
     }
@@ -364,30 +399,48 @@ export default function InboxPage() {
 
     setSending(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/messages/${selectedMessage.id}/reply`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: replyContent,
+            senderName: 'Recruiter',
+            senderEmail: userEmail,
+            sendEmailNotification: true,
+            tenantId,
+          }),
+        }
+      );
 
-      const newReply: Reply = {
-        id: Date.now(),
-        from: 'You',
-        content: replyContent,
-        time: 'Just now',
-      };
+      if (res.ok) {
+        const newReply: Reply = {
+          id: Date.now().toString(),
+          from: 'You',
+          content: replyContent,
+          time: 'Just now',
+        };
 
-      setMessages(messages.map(m =>
-        m.id === selectedMessage.id
-          ? { ...m, replies: [...(m.replies || []), newReply] }
-          : m
-      ));
+        setMessages(messages.map(m =>
+          m.id === selectedMessage.id
+            ? { ...m, replies: [...(m.replies || []), newReply] }
+            : m
+        ));
 
-      setSelectedMessage({
-        ...selectedMessage,
-        replies: [...(selectedMessage.replies || []), newReply],
-      });
+        setSelectedMessage({
+          ...selectedMessage,
+          replies: [...(selectedMessage.replies || []), newReply],
+        });
 
-      setReplyContent('');
-      alert(`Reply sent to ${selectedMessage.from}.\nEmail notification sent.`);
+        setReplyContent('');
+        alert(`Reply sent to ${selectedMessage.from}.\nEmail notification sent.`);
+      } else {
+        throw new Error('Failed to send reply');
+      }
     } catch (error) {
       console.error('Failed to send reply:', error);
+      alert('Failed to send reply. Please try again.');
     } finally {
       setSending(false);
     }

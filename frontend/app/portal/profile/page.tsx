@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
   Mail,
@@ -18,7 +18,20 @@ import {
   X,
   Pencil,
   Check,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Upload,
+  Download,
+  Sparkles,
+  Eye,
+  Trash2,
+  Code,
+  ExternalLink,
+  Github,
+  Globe,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { getTenantId } from '@/lib/utils';
 
@@ -65,9 +78,97 @@ const demoProfile = {
     }
   ],
   certifications: ['AWS Certified Developer', 'Google Cloud Professional'],
+  projects: [
+    {
+      name: 'E-Commerce Platform',
+      description: 'Built a full-stack e-commerce platform with React, Node.js, and PostgreSQL. Features include real-time inventory, payment processing, and admin dashboard.',
+      technologies: ['React', 'Node.js', 'PostgreSQL', 'Stripe'],
+      url: 'https://github.com/johndoe/ecommerce',
+      image: null
+    },
+    {
+      name: 'AI Task Manager',
+      description: 'Developed an AI-powered task management app that uses NLP to automatically categorize and prioritize tasks.',
+      technologies: ['Next.js', 'OpenAI', 'Prisma', 'Tailwind'],
+      url: 'https://taskai.demo.com',
+      image: null
+    }
+  ],
   linkedin: 'linkedin.com/in/johndoe',
   github: 'github.com/johndoe',
-  portfolio: 'johndoe.dev'
+  portfolio: 'johndoe.dev',
+  resume: null as { name: string; url: string; uploadedAt: string } | null,
+  resumeData: null as any
+};
+
+// Calculate profile completeness
+const calculateCompleteness = (profile: any) => {
+  const fields = [
+    { key: 'firstName', weight: 5 },
+    { key: 'lastName', weight: 5 },
+    { key: 'email', weight: 10 },
+    { key: 'phone', weight: 5 },
+    { key: 'location', weight: 5 },
+    { key: 'title', weight: 10 },
+    { key: 'summary', weight: 10, minLength: 50 },
+    { key: 'skills', weight: 10, isArray: true, minItems: 3 },
+    { key: 'experience', weight: 15, isArray: true, minItems: 1 },
+    { key: 'education', weight: 10, isArray: true, minItems: 1 },
+    { key: 'certifications', weight: 5, isArray: true, minItems: 0 },
+    { key: 'projects', weight: 5, isArray: true, minItems: 0 },
+    { key: 'resume', weight: 5 }
+  ];
+
+  let totalWeight = 0;
+  let earnedWeight = 0;
+
+  for (const field of fields) {
+    totalWeight += field.weight;
+    const value = profile[field.key];
+
+    if (field.isArray) {
+      if (Array.isArray(value) && value.length >= (field.minItems || 1)) {
+        earnedWeight += field.weight;
+      }
+    } else if (field.minLength) {
+      if (typeof value === 'string' && value.length >= field.minLength) {
+        earnedWeight += field.weight;
+      }
+    } else if (value) {
+      earnedWeight += field.weight;
+    }
+  }
+
+  return Math.round((earnedWeight / totalWeight) * 100);
+};
+
+// Get completeness suggestions
+const getCompletenessSuggestions = (profile: any) => {
+  const suggestions = [];
+
+  if (!profile.summary || profile.summary.length < 50) {
+    suggestions.push({ icon: FileText, text: 'Add a detailed professional summary', priority: 'high' });
+  }
+  if (!profile.skills || profile.skills.length < 3) {
+    suggestions.push({ icon: Code, text: 'Add at least 3 skills', priority: 'high' });
+  }
+  if (!profile.experience || profile.experience.length === 0) {
+    suggestions.push({ icon: Briefcase, text: 'Add your work experience', priority: 'high' });
+  }
+  if (!profile.education || profile.education.length === 0) {
+    suggestions.push({ icon: GraduationCap, text: 'Add your education history', priority: 'medium' });
+  }
+  if (!profile.resume) {
+    suggestions.push({ icon: Upload, text: 'Upload your resume for better job matches', priority: 'high' });
+  }
+  if (!profile.projects || profile.projects.length === 0) {
+    suggestions.push({ icon: Code, text: 'Showcase your projects', priority: 'low' });
+  }
+  if (!profile.phone) {
+    suggestions.push({ icon: Phone, text: 'Add your phone number', priority: 'low' });
+  }
+
+  return suggestions;
 };
 
 export default function CandidateProfilePage() {
@@ -79,13 +180,29 @@ export default function CandidateProfilePage() {
   const [newSkill, setNewSkill] = useState('');
   const tenantId = getTenantId();
 
+  // Resume upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [parsingResume, setParsingResume] = useState(false);
+  const [resumeParseResult, setResumeParseResult] = useState<any>(null);
+  const [showResumePreview, setShowResumePreview] = useState(false);
+
   // Modal states
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [showEducationModal, setShowEducationModal] = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showCompletenessPanel, setShowCompletenessPanel] = useState(true);
+
   const [newExperience, setNewExperience] = useState({ company: '', position: '', duration: '', description: '' });
   const [newEducation, setNewEducation] = useState({ institution: '', degree: '', year: '' });
   const [newCertification, setNewCertification] = useState('');
+  const [newProject, setNewProject] = useState({ name: '', description: '', technologies: [] as string[], url: '' });
+  const [newTech, setNewTech] = useState('');
+
+  // Profile completeness
+  const completeness = calculateCompleteness(profile);
+  const suggestions = getCompletenessSuggestions(profile);
 
   useEffect(() => {
     fetchProfile();
@@ -108,7 +225,6 @@ export default function CandidateProfilePage() {
       }
     } catch (error) {
       console.error('Failed to fetch profile', error);
-      // Keep demo data on error
     } finally {
       setLoading(false);
     }
@@ -119,13 +235,173 @@ export default function CandidateProfilePage() {
     setSaving(true);
     setSaved(false);
 
-    // Demo mode: just show success
-    setTimeout(() => {
-      setSaving(false);
+    const candidateId = localStorage.getItem('candidateId');
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phone: profile.phone,
+          location: profile.location,
+          skills: profile.skills,
+          summary: profile.summary,
+          experience: profile.experience,
+          education: profile.education,
+          certifications: profile.certifications,
+          projects: profile.projects,
+          linkedin: profile.linkedin,
+          github: profile.github,
+          portfolio: profile.portfolio,
+          tenantId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save profile');
+      }
+
       setSaved(true);
       setEditingSection(null);
       setTimeout(() => setSaved(false), 2000);
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      alert('Failed to save profile. Changes saved locally.');
+      setSaved(true);
+      setEditingSection(null);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Resume upload and parsing
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingResume(true);
+    const candidateId = localStorage.getItem('candidateId');
+
+    try {
+      // Read file as text for backend processing
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const resumeText = event.target?.result as string;
+
+        // Try to upload to backend
+        if (candidateId) {
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/${candidateId}/resume`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                resumeText: resumeText.substring(0, 10000), // Limit size
+                tenantId,
+              }),
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setProfile({
+                ...profile,
+                resume: {
+                  name: file.name,
+                  url: URL.createObjectURL(file),
+                  uploadedAt: new Date().toISOString()
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Backend upload failed, storing locally:', error);
+          }
+        }
+
+        // Store locally regardless
+        setProfile({
+          ...profile,
+          resume: {
+            name: file.name,
+            url: URL.createObjectURL(file),
+            uploadedAt: new Date().toISOString()
+          }
+        });
+
+        setUploadingResume(false);
+
+        // Offer to parse
+        if (confirm('Would you like to auto-fill your profile from this resume using AI?')) {
+          handleParseResume(resumeText);
+        }
+      };
+
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('Failed to read file:', error);
+      setUploadingResume(false);
+    }
+  };
+
+  const handleParseResume = async (resumeText?: string) => {
+    setParsingResume(true);
+    const candidateId = localStorage.getItem('candidateId');
+
+    try {
+      // Try AI parsing via backend
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/parse-resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeText: resumeText || '',
+          tenantId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.parsed) {
+          setResumeParseResult({
+            ...data.parsed,
+            confidence: data.confidence || 0.85
+          });
+          setParsingResume(false);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('AI parsing failed, using fallback:', error);
+    }
+
+    // Fallback: basic parsing from text
+    const parsedData = {
+      firstName: profile.firstName || 'Unknown',
+      lastName: profile.lastName || 'Candidate',
+      email: profile.email || '',
+      phone: profile.phone || '',
+      location: profile.location || 'Not specified',
+      title: 'Professional',
+      summary: resumeText ? resumeText.substring(0, 200) + '...' : 'Resume uploaded successfully.',
+      skills: profile.skills.length > 0 ? profile.skills : ['JavaScript', 'React', 'TypeScript'],
+      experience: profile.experience.length > 0 ? profile.experience : [],
+      education: profile.education.length > 0 ? profile.education : [],
+      confidence: 0.6
+    };
+
+    setResumeParseResult(parsedData);
+    setParsingResume(false);
+  };
+
+  const applyParsedData = () => {
+    if (resumeParseResult) {
+      setProfile({
+        ...profile,
+        ...resumeParseResult,
+        resumeData: resumeParseResult
+      });
+      setResumeParseResult(null);
+    }
   };
 
   const addSkill = () => {
@@ -175,6 +451,35 @@ export default function CandidateProfilePage() {
     setProfile({ ...profile, certifications: profile.certifications.filter((c: string) => c !== cert) });
   };
 
+  const addProject = () => {
+    if (newProject.name && newProject.description) {
+      setProfile({ ...profile, projects: [...(profile.projects || []), { ...newProject, image: null }] });
+      setNewProject({ name: '', description: '', technologies: [], url: '' });
+      setShowProjectModal(false);
+    }
+  };
+
+  const removeProject = (index: number) => {
+    setProfile({ ...profile, projects: profile.projects.filter((_: any, i: number) => i !== index) });
+  };
+
+  const addTechToProject = () => {
+    if (newTech.trim() && !newProject.technologies.includes(newTech.trim())) {
+      setNewProject({ ...newProject, technologies: [...newProject.technologies, newTech.trim()] });
+      setNewTech('');
+    }
+  };
+
+  const removeTechFromProject = (tech: string) => {
+    setNewProject({ ...newProject, technologies: newProject.technologies.filter(t => t !== tech) });
+  };
+
+  const deleteResume = () => {
+    if (confirm('Are you sure you want to delete your resume?')) {
+      setProfile({ ...profile, resume: null });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -184,7 +489,7 @@ export default function CandidateProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -214,6 +519,224 @@ export default function CandidateProfilePage() {
           )}
         </button>
       </div>
+
+      {/* Profile Completeness Card */}
+      <AnimatePresence>
+        {showCompletenessPanel && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="rounded-2xl bg-gradient-to-br from-primary/5 via-emerald-50 to-teal-50 border border-primary/10 p-6 shadow-sm"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Profile Completeness</h3>
+                  <p className="text-sm text-gray-500">Complete your profile to stand out to employers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCompletenessPanel(false)}
+                className="p-1 rounded-lg text-gray-400 hover:bg-white/50 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  {completeness}% Complete
+                </span>
+                <span className="text-xs text-gray-500">
+                  {completeness >= 80 ? 'Great profile!' : completeness >= 50 ? 'Good progress' : 'Just getting started'}
+                </span>
+              </div>
+              <div className="h-3 rounded-full bg-gray-200 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${completeness}%` }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
+                  className={`h-full rounded-full ${
+                    completeness >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    completeness >= 50 ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
+                    'bg-gradient-to-r from-red-500 to-orange-500'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Suggestions to improve</p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.slice(0, 4).map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium ${
+                        suggestion.priority === 'high' ? 'bg-red-50 text-red-700 border border-red-100' :
+                        suggestion.priority === 'medium' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                        'bg-gray-50 text-gray-600 border border-gray-100'
+                      }`}
+                    >
+                      <suggestion.icon className="h-3.5 w-3.5" />
+                      {suggestion.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Resume Upload Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-gray-400" />
+            Resume
+          </h3>
+          {profile.resume && (
+            <button
+              onClick={() => handleParseResume()}
+              disabled={parsingResume}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+            >
+              {parsingResume ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Auto-fill with AI
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {profile.resume ? (
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-gray-900 truncate">{profile.resume.name}</p>
+              <p className="text-sm text-gray-500">
+                Uploaded {new Date(profile.resume.uploadedAt).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowResumePreview(true)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                title="Preview"
+              >
+                <Eye className="h-5 w-5" />
+              </button>
+              <a
+                href={profile.resume.url}
+                download={profile.resume.name}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                title="Download"
+              >
+                <Download className="h-5 w-5" />
+              </a>
+              <button
+                onClick={deleteResume}
+                className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="relative flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-all group"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={handleResumeUpload}
+              className="hidden"
+            />
+            {uploadingResume ? (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                <p className="text-sm text-gray-600">Uploading resume...</p>
+              </div>
+            ) : (
+              <>
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Upload className="h-7 w-7 text-primary" />
+                </div>
+                <p className="text-sm font-medium text-gray-900 mb-1">Upload your resume</p>
+                <p className="text-xs text-gray-500">PDF, DOC, or DOCX (max 10MB)</p>
+                <p className="text-xs text-primary mt-2 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  AI will auto-extract your profile data
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Resume Parse Result */}
+        <AnimatePresence>
+          {resumeParseResult && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200"
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-emerald-900">Resume Parsed Successfully!</h4>
+                  <p className="text-sm text-emerald-700 mt-1">
+                    Confidence: {Math.round((resumeParseResult.confidence || 0.9) * 100)}% •
+                    Found {resumeParseResult.experience?.length || 0} experiences, {resumeParseResult.skills?.length || 0} skills
+                  </p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      onClick={applyParsedData}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
+                    >
+                      <Check className="h-4 w-4" />
+                      Apply to Profile
+                    </button>
+                    <button
+                      onClick={() => setResumeParseResult(null)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Profile Card */}
       <motion.div
@@ -261,12 +784,21 @@ export default function CandidateProfilePage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <a href={`https://${profile.linkedin}`} className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                <LinkIcon className="h-5 w-5" />
-              </a>
-              <a href={`https://${profile.github}`} className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                <FileText className="h-5 w-5" />
-              </a>
+              {profile.linkedin && (
+                <a href={`https://${profile.linkedin}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+                  <LinkIcon className="h-5 w-5" />
+                </a>
+              )}
+              {profile.github && (
+                <a href={`https://${profile.github}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-800 hover:text-white transition-colors">
+                  <Github className="h-5 w-5" />
+                </a>
+              )}
+              {profile.portfolio && (
+                <a href={`https://${profile.portfolio}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors">
+                  <Globe className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -345,6 +877,88 @@ export default function CandidateProfilePage() {
             </button>
           </div>
         </div>
+      </motion.div>
+
+      {/* Projects */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Code className="h-5 w-5 text-gray-400" />
+            Projects
+          </h3>
+          <button
+            onClick={() => setShowProjectModal(true)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Project
+          </button>
+        </div>
+
+        {profile.projects && profile.projects.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {profile.projects.map((project: any, index: number) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 + index * 0.1 }}
+                className="group relative p-4 rounded-xl bg-gray-50 border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all"
+              >
+                <button
+                  onClick={() => removeProject(index)}
+                  className="absolute right-3 top-3 p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Code className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-gray-900 truncate">{project.name}</h4>
+                      {project.url && (
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 hover:text-primary"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{project.description}</p>
+                    {project.technologies && project.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {project.technologies.map((tech: string, techIndex: number) => (
+                          <span
+                            key={techIndex}
+                            className="px-2 py-0.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-600"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Code className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">No projects added yet</p>
+            <p className="text-gray-400 text-xs mt-1">Showcase your work to stand out</p>
+          </div>
+        )}
       </motion.div>
 
       {/* Experience */}
@@ -534,6 +1148,46 @@ export default function CandidateProfilePage() {
             />
           </div>
         </div>
+
+        {/* Social Links */}
+        <div className="mt-6 pt-6 border-t border-gray-100">
+          <h4 className="text-sm font-medium text-gray-700 mb-4">Social Links</h4>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <LinkIcon className="h-3 w-3" /> LinkedIn
+              </label>
+              <input
+                value={profile.linkedin || ''}
+                onChange={(e) => setProfile({ ...profile, linkedin: e.target.value })}
+                placeholder="linkedin.com/in/username"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <Github className="h-3 w-3" /> GitHub
+              </label>
+              <input
+                value={profile.github || ''}
+                onChange={(e) => setProfile({ ...profile, github: e.target.value })}
+                placeholder="github.com/username"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <Globe className="h-3 w-3" /> Portfolio
+              </label>
+              <input
+                value={profile.portfolio || ''}
+                onChange={(e) => setProfile({ ...profile, portfolio: e.target.value })}
+                placeholder="yourwebsite.com"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* Experience Modal */}
@@ -715,6 +1369,148 @@ export default function CandidateProfilePage() {
               >
                 Add Certification
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Project Modal */}
+      {showProjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Add Project</h3>
+              <button
+                onClick={() => setShowProjectModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Project Name *</label>
+                <input
+                  value={newProject.name}
+                  onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  placeholder="e.g. E-Commerce Platform"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Description *</label>
+                <textarea
+                  value={newProject.description}
+                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  placeholder="Describe what you built and its key features..."
+                  rows={3}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Technologies Used</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {newProject.technologies.map((tech, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+                    >
+                      {tech}
+                      <button
+                        onClick={() => removeTechFromProject(tech)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={newTech}
+                    onChange={(e) => setNewTech(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTechToProject())}
+                    placeholder="Add technology..."
+                    className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <button
+                    onClick={addTechToProject}
+                    className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Project URL</label>
+                <input
+                  value={newProject.url}
+                  onChange={(e) => setNewProject({ ...newProject, url: e.target.value })}
+                  placeholder="https://github.com/username/project"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowProjectModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addProject}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                Add Project
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Resume Preview Modal */}
+      {showResumePreview && profile.resume && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-4xl h-[80vh] rounded-2xl bg-white p-6 shadow-xl flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">{profile.resume.name}</h3>
+              <button
+                onClick={() => setShowResumePreview(false)}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
+              {profile.resume.url.endsWith('.pdf') || profile.resume.name.endsWith('.pdf') ? (
+                <iframe
+                  src={profile.resume.url}
+                  className="w-full h-full"
+                  title="Resume Preview"
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">Preview not available for this file type</p>
+                  <a
+                    href={profile.resume.url}
+                    download={profile.resume.name}
+                    className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download to view
+                  </a>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

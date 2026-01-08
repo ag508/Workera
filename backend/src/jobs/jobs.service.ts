@@ -10,7 +10,7 @@ export class JobsService {
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async createJob(
     title: string,
@@ -82,5 +82,36 @@ export class JobsService {
     }
 
     return savedJob;
+  }
+
+  async deleteJob(id: string, tenantId: string): Promise<boolean> {
+    const job = await this.getJobById(id, tenantId);
+    if (!job) {
+      return false;
+    }
+
+    await this.jobRepository.remove(job);
+    return true;
+  }
+
+  async duplicateJob(id: string, tenantId: string): Promise<Job | null> {
+    const job = await this.getJobById(id, tenantId);
+    if (!job) {
+      return null;
+    }
+
+    const duplicate = this.jobRepository.create({
+      title: `${job.title} (Copy)`,
+      description: job.description,
+      company: job.company,
+      location: job.location,
+      salary: job.salary,
+      tenantId: job.tenantId,
+      requirements: job.requirements || [],
+      status: JobStatus.DRAFT,
+      channels: [],
+    });
+
+    return await this.jobRepository.save(duplicate);
   }
 }

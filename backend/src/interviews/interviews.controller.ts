@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { InterviewsService } from './interviews.service';
 import { InterviewType, InterviewStatus } from '../database/entities';
+import { Public } from '../auth/decorators/public.decorator';
 
 export class ScheduleInterviewDto {
   applicationId: string;
@@ -35,14 +36,23 @@ export class SubmitFeedbackDto {
 
 @Controller('interviews')
 export class InterviewsController {
-  constructor(private readonly interviewsService: InterviewsService) {}
+  constructor(private readonly interviewsService: InterviewsService) { }
+
+  @Public()
+  @Get()
+  async getAllInterviews(@Query('tenantId') tenantId: string) {
+    const interviews = await this.interviewsService.getAllInterviews(
+      tenantId || '11111111-1111-1111-1111-111111111111'
+    );
+    return interviews;
+  }
 
   @Post()
   async scheduleInterview(@Body() dto: ScheduleInterviewDto) {
     const interview = await this.interviewsService.scheduleInterview({
       ...dto,
       scheduledAt: new Date(dto.scheduledAt),
-      tenantId: dto.tenantId || 'default-tenant',
+      tenantId: dto.tenantId || '11111111-1111-1111-1111-111111111111',
     });
     return {
       success: true,
@@ -57,7 +67,7 @@ export class InterviewsController {
   ) {
     const interviews = await this.interviewsService.getInterviewsByApplication(
       applicationId,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -65,10 +75,11 @@ export class InterviewsController {
     };
   }
 
+  @Public()
   @Get('upcoming')
   async getUpcomingInterviews(@Query('tenantId') tenantId: string) {
     const interviews = await this.interviewsService.getUpcomingInterviews(
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: true,
@@ -83,7 +94,7 @@ export class InterviewsController {
   ) {
     const interview = await this.interviewsService.getInterviewById(
       id,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: !!interview,
@@ -99,7 +110,7 @@ export class InterviewsController {
     const interview = await this.interviewsService.updateInterviewStatus(
       id,
       dto.status,
-      dto.tenantId || 'default-tenant'
+      dto.tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: !!interview,
@@ -115,7 +126,7 @@ export class InterviewsController {
     const interview = await this.interviewsService.rescheduleInterview(
       id,
       new Date(dto.newTime),
-      dto.tenantId || 'default-tenant'
+      dto.tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: !!interview,
@@ -132,11 +143,26 @@ export class InterviewsController {
     const interview = await this.interviewsService.submitFeedback(
       id,
       feedback,
-      tenantId || 'default-tenant'
+      tenantId || '11111111-1111-1111-1111-111111111111'
     );
     return {
       success: !!interview,
       data: interview,
+    };
+  }
+
+  @Post(':id/send-reminder')
+  async sendReminder(
+    @Param('id') id: string,
+    @Query('tenantId') tenantId: string
+  ) {
+    const result = await this.interviewsService.sendReminder(
+      id,
+      tenantId || '11111111-1111-1111-1111-111111111111'
+    );
+    return {
+      success: result,
+      message: result ? 'Reminder sent successfully' : 'Failed to send reminder',
     };
   }
 }

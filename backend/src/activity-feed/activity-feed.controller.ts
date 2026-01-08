@@ -9,12 +9,13 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
+import { Public } from '../auth/decorators/public.decorator';
 import { ActivityFeedService, CreateActivityDto, ActivityFilters } from './activity-feed.service';
 import { ActivityType } from '../database/entities/activity-feed.entity';
 
 @Controller('activity-feed')
 export class ActivityFeedController {
-  constructor(private readonly activityFeedService: ActivityFeedService) {}
+  constructor(private readonly activityFeedService: ActivityFeedService) { }
 
   /**
    * Create a new activity
@@ -29,6 +30,7 @@ export class ActivityFeedController {
    * Get activity feed with filters
    * GET /activity-feed?tenantId=xxx&activityTypes=candidate_created,job_posted&limit=50&offset=0
    */
+  @Public()
   @Get()
   async getActivities(
     @Query('tenantId') tenantId: string,

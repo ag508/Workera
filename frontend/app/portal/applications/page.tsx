@@ -156,10 +156,36 @@ export default function MyApplicationsPage() {
   const handleWithdraw = async (id: string) => {
     if (!confirm('Are you sure you want to withdraw this application?')) return;
 
-    // Demo mode: just update locally
-    setApplications(apps => apps.map(app =>
-      app.id === id ? { ...app, status: 'WITHDRAWN' } : app
-    ));
+    // If it's a demo application (simple numeric ID), just update locally
+    if (['1', '2', '3', '4', '5'].includes(id)) {
+      setApplications(apps => apps.map(app =>
+        app.id === id ? { ...app, status: 'WITHDRAWN' } : app
+      ));
+      return;
+    }
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates/applications/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'WITHDRAWN',
+          tenantId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to withdraw application');
+      }
+
+      // Update local state
+      setApplications(apps => apps.map(app =>
+        app.id === id ? { ...app, status: 'WITHDRAWN' } : app
+      ));
+    } catch (error) {
+      console.error('Failed to withdraw application:', error);
+      alert('Failed to withdraw application. Please try again.');
+    }
   };
 
   const filteredApplications = applications.filter(app => {
@@ -361,9 +387,12 @@ export default function MyApplicationsPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                      <button className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
+                      <Link
+                        href={`/portal/apply/${app.application?.job?.id || app.id}`}
+                        className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-center"
+                      >
                         View Details
-                      </button>
+                      </Link>
                       {!['REJECTED', 'WITHDRAWN', 'ACCEPTED'].includes(app.status) && (
                         <button
                           onClick={() => handleWithdraw(app.id)}

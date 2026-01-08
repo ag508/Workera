@@ -43,6 +43,9 @@ export class CandidateUser {
   @Column({ type: 'simple-json', nullable: true })
   skills: string[];
 
+  @Column({ type: 'simple-json', nullable: true })
+  savedJobIds: string[];
+
   @Column({ nullable: true })
   location: string;
 

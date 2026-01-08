@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getTenantId } from '@/lib/utils';
 import {
   Search,
   Filter,
@@ -29,17 +30,11 @@ import {
   FileText,
   Loader2,
   ArrowRight,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 
-// Demo job data
-const jobData: Record<string, any> = {
-  '1': { title: 'Senior React Developer', department: 'Engineering', location: 'San Francisco, CA', type: 'Full-time' },
-  '2': { title: 'Product Manager', department: 'Product', location: 'New York, NY', type: 'Full-time' },
-  '3': { title: 'UX Designer', department: 'Design', location: 'Remote', type: 'Full-time' }
-};
-
-// Demo applicants data
+// Fallback demo applicants data
 const demoApplicants = [
   {
     id: '1',
@@ -156,20 +151,89 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
 export default function ApplicantsPage() {
   const params = useParams();
   const jobId = params.id as string;
-  const job = jobData[jobId] || { title: 'Senior React Developer', department: 'Engineering', location: 'San Francisco, CA', type: 'Full-time' };
+  const tenantId = getTenantId();
 
+  const [job, setJob] = useState<any>({ title: 'Loading...', department: '', location: '', type: '' });
+  const [applicants, setApplicants] = useState<typeof demoApplicants>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [aiQuery, setAiQuery] = useState('');
   const [isAISearching, setIsAISearching] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [aiResponse, setAiResponse] = useState<string>('');
   const [selectedApplicant, setSelectedApplicant] = useState<typeof demoApplicants[0] | null>(null);
-  const [filteredApplicants, setFilteredApplicants] = useState(demoApplicants);
+  const [filteredApplicants, setFilteredApplicants] = useState<typeof demoApplicants>([]);
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Fetch job and applicants data
+  useEffect(() => {
+    fetchData();
+  }, [jobId]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch job details
+      const jobRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/${jobId}?tenantId=${tenantId}`);
+      if (jobRes.ok) {
+        const jobData = await jobRes.json();
+        const j = jobData.data || jobData;
+        setJob({
+          title: j.title || 'Job',
+          department: j.department || '',
+          location: j.location || '',
+          type: j.employmentType || 'Full-time'
+        });
+      }
+
+      // Fetch applications for this job
+      const appRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications?tenantId=${tenantId}&jobId=${jobId}`);
+      if (appRes.ok) {
+        const appData = await appRes.json();
+        const applications = appData.data || [];
+        if (applications.length > 0) {
+          const mapped = applications.map((app: any) => {
+            const c = app.candidate || {};
+            return {
+              id: app.id,
+              name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown',
+              email: c.email || '',
+              phone: c.phone || '',
+              avatar: c.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.firstName || 'U')}&background=10B981&color=fff`,
+              title: c.currentTitle || 'Candidate',
+              company: c.currentCompany || '',
+              location: c.location || 'Not specified',
+              experience: c.yearsOfExperience ? `${c.yearsOfExperience} years` : 'N/A',
+              education: c.education?.[0]?.degree || 'Not specified',
+              skills: c.skills || [],
+              matchScore: app.matchScore || c.matchScore || Math.min(95, 70 + (c.skills?.length || 0) * 3),
+              status: (app.status || 'NEW').toLowerCase(),
+              appliedDate: app.createdAt || new Date().toISOString(),
+              summary: c.summary || 'Experienced professional with relevant skills.'
+            };
+          });
+          setApplicants(mapped);
+          setFilteredApplicants(mapped);
+        } else {
+          setApplicants(demoApplicants);
+          setFilteredApplicants(demoApplicants);
+        }
+      } else {
+        setApplicants(demoApplicants);
+        setFilteredApplicants(demoApplicants);
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+      setApplicants(demoApplicants);
+      setFilteredApplicants(demoApplicants);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter applicants based on search and status
   useEffect(() => {
-    let results = demoApplicants;
+    let results = applicants;
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -186,7 +250,7 @@ export default function ApplicantsPage() {
     }
 
     setFilteredApplicants(results);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, applicants]);
 
   // AI Search handler
   const handleAISearch = async () => {

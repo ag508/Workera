@@ -20,7 +20,7 @@ export class PurgeLogsDto {
 
 @Controller('audit')
 export class AuditController {
-  constructor(private readonly auditService: AuditService) {}
+  constructor(private readonly auditService: AuditService) { }
 
   @Get('entity/:entityType/:entityId')
   async getEntityAuditTrail(
@@ -33,7 +33,7 @@ export class AuditController {
     const result = await this.auditService.getEntityAuditTrail(
       entityType,
       entityId,
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       {
         limit: limit ? parseInt(limit) : undefined,
         offset: offset ? parseInt(offset) : undefined,
@@ -49,7 +49,7 @@ export class AuditController {
   @Post('logs')
   async getTenantAuditLogs(@Body() dto: GetAuditLogsDto) {
     const result = await this.auditService.getTenantAuditLogs(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       {
         action: dto.action,
         entityType: dto.entityType,
@@ -73,7 +73,7 @@ export class AuditController {
     @Query('days') days?: string
   ) {
     const stats = await this.auditService.getAuditStatistics(
-      tenantId || 'default-tenant',
+      tenantId || '11111111-1111-1111-1111-111111111111',
       days ? parseInt(days) : 30
     );
 
@@ -86,7 +86,7 @@ export class AuditController {
   @Post('purge')
   async purgeOldLogs(@Body() dto: PurgeLogsDto) {
     const purged = await this.auditService.purgeOldLogs(
-      dto.tenantId || 'default-tenant',
+      dto.tenantId || '11111111-1111-1111-1111-111111111111',
       dto.retentionDays || 730
     );
 

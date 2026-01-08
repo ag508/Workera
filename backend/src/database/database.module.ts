@@ -4,17 +4,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
   EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  Message,
   // Requisition Management Entities
   BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
   JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
   HiringTeamMember, BudgetReservation,
 } from './entities';
+import { SeederService } from './seeder.service';
+import { SeederController } from './seeder.controller';
 
 // All entities array for TypeORM
 const allEntities = [
   // Core Entities
   Tenant, User, Job, Candidate, Resume, Application, Interview, AuditLog,
   EmailCampaign, ActivityFeed, ApplicationForm, FormSubmission, CandidateUser,
+  Message,
   // Requisition Management Entities
   BusinessUnit, Department, Location, CostCenter, JobGrade, Position,
   JobRequisition, ApprovalTransaction, ApprovalRule, RequisitionAuditLog,
@@ -23,6 +27,7 @@ const allEntities = [
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,6 +58,10 @@ const allEntities = [
         };
       },
     }),
+    TypeOrmModule.forFeature(allEntities),
   ],
+  controllers: [SeederController],
+  providers: [SeederService],
+  exports: [TypeOrmModule, SeederService],
 })
 export class DatabaseModule {}

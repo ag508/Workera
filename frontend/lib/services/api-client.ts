@@ -6,7 +6,7 @@ interface RequestOptions extends RequestInit {
 
 class ApiClient {
   private baseUrl: string;
-  private defaultTenantId: string = 'default-tenant';
+  private defaultTenantId: string = '11111111-1111-1111-1111-111111111111';
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -23,8 +23,15 @@ class ApiClient {
 
     const url = `${this.baseUrl}${endpoint}?${queryParams.toString()}`;
 
+    // Get token from localStorage if available (client-side only)
+    let token = '';
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('accessToken') || '';
+    }
+
     const headers = {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...init.headers,
     };
 

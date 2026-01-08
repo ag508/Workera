@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Candidate, Resume, Application } from '../database/entities';
@@ -69,7 +69,7 @@ export class GDPRService {
     private resumeRepository: Repository<Resume>,
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
-  ) {}
+  ) { }
 
   /**
    * Export all personal data for a candidate (GDPR Article 15 - Right of Access)
@@ -87,7 +87,7 @@ export class GDPRService {
     });
 
     if (!candidate) {
-      throw new Error('Candidate not found or access denied');
+      throw new NotFoundException('Candidate not found or access denied');
     }
 
     const exportData: GDPRDataExport = {
@@ -154,7 +154,7 @@ export class GDPRService {
     });
 
     if (!candidate) {
-      throw new Error('Candidate not found or access denied');
+      throw new NotFoundException('Candidate not found or access denied');
     }
 
     const report: GDPRDeletionReport = {
@@ -220,7 +220,7 @@ export class GDPRService {
 
     } catch (error) {
       this.logger.error(`Error during GDPR deletion for candidate ${candidateId}:`, error);
-      throw new Error(`Failed to delete candidate data: ${error.message}`);
+      throw new InternalServerErrorException(`Failed to delete candidate data: ${error.message}`);
     }
   }
 
@@ -323,27 +323,54 @@ export class GDPRService {
   }
 
   /**
-   * Verify candidate consent (placeholder - implement actual consent management)
+   * Verify candidate consent based on registration and application history
+   * Consent is considered valid if:
+   * 1. Candidate exists and was created (implied consent at registration)
+   * 2. Candidate has submitted applications (active consent through action)
+   *
+   * For full GDPR compliance, implement a dedicated consent management system
+   * that tracks explicit consent with timestamps and consent versions.
    */
   async verifyConsent(candidateId: string, tenantId: string): Promise<{
     hasConsent: boolean;
     consentDate?: Date;
-    consentType?: string;
+    consentType?: 'explicit' | 'implicit' | 'none';
+    consentSource?: string;
   }> {
-    // In production, this would check a consent management system
     const candidate = await this.candidateRepository.findOne({
       where: { id: candidateId, tenantId },
     });
 
     if (!candidate) {
-      return { hasConsent: false };
+      return {
+        hasConsent: false,
+        consentType: 'none',
+        consentSource: 'candidate_not_found'
+      };
     }
 
-    // Placeholder logic - in production, check actual consent records
+    // Check if candidate has any applications (active consent through action)
+    const applicationCount = await this.applicationRepository.count({
+      where: { candidateId },
+    });
+
+    if (applicationCount > 0) {
+      // Active consent - candidate has taken action to apply
+      return {
+        hasConsent: true,
+        consentDate: candidate.createdAt,
+        consentType: 'explicit',
+        consentSource: 'application_submission',
+      };
+    }
+
+    // Registration implies initial consent to process data
+    // Note: For stricter GDPR compliance, require explicit checkbox consent at registration
     return {
       hasConsent: true,
       consentDate: candidate.createdAt,
-      consentType: 'explicit',
+      consentType: 'implicit',
+      consentSource: 'registration',
     };
   }
 }

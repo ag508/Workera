@@ -148,11 +148,42 @@ export default function JobBoardPage() {
     const id = localStorage.getItem('candidateId');
     setIsLoggedIn(!!token);
     setCandidateId(id);
+
+    // Load saved jobs from localStorage
+    const saved = localStorage.getItem('savedJobs');
+    if (saved) {
+      setSavedJobs(JSON.parse(saved));
+    }
+
     fetchJobs();
     if (token && id) {
       fetchRecommendations(id);
+      fetchSavedJobs(id);
     }
   }, []);
+
+  const fetchSavedJobs = async (id: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/saved-jobs?candidateId=${id}&tenantId=${tenantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('candidateToken')}`,
+          },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.savedJobs) {
+          const savedIds = data.savedJobs.map((j: any) => j.id);
+          setSavedJobs(savedIds);
+          localStorage.setItem('savedJobs', JSON.stringify(savedIds));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch saved jobs', error);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -251,12 +282,39 @@ export default function JobBoardPage() {
     fetchJobs();
   };
 
-  const toggleSaveJob = (jobId: string) => {
-    setSavedJobs(prev =>
-      prev.includes(jobId)
-        ? prev.filter(id => id !== jobId)
-        : [...prev, jobId]
-    );
+  const toggleSaveJob = async (jobId: string) => {
+    const isSaved = savedJobs.includes(jobId);
+    const newSavedJobs = isSaved
+      ? savedJobs.filter(id => id !== jobId)
+      : [...savedJobs, jobId];
+
+    // Update local state immediately for responsive UI
+    setSavedJobs(newSavedJobs);
+    localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
+
+    // Sync with backend if logged in
+    if (isLoggedIn && candidateId) {
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/integrations/candidate/saved-jobs`,
+          {
+            method: isSaved ? 'DELETE' : 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('candidateToken')}`,
+            },
+            body: JSON.stringify({
+              candidateId,
+              jobId,
+              tenantId,
+            }),
+          }
+        );
+      } catch (error) {
+        console.error('Failed to sync saved job:', error);
+        // Keep localStorage version as source of truth
+      }
+    }
   };
 
   const filteredJobs = jobs.filter(job => {
