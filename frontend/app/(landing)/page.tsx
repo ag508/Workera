@@ -3,8 +3,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import Lottie from 'lottie-react';
 import {
   ArrowRight,
   Brain,
@@ -36,6 +36,210 @@ import {
   Eye
 } from 'lucide-react';
 import AnimatedGridPattern from '@/components/reactbits/AnimatedGridPattern';
+
+// Dynamic import Lottie with SSR disabled
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
+
+// Animated Icon Components for "How Workera Works" section
+const PostJobIcon = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full">
+    {/* Document Shadow */}
+    <motion.rect
+      x="55" y="48" width="100" height="120" rx="8"
+      fill="#000" opacity="0.1"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.1 }}
+      transition={{ duration: 0.5 }}
+    />
+    {/* Document Body */}
+    <motion.rect
+      x="50" y="40" width="100" height="120" rx="8"
+      fill="white" stroke="#10B981" strokeWidth="3"
+      initial={{ scale: 0, y: 20 }}
+      animate={{ scale: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "backOut" }}
+    />
+    {/* Lines on document */}
+    <motion.rect
+      x="70" y="65" width="60" height="8" rx="4"
+      fill="#10B981" opacity="0.4"
+      initial={{ width: 0 }}
+      animate={{ width: 60 }}
+      transition={{ duration: 0.4, delay: 0.5 }}
+    />
+    <motion.rect
+      x="70" y="85" width="50" height="8" rx="4"
+      fill="#10B981" opacity="0.3"
+      initial={{ width: 0 }}
+      animate={{ width: 50 }}
+      transition={{ duration: 0.4, delay: 0.7 }}
+    />
+    <motion.rect
+      x="70" y="105" width="40" height="8" rx="4"
+      fill="#10B981" opacity="0.25"
+      initial={{ width: 0 }}
+      animate={{ width: 40 }}
+      transition={{ duration: 0.4, delay: 0.9 }}
+    />
+    {/* Checkmark Circle */}
+    <motion.circle
+      cx="140" cy="140" r="25"
+      fill="#10B981"
+      initial={{ scale: 0 }}
+      animate={{ scale: [0, 1.1, 1] }}
+      transition={{ duration: 0.5, delay: 1.2, ease: "backOut" }}
+    />
+    {/* Checkmark */}
+    <motion.path
+      d="M128 140 L136 148 L152 132"
+      stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+      fill="none"
+      initial={{ pathLength: 0 }}
+      animate={{ pathLength: 1 }}
+      transition={{ duration: 0.4, delay: 1.5 }}
+    />
+  </svg>
+);
+
+const AIScreenIcon = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full">
+    {/* Outer Scan Ring */}
+    <motion.circle
+      cx="100" cy="100" r="70"
+      stroke="#3B82F6" strokeWidth="3" fill="none"
+      strokeDasharray="15 15"
+      initial={{ rotate: 0, opacity: 0 }}
+      animate={{ rotate: 360, opacity: 0.6 }}
+      transition={{ rotate: { duration: 8, repeat: Infinity, ease: "linear" }, opacity: { duration: 0.5 } }}
+      style={{ transformOrigin: "100px 100px" }}
+    />
+    {/* Inner Pulse Ring */}
+    <motion.circle
+      cx="100" cy="100" r="50"
+      fill="#3B82F6" opacity="0.15"
+      initial={{ scale: 0.95 }}
+      animate={{ scale: [0.95, 1, 0.95] }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    />
+    {/* Brain Center */}
+    <motion.circle
+      cx="100" cy="100" r="35"
+      fill="#3B82F6"
+      initial={{ scale: 0 }}
+      animate={{ scale: [1, 1.05, 1] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+    />
+    {/* Neural Nodes */}
+    {[
+      { cx: 100, cy: 75, r: 6, delay: 0 },
+      { cx: 78, cy: 90, r: 5, delay: 0.2 },
+      { cx: 122, cy: 90, r: 5, delay: 0.4 },
+      { cx: 85, cy: 115, r: 4, delay: 0.6 },
+      { cx: 115, cy: 115, r: 4, delay: 0.8 },
+    ].map((node, i) => (
+      <motion.circle
+        key={i}
+        cx={node.cx} cy={node.cy} r={node.r}
+        fill="white"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [1, 0.4, 1] }}
+        transition={{ duration: 1.5, delay: node.delay, repeat: Infinity, ease: "easeInOut" }}
+      />
+    ))}
+    {/* Scan Line */}
+    <motion.rect
+      x="40" y="98" width="120" height="4" rx="2"
+      fill="#3B82F6"
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: [50, 150, 50], opacity: [0, 0.8, 0] }}
+      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+    />
+  </svg>
+);
+
+const InterviewHireIcon = () => (
+  <svg viewBox="0 0 200 200" className="w-full h-full">
+    {/* Calendar Background */}
+    <motion.rect
+      x="45" y="45" width="110" height="100" rx="10"
+      fill="white" stroke="#8B5CF6" strokeWidth="3"
+      initial={{ scale: 0, y: 20 }}
+      animate={{ scale: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "backOut" }}
+    />
+    {/* Calendar Header */}
+    <motion.rect
+      x="45" y="45" width="110" height="30" rx="10"
+      fill="#8B5CF6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, delay: 0.5 }}
+    />
+    {/* Calendar Rings */}
+    {[70, 100, 130].map((x, i) => (
+      <motion.rect
+        key={i}
+        x={x - 4} y="38" width="8" height="20" rx="4"
+        fill="#6B7280"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.6 + i * 0.1 }}
+      />
+    ))}
+    {/* Calendar Cells */}
+    {[
+      { x: 60, y: 90, color: "#F3F4F6" },
+      { x: 90, y: 90, color: "#F3F4F6" },
+      { x: 120, y: 90, color: "#8B5CF6", highlight: true },
+      { x: 60, y: 120, color: "#F3F4F6" },
+      { x: 90, y: 120, color: "#F3F4F6" },
+    ].map((cell, i) => (
+      <motion.rect
+        key={i}
+        x={cell.x - 10} y={cell.y - 10} width="20" height="20" rx="4"
+        fill={cell.color}
+        initial={{ scale: 0 }}
+        animate={{ scale: cell.highlight ? [0, 1.15, 1] : 1 }}
+        transition={{ duration: 0.4, delay: 0.8 + i * 0.1, ease: "backOut" }}
+      />
+    ))}
+    {/* Checkmark on highlighted cell */}
+    <motion.path
+      d="M114 90 L118 94 L126 86"
+      stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      fill="none"
+      initial={{ pathLength: 0 }}
+      animate={{ pathLength: 1 }}
+      transition={{ duration: 0.3, delay: 1.3 }}
+    />
+    {/* Person 1 (Left) */}
+    <motion.g
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.5, delay: 1.0 }}
+    >
+      <circle cx="55" cy="155" r="9" fill="#10B981" />
+      <rect x="43" y="167" width="24" height="14" rx="7" fill="#10B981" />
+    </motion.g>
+    {/* Person 2 (Right) */}
+    <motion.g
+      initial={{ x: 20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.5, delay: 1.2 }}
+    >
+      <circle cx="145" cy="155" r="9" fill="#3B82F6" />
+      <rect x="133" y="167" width="24" height="14" rx="7" fill="#3B82F6" />
+    </motion.g>
+    {/* Connection Line */}
+    <motion.rect
+      x="75" y="163" width="50" height="3" rx="1.5"
+      fill="#8B5CF6"
+      initial={{ width: 0 }}
+      animate={{ width: 50 }}
+      transition={{ duration: 0.4, delay: 1.5 }}
+    />
+  </svg>
+);
 
 // Lottie animation data for hero
 const heroAnimation = {
@@ -591,11 +795,13 @@ export default function Home() {
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/30">1</div>
                     </div>
 
-                    {/* Lottie Animation */}
+                    {/* Animated Icon */}
                     <div className="h-48 flex items-center justify-center mb-6 mt-4">
                       <div className="w-40 h-40 relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-emerald-500/10 rounded-full blur-2xl" />
-                        <Lottie animationData={postJobAnimation} loop={true} className="w-full h-full relative z-10" />
+                        <div className="relative z-10 w-full h-full">
+                          <PostJobIcon />
+                        </div>
                       </div>
                     </div>
 
@@ -636,11 +842,13 @@ export default function Home() {
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">2</div>
                     </div>
 
-                    {/* Lottie Animation */}
+                    {/* Animated Icon */}
                     <div className="h-48 flex items-center justify-center mb-6 mt-4">
                       <div className="w-40 h-40 relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-full blur-2xl" />
-                        <Lottie animationData={aiScreenAnimation} loop={true} className="w-full h-full relative z-10" />
+                        <div className="relative z-10 w-full h-full">
+                          <AIScreenIcon />
+                        </div>
                       </div>
                     </div>
 
@@ -681,11 +889,13 @@ export default function Home() {
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">3</div>
                     </div>
 
-                    {/* Lottie Animation */}
+                    {/* Animated Icon */}
                     <div className="h-48 flex items-center justify-center mb-6 mt-4">
                       <div className="w-40 h-40 relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-full blur-2xl" />
-                        <Lottie animationData={interviewHireAnimation} loop={true} className="w-full h-full relative z-10" />
+                        <div className="relative z-10 w-full h-full">
+                          <InterviewHireIcon />
+                        </div>
                       </div>
                     </div>
 
