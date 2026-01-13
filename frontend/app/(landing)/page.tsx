@@ -576,16 +576,16 @@ export default function Home() {
                 />
               </div>
 
-              <div className="grid gap-12 lg:gap-8 md:grid-cols-3 relative">
+              <div className="grid gap-12 lg:gap-8 md:grid-cols-3 relative items-stretch">
                 {/* Step 1: Post Job */}
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0 }}
-                  className="relative group"
+                  className="relative group h-full"
                 >
-                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group-hover:-translate-y-2">
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group-hover:-translate-y-2 h-full flex flex-col">
                     {/* Step Number Badge */}
                     <div className="absolute -top-4 left-8 flex items-center gap-2">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/30">1</div>
@@ -628,9 +628,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.2 }}
-                  className="relative group"
+                  className="relative group h-full"
                 >
-                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-500/20 transition-all duration-500 group-hover:-translate-y-2">
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-500/20 transition-all duration-500 group-hover:-translate-y-2 h-full flex flex-col">
                     {/* Step Number Badge */}
                     <div className="absolute -top-4 left-8 flex items-center gap-2">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">2</div>
@@ -673,9 +673,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  className="relative group"
+                  className="relative group h-full"
                 >
-                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-purple-500/20 transition-all duration-500 group-hover:-translate-y-2">
+                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-purple-500/20 transition-all duration-500 group-hover:-translate-y-2 h-full flex flex-col">
                     {/* Step Number Badge */}
                     <div className="absolute -top-4 left-8 flex items-center gap-2">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">3</div>

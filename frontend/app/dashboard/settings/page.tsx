@@ -1,13 +1,51 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Check, Mail, Bell, Shield, Globe, Database, Smartphone, Slack, Github, Linkedin } from 'lucide-react';
+import { Check, Mail, Bell, Shield, Globe, Database, Smartphone, Slack, Github, Linkedin, ArrowRight, Briefcase, Video, Calendar, Building2, ChevronRight } from 'lucide-react';
 
 export default function SettingsPage() {
+  const router = useRouter();
+
+  const integrationCategories = [
+    {
+      title: 'Job Boards',
+      description: 'LinkedIn, Indeed, Naukri, Glassdoor, Monster, ZipRecruiter',
+      icon: Briefcase,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      count: '6 platforms'
+    },
+    {
+      title: 'Enterprise HCM',
+      description: 'Workday integration for enterprise recruitment',
+      icon: Building2,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      count: '1 platform'
+    },
+    {
+      title: 'Video Conferencing',
+      description: 'Zoom, Microsoft Teams, Cisco Webex',
+      icon: Video,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-100',
+      count: '3 platforms'
+    },
+    {
+      title: 'Calendar & Email',
+      description: 'Google Calendar, Outlook, SMTP, SendGrid',
+      icon: Calendar,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+      count: '4 services'
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -94,64 +132,119 @@ export default function SettingsPage() {
           </GlassCard>
         </TabsContent>
 
-        {/* Integrations Settings (Moved from previous page) */}
+        {/* Integrations Settings */}
         <TabsContent value="integrations" className="space-y-6">
-           <div className="grid gap-6 md:grid-cols-2">
-            {/* Slack */}
-            <GlassCard className="flex flex-col justify-between p-6">
+          {/* Hero Card with CTA */}
+          <GlassCard className="p-6 bg-gradient-to-r from-primary/5 to-emerald-50">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
-                  <Slack className="h-6 w-6 text-gray-700" />
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">Slack</h3>
-                <p className="mb-4 text-sm text-gray-500">
-                  Receive notifications about new applicants and interview updates directly in your team channel.
+                <h2 className="text-lg font-bold text-gray-900">Third-Party Integrations</h2>
+                <p className="text-gray-500 mt-1">
+                  Connect job boards, video conferencing, calendar, and email services to streamline your recruitment workflow.
                 </p>
               </div>
-              <Button variant="outline" className="w-full">Connect</Button>
-            </GlassCard>
+              <Button
+                onClick={() => router.push('/dashboard/settings/integrations')}
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                Manage All Integrations
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </GlassCard>
 
-            {/* LinkedIn */}
-            <GlassCard className="flex flex-col justify-between p-6">
-              <div>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                  <Linkedin className="h-6 w-6 text-blue-600" />
+          {/* Integration Categories Grid */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {integrationCategories.map((category, i) => (
+              <GlassCard
+                key={i}
+                className="p-5 cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => router.push('/dashboard/settings/integrations')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`h-12 w-12 rounded-xl ${category.bgColor} flex items-center justify-center`}>
+                      <category.icon className={`h-6 w-6 ${category.color}`} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{category.title}</h3>
+                      <p className="text-sm text-gray-500">{category.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{category.count}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-primary transition-colors" />
+                  </div>
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">LinkedIn Recruiter</h3>
-                <p className="mb-4 text-sm text-gray-500">
-                  Sync candidates and job postings directly with LinkedIn Recruiter System Connect.
-                </p>
-              </div>
-               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Connected</Button>
-            </GlassCard>
+              </GlassCard>
+            ))}
+          </div>
 
-            {/* GitHub */}
-             <GlassCard className="flex flex-col justify-between p-6">
-              <div>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
-                  <Github className="h-6 w-6 text-gray-900" />
+          {/* Quick Connect Cards */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Quick Connect</h3>
+            <div className="grid gap-4 md:grid-cols-4">
+              {/* Slack */}
+              <GlassCard className="flex flex-col justify-between p-4">
+                <div>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+                    <Slack className="h-5 w-5 text-gray-700" />
+                  </div>
+                  <h4 className="font-medium text-gray-900">Slack</h4>
+                  <p className="text-xs text-gray-500 mt-1">Team notifications</p>
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">GitHub</h3>
-                <p className="mb-4 text-sm text-gray-500">
-                   Automatically analyze developer portfolios and contribution graphs.
-                </p>
-              </div>
-              <Button variant="outline" className="w-full">Connect</Button>
-            </GlassCard>
+                <Button variant="outline" size="sm" className="w-full mt-3">Connect</Button>
+              </GlassCard>
 
-            {/* Zoom */}
-            <GlassCard className="flex flex-col justify-between p-6">
-              <div>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                   <Smartphone className="h-6 w-6 text-blue-500" />
+              {/* LinkedIn */}
+              <GlassCard className="flex flex-col justify-between p-4">
+                <div>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                    <Linkedin className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <h4 className="font-medium text-gray-900">LinkedIn</h4>
+                  <p className="text-xs text-gray-500 mt-1">Jobs & candidates</p>
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">Zoom</h3>
-                <p className="mb-4 text-sm text-gray-500">
-                  Automatically generate meeting links for scheduled interviews.
-                </p>
-              </div>
-              <Button variant="outline" className="w-full">Connect</Button>
-            </GlassCard>
+                <Button
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={(e) => { e.stopPropagation(); router.push('/dashboard/settings/integrations'); }}
+                >
+                  Configure
+                </Button>
+              </GlassCard>
+
+              {/* GitHub */}
+              <GlassCard className="flex flex-col justify-between p-4">
+                <div>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+                    <Github className="h-5 w-5 text-gray-900" />
+                  </div>
+                  <h4 className="font-medium text-gray-900">GitHub</h4>
+                  <p className="text-xs text-gray-500 mt-1">Portfolio analysis</p>
+                </div>
+                <Button variant="outline" size="sm" className="w-full mt-3">Connect</Button>
+              </GlassCard>
+
+              {/* Zoom */}
+              <GlassCard className="flex flex-col justify-between p-4">
+                <div>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                    <Smartphone className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <h4 className="font-medium text-gray-900">Zoom</h4>
+                  <p className="text-xs text-gray-500 mt-1">Video interviews</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full mt-3"
+                  onClick={(e) => { e.stopPropagation(); router.push('/dashboard/settings/integrations'); }}
+                >
+                  Configure
+                </Button>
+              </GlassCard>
+            </div>
           </div>
         </TabsContent>
 
