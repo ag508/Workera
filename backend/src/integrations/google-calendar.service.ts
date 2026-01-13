@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from '../database/entities/tenant.entity';
-import { Interview } from '../database/entities/interview.entity';
+import { Interview, InterviewStatus } from '../database/entities/interview.entity';
 import axios from 'axios';
 
 export interface GoogleOAuthConfig {
@@ -111,7 +111,7 @@ export class GoogleCalendarService {
     private tenantRepository: Repository<Tenant>,
     @InjectRepository(Interview)
     private interviewRepository: Repository<Interview>,
-  ) {}
+  ) { }
 
   /**
    * Generate OAuth authorization URL
@@ -597,7 +597,7 @@ export class GoogleCalendarService {
       interview.meetingLink = event.conferenceData?.entryPoints?.find(
         (ep: any) => ep.entryPointType === 'video',
       )?.uri;
-      interview.status = event.status === 'cancelled' ? 'CANCELLED' : 'SCHEDULED';
+      interview.status = event.status === 'cancelled' ? InterviewStatus.CANCELLED : InterviewStatus.SCHEDULED;
 
       return await this.interviewRepository.save(interview);
     } catch (error) {

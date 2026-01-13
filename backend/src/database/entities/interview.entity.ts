@@ -32,7 +32,19 @@ export class Interview {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: true })
+  googleEventId: string;
+
+  @Column({ nullable: true })
+  tenantId: string;
+
+  @Column({ nullable: true })
+  title: string;
+
+  @Column({ type: 'int', nullable: true })
+  duration: number;
+
+  @Column({ nullable: true })
   applicationId: string;
 
   @ManyToOne(() => Application, { eager: true })
