@@ -461,7 +461,10 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
               ? "You don't have any upcoming interviews scheduled."
               : "No interviews match the current filter."}
           </p>
-          <button className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white">
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             Schedule Interview
           </button>
