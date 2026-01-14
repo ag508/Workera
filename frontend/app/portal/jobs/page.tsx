@@ -547,22 +547,22 @@ export default function JobBoardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="rounded-2xl bg-gradient-to-br from-primary/5 via-white to-emerald-50 border-2 border-primary/20 p-6 shadow-sm hover:shadow-lg transition-all"
+                className="rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-lg hover:border-primary/30 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                    <div className="h-12 w-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-semibold text-base">
                       {job.company?.charAt(0) || 'W'}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-semibold text-gray-900">{job.title}</h3>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-xs font-medium border border-amber-200">
                           <Star className="h-3 w-3" />
                           Featured
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                      <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                         <Building2 className="h-3.5 w-3.5" />
                         {job.company}
                       </p>
@@ -580,24 +580,24 @@ export default function JobBoardPage() {
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-gray-500">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
                     <MapPin className="h-3.5 w-3.5" />
                     {job.location}
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
                     <Briefcase className="h-3.5 w-3.5" />
                     {job.type}
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
                     <DollarSign className="h-3.5 w-3.5" />
                     {job.salary}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex flex-wrap gap-1.5 mt-4">
                   {job.skills?.slice(0, 4).map((skill: string) => (
-                    <span key={skill} className="rounded-full bg-white border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    <span key={skill} className="rounded-full bg-gray-100 border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
                       {skill}
                     </span>
                   ))}
@@ -616,13 +616,13 @@ export default function JobBoardPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {job.matchScore && (
-                      <span className="text-xs font-medium text-emerald-600">
+                      <span className="text-xs font-medium text-primary">
                         {job.matchScore}% match
                       </span>
                     )}
                     <Link
                       href={`/portal/apply/${job.id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
                     >
                       Apply
                       <ArrowUpRight className="h-3.5 w-3.5" />
@@ -663,128 +663,113 @@ export default function JobBoardPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
-              {filteredJobs.filter(j => isAISearch ? true : !j.featured).map((job, index) => {
-                const colors = [
-                  'from-blue-500 to-indigo-600',
-                  'from-purple-500 to-pink-600',
-                  'from-emerald-500 to-teal-600',
-                  'from-orange-500 to-red-600',
-                  'from-cyan-500 to-blue-600',
-                  'from-rose-500 to-pink-600'
-                ];
-                const colorClass = colors[index % colors.length];
-
-                return (
-                  <motion.div
-                    key={job.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="group rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300"
-                  >
-                    {/* Header with gradient */}
-                    <div className={`h-2 bg-gradient-to-r ${colorClass}`} />
-
-                    <div className="p-5">
-                      {/* Company & Save */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
-                            {job.company?.charAt(0) || 'W'}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{job.company}</p>
-                            <p className="text-xs text-gray-500 flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {job.location}
-                            </p>
-                          </div>
+              {filteredJobs.filter(j => isAISearch ? true : !j.featured).map((job, index) => (
+                <motion.div
+                  key={job.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group rounded-2xl bg-white border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+                >
+                  <div className="p-5">
+                    {/* Company & Save */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 font-semibold text-base border border-gray-200">
+                          {job.company?.charAt(0) || 'W'}
                         </div>
-                        <button
-                          onClick={() => toggleSaveJob(job.id)}
-                          className={`p-2 rounded-lg transition-all ${
-                            savedJobs.includes(job.id)
-                              ? 'bg-primary/10 text-primary'
-                              : 'hover:bg-gray-100 text-gray-400 group-hover:text-gray-600'
-                          }`}
-                        >
-                          <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? 'fill-current' : ''}`} />
-                        </button>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{job.company}</p>
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {job.location}
+                          </p>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => toggleSaveJob(job.id)}
+                        className={`p-2 rounded-lg transition-all ${
+                          savedJobs.includes(job.id)
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-gray-100 text-gray-400 group-hover:text-gray-600'
+                        }`}
+                      >
+                        <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? 'fill-current' : ''}`} />
+                      </button>
+                    </div>
 
-                      {/* Title */}
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                        {job.title}
-                      </h3>
+                    {/* Title */}
+                    <h3 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {job.title}
+                    </h3>
 
-                      {/* Match reason for AI search */}
-                      {job.relevanceReason && (
-                        <p className="text-xs text-emerald-600 mb-3 flex items-center gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          {job.relevanceReason}
-                        </p>
+                    {/* Match reason for AI search */}
+                    {job.relevanceReason && (
+                      <p className="text-xs text-emerald-600 mb-3 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {job.relevanceReason}
+                      </p>
+                    )}
+
+                    {/* Meta info */}
+                    <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-gray-500">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                        <Briefcase className="h-3 w-3" />
+                        {job.type}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                        <Clock className="h-3 w-3" />
+                        {job.postedAt}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                        <Users className="h-3 w-3" />
+                        {job.applicants}
+                      </span>
+                    </div>
+
+                    {/* Skills */}
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {job.skills?.slice(0, 3).map((skill: string) => (
+                        <span key={skill} className="rounded-full bg-gray-100 border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
+                          {skill}
+                        </span>
+                      ))}
+                      {job.skills?.length > 3 && (
+                        <span className="rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-400">
+                          +{job.skills.length - 3}
+                        </span>
                       )}
+                    </div>
 
-                      {/* Meta info */}
-                      <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-gray-500">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
-                          <Briefcase className="h-3 w-3" />
-                          {job.type}
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
-                          <Clock className="h-3 w-3" />
-                          {job.postedAt}
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100">
-                          <Users className="h-3 w-3" />
-                          {job.applicants}
-                        </span>
-                      </div>
-
-                      {/* Skills */}
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {job.skills?.slice(0, 3).map((skill: string) => (
-                          <span key={skill} className="rounded-full bg-primary/5 border border-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                            {skill}
-                          </span>
-                        ))}
-                        {job.skills?.length > 3 && (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
-                            +{job.skills.length - 3}
-                          </span>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">{job.salary}</p>
+                        {job.matchScore && (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <div className="h-1.5 w-14 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${job.matchScore}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-primary">{job.matchScore}% match</span>
+                          </div>
                         )}
                       </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div>
-                          <p className="text-lg font-bold text-gray-900">{job.salary}</p>
-                          {job.matchScore && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"
-                                  style={{ width: `${job.matchScore}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-medium text-emerald-600">{job.matchScore}%</span>
-                            </div>
-                          )}
-                        </div>
-                        <Link
-                          href={`/portal/apply/${job.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors shadow-sm"
-                        >
-                          Apply
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Link>
-                      </div>
+                      <Link
+                        href={`/portal/apply/${job.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+                      >
+                        Apply
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Link>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </AnimatePresence>
           </div>
         )}

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, MoreHorizontal, Mail, Phone, MapPin, FileText, X, Loader2, Star, ChevronDown, Grid, List, Users, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, Mail, Phone, MapPin, FileText, X, Loader2, Star, ChevronDown, Grid, List, Users, SlidersHorizontal, Send } from 'lucide-react';
 import { candidatesService, Candidate } from '@/lib/services/candidates';
 import { MOCK_RESUME_TEXT } from '@/lib/demo-data';
+import { getTenantId } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   'Applied': 'bg-blue-100 text-blue-700 border-blue-200',
@@ -21,6 +22,11 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageCandidate, setMessageCandidate] = useState<any>(null);
+  const [messageData, setMessageData] = useState({ subject: '', content: '' });
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const tenantId = getTenantId();
 
   useEffect(() => {
     async function fetchCandidates() {
@@ -39,6 +45,53 @@ export default function CandidatesPage() {
   const filteredCandidates = candidates.filter(c =>
     `${c.firstName} ${c.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const openMessageModal = (candidate: any, fullName: string) => {
+    setMessageCandidate({ ...candidate, fullName });
+    setMessageData({ subject: '', content: '' });
+    setShowMessageModal(true);
+  };
+
+  const sendMessage = async () => {
+    if (!messageCandidate || !messageData.subject || !messageData.content) return;
+    setSendingMessage(true);
+
+    // Get current user from localStorage
+    const userStr = localStorage.getItem('recruiter_user');
+    const user = userStr ? JSON.parse(userStr) : { firstName: 'Recruiter', email: 'recruiter@workera.ai' };
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: messageCandidate.email,
+          toName: messageCandidate.fullName,
+          subject: messageData.subject,
+          content: messageData.content,
+          senderName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Recruiter',
+          senderEmail: user.email || 'recruiter@workera.ai',
+          candidateId: messageCandidate.id,
+          sendEmailNotification: true,
+          tenantId,
+        }),
+      });
+
+      if (res.ok) {
+        setShowMessageModal(false);
+        setMessageCandidate(null);
+        setMessageData({ subject: '', content: '' });
+        alert('Message sent successfully!');
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -200,8 +253,12 @@ export default function CandidatesPage() {
                       </button>
                     </div>
                     <div className="flex gap-2">
-                      <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <Mail className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openMessageModal(candidate, fullName); }}
+                        className="p-2 rounded-lg hover:bg-primary/10 transition-colors group/btn"
+                        title="Send Message"
+                      >
+                        <Mail className="h-4 w-4 text-gray-400 group-hover/btn:text-primary" />
                       </button>
                       <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
                         <Phone className="h-4 w-4 text-gray-400 hover:text-gray-600" />
@@ -252,6 +309,84 @@ export default function CandidatesPage() {
               </button>
               <button className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 font-semibold shadow-lg shadow-primary/25 transition-all">
                 Schedule Interview
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Message Compose Modal */}
+      {showMessageModal && messageCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                  {messageCandidate.fullName?.charAt(0) || 'C'}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Message {messageCandidate.fullName}</h3>
+                  <p className="text-sm text-gray-500">{messageCandidate.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMessageModal(false)}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={messageData.subject}
+                  onChange={(e) => setMessageData({ ...messageData, subject: e.target.value })}
+                  placeholder="e.g., Regarding your application for Software Engineer"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  value={messageData.content}
+                  onChange={(e) => setMessageData({ ...messageData, content: e.target.value })}
+                  placeholder="Write your message here..."
+                  rows={6}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-gray-100">
+              <button
+                onClick={() => setShowMessageModal(false)}
+                className="px-4 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium text-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendMessage}
+                disabled={sendingMessage || !messageData.subject || !messageData.content}
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 font-semibold shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingMessage ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send Message
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

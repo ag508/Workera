@@ -134,6 +134,7 @@ function CreateJobContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // Job Details
   const [jobDetails, setJobDetails] = useState({
@@ -313,6 +314,69 @@ function CreateJobContent() {
       alert('Failed to publish job. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAIEnhance = async () => {
+    if (!jobDetails.title) {
+      alert('Please enter a job title first');
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('recruiter_token') || '';
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-jd`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          jobTitle: jobDetails.title,
+          company: jobDetails.department || 'Workera',
+          requirements: [],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate description');
+      }
+
+      const data = await response.json();
+      if (data.data?.jobDescription) {
+        setJobDetails({ ...jobDetails, description: data.data.jobDescription });
+      }
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      // Fallback to a basic template
+      const fallbackDescription = `## About the Role
+
+We are seeking a talented ${jobDetails.title} to join our ${jobDetails.department || 'team'}. This is an exciting opportunity to make a significant impact in a fast-growing company.
+
+## Key Responsibilities
+
+- Drive innovation and deliver high-quality solutions
+- Collaborate with cross-functional teams
+- Mentor and support team members
+- Contribute to strategic initiatives
+
+## What We're Looking For
+
+- Strong experience in the relevant field
+- Excellent problem-solving and communication skills
+- Ability to work in a fast-paced environment
+- Passion for continuous learning and growth
+
+## Why Join Us?
+
+- Competitive compensation package
+- Flexible work arrangements
+- Professional development opportunities
+- Collaborative and inclusive culture`;
+      setJobDetails({ ...jobDetails, description: fallbackDescription });
+    } finally {
+      setAiGenerating(false);
     }
   };
 
@@ -558,9 +622,22 @@ function CreateJobContent() {
                     rows={8}
                     className="w-full rounded-xl border border-gray-200 py-3 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
-                  <button className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 text-white text-xs font-medium">
-                    <Sparkles className="h-3 w-3" />
-                    AI Enhance
+                  <button
+                    onClick={handleAIEnhance}
+                    disabled={aiGenerating || !jobDetails.title}
+                    className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 text-white text-xs font-medium disabled:opacity-50 hover:shadow-md transition-all"
+                  >
+                    {aiGenerating ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3" />
+                        AI Enhance
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

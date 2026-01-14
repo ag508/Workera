@@ -21,6 +21,8 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { HealthModule } from './health/health.module';
 import { RequisitionsModule } from './requisitions/requisitions.module';
 import { MessagesModule } from './messages/messages.module';
+import { UsersModule } from './users/users.module';
+import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -65,6 +67,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     HealthModule,
     RequisitionsModule,
     MessagesModule,
+    UsersModule,
+    EmailModule,
   ],
   providers: [
     // Global JWT Authentication Guard

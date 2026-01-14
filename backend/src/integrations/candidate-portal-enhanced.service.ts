@@ -6,6 +6,7 @@ import { Job, JobStatus } from '../database/entities/job.entity';
 import { Application, ApplicationStatus } from '../database/entities/application.entity';
 import { FormSubmission } from '../database/entities/form-submission.entity';
 import { AIResumeParserService, ParsedResumeData, ResumeImportSource } from '../candidates/ai-resume-parser.service';
+import { WorkeraEmailService } from '../email/workera-email.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface CandidateProfile {
@@ -87,6 +88,7 @@ export class CandidatePortalEnhancedService {
     @InjectRepository(FormSubmission)
     private formSubmissionRepository: Repository<FormSubmission>,
     private aiResumeParser: AIResumeParserService,
+    private emailService: WorkeraEmailService,
   ) {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
     if (apiKey) {
@@ -910,6 +912,25 @@ export class CandidatePortalEnhancedService {
     await this.formSubmissionRepository.save(submission);
 
     this.logger.log(`Application submitted: ${savedApplication.id} for job ${jobId}`);
+
+    // Send confirmation email to candidate
+    try {
+      await this.emailService.sendApplicationSubmitted(candidate.email, {
+        candidateName: `${candidate.firstName} ${candidate.lastName}`.trim() || 'Applicant',
+        jobTitle: job.title,
+        companyName: (job as any).company || 'Workera',
+        applicationId: savedApplication.id,
+        submittedDate: new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        trackingUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/portal/applications`,
+      });
+    } catch (emailError) {
+      this.logger.warn(`Failed to send application confirmation email: ${emailError}`);
+    }
 
     return {
       success: true,

@@ -6,6 +6,7 @@ import { Tenant } from './entities/tenant.entity';
 import { User, UserRole } from './entities/user.entity';
 import { Job, JobStatus } from './entities/job.entity';
 import { Candidate } from './entities/candidate.entity';
+import { CandidateUser } from './entities/candidate-user.entity';
 import { Application, ApplicationStatus } from './entities/application.entity';
 import { Interview, InterviewStatus, InterviewType } from './entities/interview.entity';
 import { ActivityFeed, ActivityType } from './entities/activity-feed.entity';
@@ -30,6 +31,8 @@ export class SeederService implements OnModuleInit {
     private interviewRepository: Repository<Interview>,
     @InjectRepository(ActivityFeed)
     private activityRepository: Repository<ActivityFeed>,
+    @InjectRepository(CandidateUser)
+    private candidateUserRepository: Repository<CandidateUser>,
     private configService: ConfigService,
   ) { }
 
@@ -77,6 +80,9 @@ export class SeederService implements OnModuleInit {
 
       // 7. Create activity feed entries
       await this.createActivities(tenant.id, jobs, candidates);
+
+      // 8. Create demo candidate user for portal login
+      await this.createDemoCandidateUser(tenant.id);
 
       this.logger.log('Database seeding completed successfully!');
       return { success: true, message: 'Seeded successfully' };
@@ -198,7 +204,23 @@ export class SeederService implements OnModuleInit {
   }
 
   private async createCandidates(tenantId: string): Promise<Candidate[]> {
+    // Hash password for demo candidate that can login to portal
+    const demoPassword = await bcrypt.hash('demo123', 10);
+
     const candidatesData = [
+      {
+        email: 'demo@workera.ai',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1 (555) 000-0000',
+        location: 'San Francisco, CA',
+        skills: ['React', 'TypeScript', 'Next.js', 'Node.js', 'GraphQL', 'PostgreSQL'],
+        linkedin: 'https://linkedin.com/in/johndoe',
+        github: 'https://github.com/johndoe',
+        portfolio: 'https://johndoe.dev',
+        password: demoPassword,
+        tenantId,
+      },
       {
         email: 'alice.smith@example.com',
         firstName: 'Alice',
@@ -441,6 +463,39 @@ export class SeederService implements OnModuleInit {
     }
   }
 
+  private async createDemoCandidateUser(tenantId: string): Promise<CandidateUser> {
+    // Check if already exists
+    const existing = await this.candidateUserRepository.findOne({
+      where: { email: 'demo@workera.ai', tenantId },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    const passwordHash = await bcrypt.hash('demo123', 10);
+
+    const candidateUser = this.candidateUserRepository.create({
+      email: 'demo@workera.ai',
+      firstName: 'John',
+      lastName: 'Doe',
+      phone: '+1 (555) 000-0000',
+      passwordHash,
+      location: 'San Francisco, CA',
+      skills: ['React', 'TypeScript', 'Next.js', 'Node.js', 'GraphQL', 'PostgreSQL'],
+      linkedinUrl: 'https://linkedin.com/in/johndoe',
+      githubUrl: 'https://github.com/johndoe',
+      portfolioUrl: 'https://johndoe.dev',
+      bio: 'Senior Frontend Developer with 6+ years of experience building modern web applications. Passionate about React, TypeScript, and creating delightful user experiences.',
+      isEmailVerified: true,
+      tenantId,
+    });
+
+    this.logger.log('Created demo candidate user: demo@workera.ai / demo123');
+
+    return this.candidateUserRepository.save(candidateUser);
+  }
+
   async clearDatabase(): Promise<void> {
     this.logger.warn('Clearing database...');
 
@@ -449,6 +504,7 @@ export class SeederService implements OnModuleInit {
     await this.applicationRepository.delete({});
     await this.activityRepository.delete({});
     await this.candidateRepository.delete({});
+    await this.candidateUserRepository.delete({});
     await this.jobRepository.delete({});
     await this.userRepository.delete({});
     await this.tenantRepository.delete({});
