@@ -1,17 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Interview, InterviewStatus, InterviewType, Application } from '../database/entities';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WorkeraEmailService } from '../email/workera-email.service';
 
 @Injectable()
 export class InterviewsService {
+  private readonly logger = new Logger(InterviewsService.name);
+
   constructor(
     @InjectRepository(Interview)
     private interviewRepository: Repository<Interview>,
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
     private notificationsService: NotificationsService,
+    private emailService: WorkeraEmailService,
   ) { }
 
   async scheduleInterview(data: {
@@ -59,6 +63,35 @@ export class InterviewsService {
       interviewDate: data.scheduledAt,
       interviewLink: data.meetingLink,
     });
+
+    // Send branded interview scheduled email
+    try {
+      const scheduledDate = new Date(data.scheduledAt);
+      await this.emailService.sendInterviewScheduled(application.candidate.email, {
+        candidateName: `${application.candidate.firstName} ${application.candidate.lastName}`.trim(),
+        jobTitle: application.job.title,
+        companyName: application.job.company || 'Workera',
+        interviewDate: scheduledDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        interviewTime: scheduledDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        interviewType: data.type,
+        duration: data.durationMinutes || 60,
+        interviewers: data.interviewerId || 'Hiring Team',
+        meetingLink: data.meetingLink,
+        location: data.location,
+        notes: data.notes,
+      });
+      this.logger.log(`Interview scheduled email sent to ${application.candidate.email}`);
+    } catch (emailError) {
+      this.logger.warn(`Failed to send interview scheduled email: ${emailError}`);
+    }
 
     return savedInterview;
   }

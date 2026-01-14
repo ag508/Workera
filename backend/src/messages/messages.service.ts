@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Message } from '../database/entities/message.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WorkeraEmailService } from '../email/workera-email.service';
 
 export interface CreateMessageDto {
   tenantId: string;
@@ -30,10 +31,13 @@ export interface MessageFilters {
 
 @Injectable()
 export class MessagesService {
+  private readonly logger = new Logger(MessagesService.name);
+
   constructor(
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
     private notificationsService: NotificationsService,
+    private emailService: WorkeraEmailService,
   ) {}
 
   /**
@@ -233,38 +237,25 @@ export class MessagesService {
    * Send email notification for a message
    */
   private async sendEmailNotification(message: Message): Promise<void> {
-    // Use the notifications service to send an email
-    const template = {
-      subject: `New Message: ${message.subject}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); padding: 30px; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Workera</h1>
-          </div>
-          <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
-            <h2 style="color: #1f2937; margin-top: 0;">New Message from ${message.senderName}</h2>
-            <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">
-              <strong>Subject:</strong> ${message.subject}
-            </p>
-            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #10B981;">
-              <p style="color: #4b5563; white-space: pre-wrap; margin: 0;">
-                ${message.content}
-              </p>
-            </div>
-            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-              Log in to Workera to reply to this message.
-            </p>
-          </div>
-          <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
-            <p>© 2024 Workera. All rights reserved.</p>
-          </div>
-        </div>
-      `,
-      text: `New Message from ${message.senderName}\n\nSubject: ${message.subject}\n\n${message.content}\n\nLog in to Workera to reply to this message.`,
-    };
-
-    // Note: We're calling the private sendEmail method indirectly through a public method
-    // For now, we'll just log since NotificationsService doesn't have a generic send method
-    console.log(`Email notification sent to ${message.recipientEmail} for message: ${message.subject}`);
+    try {
+      await this.emailService.sendNewMessageNotification(message.recipientEmail, {
+        recipientName: message.recipientName || 'there',
+        senderName: message.senderName,
+        companyName: 'Workera',
+        sentAt: new Date().toLocaleString('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        messagePreview: message.preview || message.content.substring(0, 150),
+        messageUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/portal/messages`,
+      });
+      this.logger.log(`Email notification sent to ${message.recipientEmail}`);
+    } catch (error) {
+      this.logger.warn(`Failed to send message notification email: ${error}`);
+    }
   }
 }
