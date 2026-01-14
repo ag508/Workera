@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Briefcase, User, ArrowRight, Building2, Users, Sparkles } from 'lucide-react';
 
@@ -14,12 +15,22 @@ export default function GetStartedPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-center gap-3 mb-12"
         >
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
-            <span className="text-white font-bold text-2xl">W</span>
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25 p-2">
+            <Image
+              src="/images/brand/Workera_logo_icon.png"
+              alt="Workera"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
           </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
-            Workera
-          </span>
+          <Image
+            src="/images/brand/Workera_Text_logo.png"
+            alt="Workera"
+            width={140}
+            height={40}
+            className="object-contain"
+          />
         </motion.div>
 
         {/* Title */}

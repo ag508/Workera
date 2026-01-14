@@ -23,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
   { name: 'Browse Jobs', href: '/portal/jobs', icon: Briefcase },
   { name: 'My Applications', href: '/portal/applications', icon: FileText },
+  { name: 'Interviews', href: '/portal/interviews', icon: Bell },
   { name: 'Profile', href: '/portal/profile', icon: User },
 ];
 

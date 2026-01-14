@@ -35,6 +35,9 @@ export class Candidate {
   @Column({ nullable: true })
   portfolio: string;
 
+  @Column({ nullable: true })
+  password: string;
+
   @OneToMany(() => Resume, resume => resume.candidate)
   resumes: Resume[];
 

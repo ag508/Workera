@@ -295,15 +295,6 @@ export default function MyApplicationsPage() {
             {filteredApplications.map((app, index) => {
               const status = statusConfig[app.status] || statusConfig['APPLIED'];
               const StatusIcon = status.icon;
-              const colors = [
-                'from-blue-500 to-indigo-600',
-                'from-purple-500 to-pink-600',
-                'from-emerald-500 to-teal-600',
-                'from-orange-500 to-red-600',
-                'from-cyan-500 to-blue-600',
-                'from-rose-500 to-pink-600'
-              ];
-              const colorClass = colors[index % colors.length];
 
               return (
                 <motion.div
@@ -313,64 +304,61 @@ export default function MyApplicationsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
-                  className="group rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300"
+                  className="group rounded-2xl bg-white border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300"
                 >
-                  {/* Gradient Header */}
-                  <div className={`h-2 bg-gradient-to-r ${colorClass}`} />
-
                   <div className="p-5">
                     {/* Company & Status Row */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                        <div className="h-11 w-11 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-semibold text-base">
                           {app.application.job.company.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">{app.application.job.company}</p>
+                          <p className="font-medium text-gray-900">{app.application.job.company}</p>
                           <p className="text-xs text-gray-500">{app.application.job.type}</p>
                         </div>
                       </div>
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${status.bg} ${status.text}`}>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border ${status.bg} ${status.text}`}>
                         <StatusIcon className="h-3.5 w-3.5" />
                         <span className="text-xs font-semibold">{status.label}</span>
                       </div>
                     </div>
 
                     {/* Job Title */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3 group-hover:text-primary transition-colors">
                       {app.application.job.title}
                     </h3>
 
                     {/* Details */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <MapPin className="h-4 w-4" />
-                        <span>{app.application.job.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Calendar className="h-4 w-4" />
-                        <span>Applied {new Date(app.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      {app.application.job.salary && (
-                        <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
-                          <span>{app.application.job.salary}</span>
-                        </div>
-                      )}
+                    <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {app.application.job.location}
+                      </span>
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {new Date(app.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
+
+                    {/* Salary */}
+                    {app.application.job.salary && (
+                      <p className="text-sm font-medium text-gray-900 mb-4">{app.application.job.salary}</p>
+                    )}
 
                     {/* Match Score Progress */}
                     {app.matchScore && (
                       <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-1">
+                        <div className="flex items-center justify-between text-sm mb-1.5">
                           <span className="text-gray-500">Match Score</span>
-                          <span className="font-semibold text-gray-900">{app.matchScore}%</span>
+                          <span className="font-medium text-primary">{app.matchScore}%</span>
                         </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${app.matchScore}%` }}
                             transition={{ duration: 0.8, delay: index * 0.1 }}
-                            className={`h-full bg-gradient-to-r ${colorClass} rounded-full`}
+                            className="h-full bg-primary rounded-full"
                           />
                         </div>
                       </div>
@@ -378,25 +366,25 @@ export default function MyApplicationsPage() {
 
                     {/* Next Step */}
                     {app.nextStep && (
-                      <div className="bg-gray-50 rounded-xl px-3 py-2 mb-4">
-                        <p className="text-xs text-gray-500">
-                          <span className="font-medium">Next:</span> {app.nextStep}
+                      <div className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 mb-4">
+                        <p className="text-xs text-gray-600">
+                          <span className="font-medium text-gray-700">Next:</span> {app.nextStep}
                         </p>
                       </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
                       <Link
                         href={`/portal/apply/${app.application?.job?.id || app.id}`}
-                        className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-center"
+                        className="flex-1 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-center"
                       >
                         View Details
                       </Link>
                       {!['REJECTED', 'WITHDRAWN', 'ACCEPTED'].includes(app.status) && (
                         <button
                           onClick={() => handleWithdraw(app.id)}
-                          className="px-4 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                          className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                         >
                           Withdraw
                         </button>
