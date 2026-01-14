@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Home,
   Briefcase,
@@ -34,6 +34,14 @@ import {
   User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface UserData {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: string;
+}
 
 interface NavItem {
   name: string;
@@ -191,6 +199,41 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  useEffect(() => {
+    // Load user data from localStorage
+    const userData = localStorage.getItem('recruiter_user');
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        console.error('Failed to parse user data', e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('recruiter_token');
+    localStorage.removeItem('recruiter_user');
+    router.push('/login');
+  };
+
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    return `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`.toUpperCase() || 'U';
+  };
+
+  const getRoleDisplay = (role?: string) => {
+    switch (role) {
+      case 'admin': return 'Administrator';
+      case 'recruiter': return 'Recruiter';
+      case 'hiring_manager': return 'Hiring Manager';
+      default: return 'Recruiter';
+    }
+  };
 
   return (
     <div className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-gray-100 bg-white">
@@ -269,22 +312,56 @@ export function Sidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="border-t border-gray-100 p-4">
-        <div className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-gray-50 cursor-pointer">
+      <div className="border-t border-gray-100 p-4 relative">
+        <div
+          className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-gray-50 cursor-pointer"
+          onClick={() => setShowUserMenu(!showUserMenu)}
+        >
           <div className="relative">
-            <img
-              src="https://i.pravatar.cc/100?img=32"
-              alt="User"
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-white"
-            />
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
+              {getUserInitials()}
+            </div>
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">Sarah Johnson</p>
-            <p className="text-xs text-gray-500 truncate">Talent Acquisition Lead</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">{getRoleDisplay(user?.role)}</p>
           </div>
-          <ChevronRight className="h-4 w-4 text-gray-400" />
+          <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", showUserMenu && "rotate-180")} />
         </div>
+
+        {/* User Menu Dropdown */}
+        <AnimatePresence>
+          {showUserMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-full left-4 right-4 mb-2 rounded-xl bg-white border border-gray-200 shadow-lg overflow-hidden"
+            >
+              <div className="p-3 border-b border-gray-100">
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+              <Link
+                href="/dashboard/settings"
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setShowUserMenu(false)}
+              >
+                <Settings className="h-4 w-4 text-gray-400" />
+                Settings
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
