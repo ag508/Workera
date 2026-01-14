@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class AiService {
+  private readonly logger = new Logger(AiService.name);
   private genAI: GoogleGenerativeAI;
+  private readonly modelName: string;
 
   constructor() {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
+    this.modelName = process.env.GOOGLE_AI_MODEL || 'gemini-pro';
     if (!apiKey) {
-      console.warn('GOOGLE_AI_API_KEY not set. AI features will use mock responses.');
+      this.logger.warn('GOOGLE_AI_API_KEY not set. AI features will use mock responses.');
+    } else {
+      this.logger.log(`AI Service initialized with model: ${this.modelName}`);
     }
     this.genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null as any;
   }
@@ -19,7 +24,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
 
       const companyLine = company ? 'Company: ' + company : '';
       const reqLine = requirements && requirements.length > 0 ? 'Additional Requirements: ' + requirements.join(', ') : '';
@@ -43,7 +48,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
 
       const prompt = 'As an expert recruiter, analyze how well this candidate resume matches the job description.\n\nJOB DESCRIPTION:\n' + jobDescription + '\n\nRESUME:\n' + resumeText + '\n\nProvide your analysis in JSON format with: matchScore (0-100), strengths (array), gaps (array), recommendation (string)';
 
@@ -69,7 +74,7 @@ export class AiService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
 
       const prompt = `You are an expert resume parser. Extract structured information from this resume.
 

@@ -43,23 +43,30 @@ export class WorkeraEmailService {
   private initializeTransporter(): boolean {
     const host = this.configService.get<string>('SMTP_HOST');
     const port = this.configService.get<number>('SMTP_PORT');
-    const user = this.configService.get<string>('SMTP_USER');
+    // Support both SMTP_USER and SMTP_FROM for authentication
+    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('SMTP_FROM');
     const pass = this.configService.get<string>('SMTP_PASSWORD');
 
     if (!host || !user || !pass) {
       this.logger.warn('SMTP not configured. Emails will be logged but not sent.');
+      this.logger.warn(`Missing: ${!host ? 'SMTP_HOST ' : ''}${!user ? 'SMTP_USER/SMTP_FROM ' : ''}${!pass ? 'SMTP_PASSWORD' : ''}`);
       return false;
     }
 
     try {
+      const smtpPort = port || 587;
       this.transporter = nodemailer.createTransport({
         host,
-        port: port || 587,
-        secure: port === 465,
+        port: smtpPort,
+        secure: smtpPort === 465,
         auth: { user, pass },
+        // For SSL connections
+        tls: {
+          rejectUnauthorized: false, // Accept self-signed certs
+        },
       });
 
-      this.logger.log(`Email service initialized with SMTP host: ${host}`);
+      this.logger.log(`Email service initialized with SMTP host: ${host}:${smtpPort}`);
       return true;
     } catch (error) {
       this.logger.error('Failed to initialize email transporter:', error);

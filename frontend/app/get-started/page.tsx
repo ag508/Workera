@@ -24,13 +24,9 @@ export default function GetStartedPage() {
               className="object-contain"
             />
           </div>
-          <Image
-            src="/images/brand/Workera_Text_logo.png"
-            alt="Workera"
-            width={140}
-            height={40}
-            className="object-contain"
-          />
+          <span className="text-3xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+            Workera
+          </span>
         </motion.div>
 
         {/* Title */}
@@ -51,17 +47,15 @@ export default function GetStartedPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
+            className="space-y-4"
           >
-            <Link
-              href="/login"
-              className="group block rounded-2xl bg-white border border-gray-200 p-8 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300"
-            >
+            <div className="group block rounded-2xl bg-white border border-gray-200 p-8 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300">
               <div className="flex items-start gap-4 mb-6">
                 <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-primary/25">
                   <Building2 className="h-7 w-7" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">I'm a Recruiter</h2>
+                  <h2 className="text-xl font-bold text-gray-900">I'm a Recruiter</h2>
                   <p className="text-sm text-gray-500">Hire top talent for your company</p>
                 </div>
               </div>
@@ -81,13 +75,22 @@ export default function GetStartedPage() {
                 ))}
               </ul>
 
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-primary">Start recruiting</span>
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                  <ArrowRight className="h-5 w-5 text-primary group-hover:text-white transition-colors" />
-                </div>
+              <div className="flex gap-3">
+                <Link
+                  href="/login"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-emerald-600 text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
+                >
+                  Sign In
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/register"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-primary text-primary font-medium hover:bg-primary/5 transition-all"
+                >
+                  Register
+                </Link>
               </div>
-            </Link>
+            </div>
           </motion.div>
 
           {/* Candidate Option */}
