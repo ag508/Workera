@@ -174,10 +174,21 @@ export class IntegrationsController {
       tenantId: string;
     },
   ) {
-    // Fetch job from database
-    // Then post to LinkedIn
-    // This is a placeholder - implement full logic
-    return { success: true };
+    // Validate config before proceeding
+    if (!body.config?.accessToken || !body.config?.organizationId) {
+      return {
+        success: false,
+        error: 'LinkedIn access token and organization ID are required',
+      };
+    }
+
+    // Use the LinkedIn service to post the job
+    // The service will fetch the job from DB and post it
+    return this.linkedInService.exportJobToLinkedIn(
+      body.config,
+      body.jobId,
+      body.tenantId,
+    );
   }
 
   /**
@@ -238,12 +249,25 @@ export class IntegrationsController {
     body: {
       config: WorkdayConfig;
       applicationId: string;
+      tenantId: string;
       status: string;
     },
   ) {
-    // Fetch application and sync
-    // This is a placeholder
-    return { success: true };
+    // Validate config before proceeding
+    if (!body.config?.tenantName || !body.config?.username || !body.config?.password || !body.config?.baseUrl) {
+      return {
+        success: false,
+        error: 'Workday configuration is incomplete. Tenant name, username, password, and base URL are required.',
+      };
+    }
+
+    // Use the Workday service to sync the application status
+    return this.workdayService.syncApplicationToWorkday(
+      body.config,
+      body.applicationId,
+      body.tenantId,
+      body.status,
+    );
   }
 
   /**

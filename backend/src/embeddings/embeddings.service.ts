@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NLPService } from '../nlp/nlp.service';
 import { Candidate } from '../database/entities/candidate.entity';
 import { Job } from '../database/entities/job.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface VectorDocument {
   id: string;
@@ -22,15 +24,25 @@ export interface SearchResult {
   entityType: string;
 }
 
+interface PersistenceData {
+  version: string;
+  savedAt: string;
+  documents: Array<VectorDocument & { createdAt: string }>;
+}
+
 /**
- * In-memory FAISS-like vector store
- * For production, integrate with actual FAISS library or vector database (Pinecone, Weaviate, etc.)
+ * Vector store with file-based persistence
+ * Data is automatically saved to disk and restored on restart
+ * For high-scale production, consider vector databases (Pinecone, Weaviate, pgvector, etc.)
  */
 @Injectable()
-export class EmbeddingsService {
+export class EmbeddingsService implements OnModuleInit {
   private readonly logger = new Logger(EmbeddingsService.name);
   private vectorStore: Map<string, VectorDocument> = new Map();
   private index: Map<string, VectorDocument[]> = new Map(); // Simple index by entity type
+  private readonly persistencePath: string;
+  private saveTimeout: NodeJS.Timeout | null = null;
+  private isDirty = false;
 
   constructor(
     private nlpService: NLPService,
@@ -38,7 +50,113 @@ export class EmbeddingsService {
     private candidateRepository: Repository<Candidate>,
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
-  ) {}
+  ) {
+    // Use data directory for persistence
+    const dataDir = process.env.VECTOR_STORE_PATH || path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    this.persistencePath = path.join(dataDir, 'vector-store.json');
+  }
+
+  /**
+   * Initialize service and load persisted data
+   */
+  async onModuleInit() {
+    await this.loadFromDisk();
+  }
+
+  /**
+   * Load vector store from disk
+   */
+  private async loadFromDisk(): Promise<void> {
+    try {
+      if (!fs.existsSync(this.persistencePath)) {
+        this.logger.log('No persisted vector store found, starting fresh');
+        return;
+      }
+
+      const data = fs.readFileSync(this.persistencePath, 'utf-8');
+      const parsed: PersistenceData = JSON.parse(data);
+
+      // Restore documents
+      for (const doc of parsed.documents) {
+        const document: VectorDocument = {
+          ...doc,
+          createdAt: new Date(doc.createdAt),
+        };
+        this.vectorStore.set(doc.id, document);
+
+        // Rebuild index
+        if (!this.index.has(doc.entityType)) {
+          this.index.set(doc.entityType, []);
+        }
+        this.index.get(doc.entityType)!.push(document);
+      }
+
+      this.logger.log(`Loaded ${this.vectorStore.size} documents from disk (saved: ${parsed.savedAt})`);
+    } catch (error) {
+      this.logger.error(`Failed to load vector store from disk: ${error.message}`);
+      // Continue with empty store
+    }
+  }
+
+  /**
+   * Save vector store to disk (debounced)
+   */
+  private scheduleSave(): void {
+    this.isDirty = true;
+
+    // Debounce saves - wait 2 seconds after last change before writing
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    this.saveTimeout = setTimeout(() => {
+      this.saveToDisk();
+    }, 2000);
+  }
+
+  /**
+   * Immediately save vector store to disk
+   */
+  private saveToDisk(): void {
+    if (!this.isDirty) return;
+
+    try {
+      const documents = Array.from(this.vectorStore.values()).map(doc => ({
+        ...doc,
+        createdAt: doc.createdAt.toISOString(),
+      }));
+
+      const data: PersistenceData = {
+        version: '1.0',
+        savedAt: new Date().toISOString(),
+        documents: documents as any,
+      };
+
+      // Write atomically using temp file
+      const tempPath = `${this.persistencePath}.tmp`;
+      fs.writeFileSync(tempPath, JSON.stringify(data, null, 2));
+      fs.renameSync(tempPath, this.persistencePath);
+
+      this.isDirty = false;
+      this.logger.log(`Saved ${documents.length} documents to disk`);
+    } catch (error) {
+      this.logger.error(`Failed to save vector store to disk: ${error.message}`);
+    }
+  }
+
+  /**
+   * Force immediate save (call before shutdown)
+   */
+  async forceSave(): Promise<void> {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    this.saveToDisk();
+  }
 
   /**
    * Add document to vector store
@@ -68,6 +186,9 @@ export class EmbeddingsService {
         this.index.set(entityType, []);
       }
       this.index.get(entityType)!.push(document);
+
+      // Schedule persistence
+      this.scheduleSave();
 
       this.logger.log(`Added document ${id} to vector store (${entityType})`);
 
@@ -220,6 +341,9 @@ export class EmbeddingsService {
         entityDocs.splice(index, 1);
       }
     }
+
+    // Schedule persistence
+    this.scheduleSave();
 
     this.logger.log(`Removed document ${id} from vector store`);
     return true;

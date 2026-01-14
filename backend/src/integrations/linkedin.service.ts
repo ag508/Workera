@@ -1,15 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '../database/entities/job.entity';
 import { Candidate } from '../database/entities/candidate.entity';
 import { ConfigService } from '@nestjs/config';
+import axios, { AxiosError } from 'axios';
 
 export interface LinkedInConfig {
   clientId: string;
   clientSecret: string;
   accessToken: string;
   organizationId: string;
+}
+
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
 }
 
 export interface LinkedInJob {
@@ -55,6 +62,11 @@ export interface LinkedInCandidate {
 export class LinkedInService {
   private readonly logger = new Logger(LinkedInService.name);
   private readonly BASE_URL = 'https://api.linkedin.com/v2';
+  private readonly defaultRetryConfig: RetryConfig = {
+    maxRetries: 3,
+    baseDelay: 1000,
+    maxDelay: 10000,
+  };
 
   constructor(
     @InjectRepository(Job)
@@ -63,6 +75,110 @@ export class LinkedInService {
     private candidateRepository: Repository<Candidate>,
     private configService: ConfigService,
   ) {}
+
+  /**
+   * Validate LinkedIn configuration
+   */
+  private validateConfig(config: LinkedInConfig): void {
+    if (!config.accessToken) {
+      throw new BadRequestException('LinkedIn access token is required');
+    }
+    if (!config.organizationId) {
+      throw new BadRequestException('LinkedIn organization ID is required');
+    }
+    // Validate token format (basic check)
+    if (config.accessToken.length < 20) {
+      throw new BadRequestException('Invalid LinkedIn access token format');
+    }
+  }
+
+  /**
+   * Make API request with retry logic
+   */
+  private async makeRequestWithRetry<T>(
+    requestFn: () => Promise<T>,
+    retryConfig: RetryConfig = this.defaultRetryConfig,
+  ): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error) {
+        lastError = error as Error;
+        const axiosError = error as AxiosError;
+
+        // Don't retry on client errors (4xx) except rate limiting (429)
+        if (axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500 && axiosError.response.status !== 429) {
+          throw this.handleLinkedInError(axiosError);
+        }
+
+        // Calculate delay with exponential backoff
+        if (attempt < retryConfig.maxRetries) {
+          const delay = Math.min(
+            retryConfig.baseDelay * Math.pow(2, attempt),
+            retryConfig.maxDelay,
+          );
+          this.logger.warn(`LinkedIn API request failed (attempt ${attempt + 1}/${retryConfig.maxRetries + 1}), retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw lastError || new Error('LinkedIn API request failed after retries');
+  }
+
+  /**
+   * Handle LinkedIn API errors
+   */
+  private handleLinkedInError(error: AxiosError): Error {
+    const status = error.response?.status;
+    const data = error.response?.data as any;
+
+    if (status === 401) {
+      return new BadRequestException('LinkedIn access token is invalid or expired. Please reconnect your LinkedIn account.');
+    }
+    if (status === 403) {
+      return new BadRequestException('LinkedIn API access denied. Ensure you have the required permissions.');
+    }
+    if (status === 429) {
+      return new BadRequestException('LinkedIn API rate limit exceeded. Please try again later.');
+    }
+    if (status === 404) {
+      return new BadRequestException('LinkedIn resource not found. The organization or job may not exist.');
+    }
+
+    return new Error(data?.message || `LinkedIn API error: ${error.message}`);
+  }
+
+  /**
+   * Sleep utility for retry delays
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Test LinkedIn connection
+   */
+  async testConnection(config: LinkedInConfig): Promise<{ success: boolean; message: string }> {
+    try {
+      this.validateConfig(config);
+
+      await this.makeRequestWithRetry(async () => {
+        const response = await axios.get(`${this.BASE_URL}/me`, {
+          headers: {
+            'Authorization': `Bearer ${config.accessToken}`,
+          },
+        });
+        return response.data;
+      });
+
+      return { success: true, message: 'LinkedIn connection successful' };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
 
   /**
    * Import job postings from LinkedIn
@@ -81,19 +197,23 @@ export class LinkedInService {
   }> {
     const { limit = 100, status = 'open' } = options;
 
-    try {
-      const axios = require('axios');
+    // Validate configuration
+    this.validateConfig(config);
 
-      // Fetch job postings from LinkedIn
-      const response = await axios.get(
-        `${this.BASE_URL}/jobs?q=organization&organization=${config.organizationId}&count=${limit}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${config.accessToken}`,
-            'X-Restli-Protocol-Version': '2.0.0',
+    try {
+      // Fetch job postings from LinkedIn with retry
+      const response = await this.makeRequestWithRetry(async () => {
+        return axios.get(
+          `${this.BASE_URL}/jobs?q=organization&organization=${config.organizationId}&count=${limit}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${config.accessToken}`,
+              'X-Restli-Protocol-Version': '2.0.0',
+            },
+            timeout: 30000, // 30 second timeout
           },
-        },
-      );
+        );
+      });
 
       const linkedInJobs: LinkedInJob[] = response.data.elements || [];
 
@@ -332,6 +452,42 @@ export class LinkedInService {
       this.logger.error('Failed to post job to LinkedIn:', error);
       return {
         success: false,
+      };
+    }
+  }
+
+  /**
+   * Export a job from database to LinkedIn
+   * Fetches job by ID and posts to LinkedIn
+   */
+  async exportJobToLinkedIn(
+    config: LinkedInConfig,
+    jobId: string,
+    tenantId: string,
+  ): Promise<{ success: boolean; linkedInJobId?: string; error?: string }> {
+    try {
+      // Validate config
+      this.validateConfig(config);
+
+      // Fetch job from database
+      const job = await this.jobRepository.findOne({
+        where: { id: jobId, tenantId },
+      });
+
+      if (!job) {
+        return {
+          success: false,
+          error: 'Job not found',
+        };
+      }
+
+      // Post to LinkedIn
+      return this.postJobToLinkedIn(config, job);
+    } catch (error) {
+      this.logger.error(`Failed to export job to LinkedIn: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
       };
     }
   }
