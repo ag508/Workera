@@ -32,6 +32,7 @@ import {
   Link2
 } from 'lucide-react';
 import { interviewsService, Interview, InterviewStatus, InterviewType } from '@/lib/services/interviews';
+import { getTenantId } from '@/lib/utils';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
   scheduled: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100 border-blue-200', icon: Calendar },
@@ -131,7 +132,8 @@ export default function InterviewsPage() {
 
   const fetchCandidates = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates?tenantId=default-tenant`);
+      const tenantId = getTenantId();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/candidates?tenantId=${tenantId}`);
       if (res.ok) {
         const data = await res.json();
         const candidateList = data.data || data;
@@ -343,8 +345,9 @@ ${scheduleForm.addToCalendar ? '\nAdded to interviewer calendars' : ''}`);
 
   const handleSendReminder = async (interview: Interview) => {
     try {
+      const tenantId = getTenantId();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/interviews/${interview.id}/send-reminder?tenantId=default-tenant`,
+        `${process.env.NEXT_PUBLIC_API_URL}/interviews/${interview.id}/send-reminder?tenantId=${tenantId}`,
         { method: 'POST' }
       );
 

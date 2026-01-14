@@ -485,6 +485,44 @@ export class WorkdayService {
   }
 
   /**
+   * Sync application to Workday by application ID
+   * Wrapper method that fetches the application and then syncs
+   */
+  async syncApplicationToWorkday(
+    config: WorkdayConfig,
+    applicationId: string,
+    tenantId: string,
+    status: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Validate config
+      this.validateConfig(config);
+
+      // Fetch application from database
+      const application = await this.applicationRepository.findOne({
+        where: { id: applicationId },
+        relations: ['candidate', 'job'],
+      });
+
+      if (!application) {
+        return {
+          success: false,
+          error: 'Application not found',
+        };
+      }
+
+      // Sync to Workday
+      return this.syncApplicationStatusToWorkday(config, application, status);
+    } catch (error) {
+      this.logger.error(`Failed to sync application to Workday: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
    * Map Workday application status to internal ApplicationStatus enum
    */
   private mapWorkdayStatusToApplicationStatus(workdayStatus: string): ApplicationStatus {

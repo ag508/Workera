@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CandidateUser } from '../database/entities/candidate-user.entity';
 import { FormSubmission } from '../database/entities/form-submission.entity';
 import { Job, JobStatus } from '../database/entities/job.entity';
+import { WorkeraEmailService } from '../email/workera-email.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -53,6 +54,7 @@ export class CandidatePortalService {
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
     private jwtService: JwtService,
+    private emailService: WorkeraEmailService,
   ) {}
 
   /**
@@ -89,7 +91,20 @@ export class CandidatePortalService {
 
     this.logger.log(`New candidate registered: ${savedCandidate.email}`);
 
-    // TODO: Send verification email
+    // Send verification email
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verificationLink = `${frontendUrl}/portal/verify-email?token=${emailVerificationToken}`;
+    try {
+      await this.emailService.sendEmailVerification(
+        savedCandidate.email,
+        savedCandidate.firstName,
+        verificationLink,
+      );
+      this.logger.log(`Verification email sent to: ${savedCandidate.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send verification email: ${error.message}`);
+      // Don't fail registration if email fails
+    }
 
     // Generate JWT token
     const accessToken = this.generateToken(savedCandidate);
@@ -240,7 +255,20 @@ export class CandidatePortalService {
 
     this.logger.log(`Password reset token generated for: ${email}`);
 
-    // TODO: Send password reset email with token
+    // Send password reset email
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetLink = `${frontendUrl}/portal/reset-password?token=${resetToken}`;
+    try {
+      await this.emailService.sendPasswordReset(
+        candidate.email,
+        candidate.firstName,
+        resetLink,
+      );
+      this.logger.log(`Password reset email sent to: ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send password reset email: ${error.message}`);
+      // Don't fail if email fails - user can try again
+    }
   }
 
   /**

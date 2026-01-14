@@ -457,6 +457,42 @@ export class LinkedInService {
   }
 
   /**
+   * Export a job from database to LinkedIn
+   * Fetches job by ID and posts to LinkedIn
+   */
+  async exportJobToLinkedIn(
+    config: LinkedInConfig,
+    jobId: string,
+    tenantId: string,
+  ): Promise<{ success: boolean; linkedInJobId?: string; error?: string }> {
+    try {
+      // Validate config
+      this.validateConfig(config);
+
+      // Fetch job from database
+      const job = await this.jobRepository.findOne({
+        where: { id: jobId, tenantId },
+      });
+
+      if (!job) {
+        return {
+          success: false,
+          error: 'Job not found',
+        };
+      }
+
+      // Post to LinkedIn
+      return this.postJobToLinkedIn(config, job);
+    } catch (error) {
+      this.logger.error(`Failed to export job to LinkedIn: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
    * Get applicants for a LinkedIn job posting
    */
   async getJobApplicants(
