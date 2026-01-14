@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse');
+
 export interface ParsedResumeData {
   personalInfo: {
     firstName: string;
@@ -125,24 +128,49 @@ export class AIResumeParserService {
 
   /**
    * Extract text from PDF (base64 encoded)
+   * Uses pdf-parse library for real PDF text extraction
    */
   private async extractTextFromPDF(base64Content: string): Promise<string> {
-    // In production, you would use a PDF parsing library like pdf-parse
-    // For now, we'll simulate PDF text extraction
     try {
-      // Decode base64 and extract text (simplified)
+      // Decode base64 to buffer
       const buffer = Buffer.from(base64Content, 'base64');
 
-      // Simulated PDF text extraction
-      // In production, use: const pdfParse = require('pdf-parse');
-      // const data = await pdfParse(buffer);
-      // return data.text;
+      this.logger.log(`Parsing PDF file (${buffer.length} bytes)`);
 
-      // For demo, return a placeholder that indicates PDF was received
-      return `PDF Resume Content (${buffer.length} bytes)`;
+      // Use pdf-parse to extract text from PDF
+      const data = await pdfParse(buffer, {
+        // Options for better text extraction
+        max: 0, // No page limit
+      });
+
+      const extractedText = data.text;
+
+      // Clean up extracted text
+      const cleanedText = extractedText
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .replace(/[^\x20-\x7E\n\r]/g, '') // Remove non-printable characters
+        .trim();
+
+      this.logger.log(`Extracted ${cleanedText.length} characters from PDF (${data.numpages} pages)`);
+
+      if (cleanedText.length < 50) {
+        this.logger.warn('PDF text extraction yielded minimal content, PDF may be image-based');
+        return `[Image-based PDF - ${buffer.length} bytes, ${data.numpages} pages. Consider using OCR for better results.]`;
+      }
+
+      return cleanedText;
     } catch (error) {
-      this.logger.error('Failed to extract text from PDF', error);
-      return '';
+      this.logger.error(`Failed to extract text from PDF: ${error.message}`);
+
+      // Return a meaningful error message instead of empty string
+      if (error.message?.includes('Invalid PDF')) {
+        return '[Error: Invalid or corrupted PDF file]';
+      }
+      if (error.message?.includes('encrypted')) {
+        return '[Error: PDF is password protected]';
+      }
+
+      return `[Error extracting PDF content: ${error.message}]`;
     }
   }
 

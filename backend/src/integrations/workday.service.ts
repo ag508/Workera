@@ -1,16 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '../database/entities/job.entity';
 import { Candidate } from '../database/entities/candidate.entity';
 import { Application, ApplicationStatus } from '../database/entities/application.entity';
 import { ConfigService } from '@nestjs/config';
+import axios, { AxiosError } from 'axios';
 
 export interface WorkdayConfig {
   tenantName: string;
   username: string;
   password: string;
   baseUrl: string; // e.g., https://wd2-impl-services1.workday.com
+}
+
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
 }
 
 export interface WorkdayJob {
@@ -41,6 +48,11 @@ export interface WorkdayCandidate {
 @Injectable()
 export class WorkdayService {
   private readonly logger = new Logger(WorkdayService.name);
+  private readonly defaultRetryConfig: RetryConfig = {
+    maxRetries: 3,
+    baseDelay: 1000,
+    maxDelay: 10000,
+  };
 
   constructor(
     @InjectRepository(Job)
@@ -51,6 +63,125 @@ export class WorkdayService {
     private applicationRepository: Repository<Application>,
     private configService: ConfigService,
   ) {}
+
+  /**
+   * Validate Workday configuration
+   */
+  private validateConfig(config: WorkdayConfig): void {
+    if (!config.tenantName) {
+      throw new BadRequestException('Workday tenant name is required');
+    }
+    if (!config.username) {
+      throw new BadRequestException('Workday username is required');
+    }
+    if (!config.password) {
+      throw new BadRequestException('Workday password is required');
+    }
+    if (!config.baseUrl) {
+      throw new BadRequestException('Workday base URL is required');
+    }
+    // Validate URL format
+    try {
+      new URL(config.baseUrl);
+    } catch {
+      throw new BadRequestException('Invalid Workday base URL format');
+    }
+  }
+
+  /**
+   * Make API request with retry logic
+   */
+  private async makeRequestWithRetry<T>(
+    requestFn: () => Promise<T>,
+    retryConfig: RetryConfig = this.defaultRetryConfig,
+  ): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error) {
+        lastError = error as Error;
+        const axiosError = error as AxiosError;
+
+        // Don't retry on client errors (4xx) except rate limiting (429)
+        if (axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500 && axiosError.response.status !== 429) {
+          throw this.handleWorkdayError(axiosError);
+        }
+
+        // Calculate delay with exponential backoff
+        if (attempt < retryConfig.maxRetries) {
+          const delay = Math.min(
+            retryConfig.baseDelay * Math.pow(2, attempt),
+            retryConfig.maxDelay,
+          );
+          this.logger.warn(`Workday API request failed (attempt ${attempt + 1}/${retryConfig.maxRetries + 1}), retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw lastError || new Error('Workday API request failed after retries');
+  }
+
+  /**
+   * Handle Workday API errors
+   */
+  private handleWorkdayError(error: AxiosError): Error {
+    const status = error.response?.status;
+    const data = error.response?.data as any;
+
+    if (status === 401) {
+      return new BadRequestException('Workday credentials are invalid. Please check your username and password.');
+    }
+    if (status === 403) {
+      return new BadRequestException('Workday API access denied. Ensure you have the required permissions.');
+    }
+    if (status === 429) {
+      return new BadRequestException('Workday API rate limit exceeded. Please try again later.');
+    }
+    if (status === 404) {
+      return new BadRequestException('Workday resource not found. The tenant or endpoint may not exist.');
+    }
+
+    return new Error(data?.error || `Workday API error: ${error.message}`);
+  }
+
+  /**
+   * Sleep utility for retry delays
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Test Workday connection
+   */
+  async testConnection(config: WorkdayConfig): Promise<{ success: boolean; message: string }> {
+    try {
+      this.validateConfig(config);
+
+      const auth = Buffer.from(`${config.username}:${config.password}`).toString('base64');
+
+      await this.makeRequestWithRetry(async () => {
+        const response = await axios.get(
+          `${config.baseUrl}/ccx/service/${config.tenantName}/Recruiting/v1/status`,
+          {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000,
+          },
+        );
+        return response.data;
+      });
+
+      return { success: true, message: 'Workday connection successful' };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
 
   /**
    * Import job requisitions from Workday
@@ -69,24 +200,29 @@ export class WorkdayService {
   }> {
     const { status = 'open', limit = 100 } = options;
 
+    // Validate configuration
+    this.validateConfig(config);
+
     try {
-      const axios = require('axios');
       const auth = Buffer.from(`${config.username}:${config.password}`).toString('base64');
 
-      // Workday REST API call
-      const response = await axios.get(
-        `${config.baseUrl}/ccx/service/${config.tenantName}/Recruiting/v1/jobRequisitions`,
-        {
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
+      // Workday REST API call with retry
+      const response = await this.makeRequestWithRetry(async () => {
+        return axios.get(
+          `${config.baseUrl}/ccx/service/${config.tenantName}/Recruiting/v1/jobRequisitions`,
+          {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/json',
+            },
+            params: {
+              status: status === 'all' ? undefined : status,
+              limit,
+            },
+            timeout: 30000,
           },
-          params: {
-            status: status === 'all' ? undefined : status,
-            limit,
-          },
-        },
-      );
+        );
+      });
 
       const workdayJobs: WorkdayJob[] = response.data.data || [];
 
