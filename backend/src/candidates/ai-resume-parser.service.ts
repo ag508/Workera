@@ -89,11 +89,14 @@ export interface ResumeImportSource {
 export class AIResumeParserService {
   private readonly logger = new Logger(AIResumeParserService.name);
   private genAI: GoogleGenerativeAI | null = null;
+  private readonly modelName: string;
 
   constructor() {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
+    this.modelName = process.env.GOOGLE_AI_MODEL || 'gemini-pro';
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
+      this.logger.log(`AI Resume Parser initialized with model: ${this.modelName}`);
     }
   }
 
@@ -290,7 +293,7 @@ export class AIResumeParserService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
 
       const prompt = `
         Parse the following resume text and extract structured information.

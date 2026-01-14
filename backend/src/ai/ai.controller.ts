@@ -1,6 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { AIRankingService } from './ai-ranking.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 export class GenerateJDDto {
   jobTitle: string;
@@ -64,6 +65,7 @@ export class AiController {
     private readonly rankingService: AIRankingService
   ) {}
 
+  @Public()
   @Post('generate-jd')
   async generateJobDescription(@Body() dto: GenerateJDDto) {
     const jobDescription = await this.aiService.generateJobDescription(
@@ -80,6 +82,7 @@ export class AiController {
     };
   }
 
+  @Public()
   @Post('analyze-resume')
   async analyzeResume(@Body() dto: AnalyzeResumeDto) {
     const analysis = await this.aiService.analyzeResume(
@@ -93,6 +96,7 @@ export class AiController {
     };
   }
 
+  @Public()
   @Post('parse-resume')
   async parseResume(@Body() dto: ParseResumeDto) {
     const parsed = await this.aiService.parseResume(dto.resumeText);
@@ -104,6 +108,7 @@ export class AiController {
     };
   }
 
+  @Public()
   @Post('rank-candidate')
   async rankCandidate(@Body() dto: RankCandidateDto) {
     const ranking = await this.rankingService.rankCandidate(
@@ -117,6 +122,7 @@ export class AiController {
     };
   }
 
+  @Public()
   @Post('rank-candidates')
   async rankMultipleCandidates(@Body() dto: RankMultipleCandidatesDto) {
     const rankings = await this.rankingService.rankMultipleCandidates(
