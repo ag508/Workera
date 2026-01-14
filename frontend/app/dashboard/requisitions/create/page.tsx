@@ -15,7 +15,9 @@ import {
   UserPlus,
   FileCheck,
   Send,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,10 +44,12 @@ const requisitionTypes = [
 export default function CreateRequisitionPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
   const [formData, setFormData] = useState({
     requisitionType: '',
     jobTitle: '',
     jobCode: '',
+    jobDescription: '',
     department: '',
     location: '',
     headcount: 1,
@@ -58,6 +62,59 @@ export default function CreateRequisitionPage() {
     recruiter: '',
     justification: '',
   });
+
+  const handleAIEnhance = async () => {
+    if (!formData.jobTitle) {
+      alert('Please enter a job title first');
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      const token = localStorage.getItem('recruiter_token') || '';
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-jd`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          jobTitle: formData.jobTitle,
+          company: formData.department || 'Workera',
+          requirements: [],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate description');
+      }
+
+      const data = await response.json();
+      if (data.data?.jobDescription) {
+        setFormData({ ...formData, jobDescription: data.data.jobDescription });
+      }
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      // Fallback template
+      const fallbackDescription = `## About the Role
+
+We are seeking a talented ${formData.jobTitle} to join our ${formData.department || 'team'}. This is an exciting opportunity to make a significant impact.
+
+## Key Responsibilities
+
+- Drive innovation and deliver high-quality solutions
+- Collaborate with cross-functional teams
+- Mentor and support team members
+
+## What We're Looking For
+
+- Strong experience in the relevant field
+- Excellent problem-solving and communication skills
+- Passion for continuous learning and growth`;
+      setFormData({ ...formData, jobDescription: fallbackDescription });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length) {
@@ -240,13 +297,35 @@ export default function CreateRequisitionPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Description</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Job Description</label>
+                    <button
+                      type="button"
+                      onClick={handleAIEnhance}
+                      disabled={aiGenerating || !formData.jobTitle}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 text-white text-xs font-medium disabled:opacity-50 hover:shadow-md transition-all"
+                    >
+                      {aiGenerating ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3 w-3" />
+                          AI Generate
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <textarea
-                    rows={6}
-                    placeholder="Describe the role, responsibilities, and requirements..."
+                    rows={8}
+                    value={formData.jobDescription}
+                    onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
+                    placeholder="Describe the role, responsibilities, and requirements... Or click AI Generate to create one automatically."
                     className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
-                  <p className="mt-2 text-xs text-gray-500">Tip: Use AI to generate a comprehensive job description</p>
+                  <p className="mt-2 text-xs text-gray-500">Enter a job title above and click &quot;AI Generate&quot; to create a comprehensive job description</p>
                 </div>
               </div>
             </motion.div>

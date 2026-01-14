@@ -32,8 +32,26 @@ export default function MessagesPage() {
   const [showCompose, setShowCompose] = useState(false);
   const [composeData, setComposeData] = useState({ to: '', toName: '', subject: '', content: '' });
   const [showMenu, setShowMenu] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string; firstName?: string; lastName?: string } | null>(null);
   const tenantId = getTenantId();
-  const userEmail = 'recruiter@workera.ai'; // In production, get from auth context
+
+  // Get current user from localStorage on mount
+  useEffect(() => {
+    const userStr = localStorage.getItem('recruiter_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser({ email: 'recruiter@workera.ai', firstName: 'Recruiter' });
+      }
+    } else {
+      setCurrentUser({ email: 'recruiter@workera.ai', firstName: 'Recruiter' });
+    }
+  }, []);
+
+  const userEmail = currentUser?.email || 'recruiter@workera.ai';
+  const userName = currentUser ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'Recruiter' : 'Recruiter';
 
   useEffect(() => {
     fetchMessages();
@@ -138,8 +156,9 @@ export default function MessagesPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content: newMessageContent,
-            senderName: 'Recruiter',
+            senderName: userName,
             senderEmail: userEmail,
+            sendEmailNotification: true,
             tenantId,
           }),
         }
@@ -167,8 +186,9 @@ export default function MessagesPage() {
           toName: composeData.toName,
           subject: composeData.subject,
           content: composeData.content,
-          senderName: 'Recruiter',
+          senderName: userName,
           senderEmail: userEmail,
+          sendEmailNotification: true,
           tenantId,
         }),
       });
