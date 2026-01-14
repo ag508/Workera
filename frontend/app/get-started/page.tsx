@@ -53,7 +53,7 @@ export default function GetStartedPage() {
             transition={{ delay: 0.2 }}
           >
             <Link
-              href="/dashboard"
+              href="/login"
               className="group block rounded-2xl bg-white border border-gray-200 p-8 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300"
             >
               <div className="flex items-start gap-4 mb-6">

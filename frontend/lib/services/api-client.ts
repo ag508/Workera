@@ -26,7 +26,7 @@ class ApiClient {
     // Get token from localStorage if available (client-side only)
     let token = '';
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('accessToken') || '';
+      token = localStorage.getItem('recruiter_token') || localStorage.getItem('accessToken') || '';
     }
 
     const headers = {
