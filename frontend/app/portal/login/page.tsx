@@ -83,13 +83,7 @@ export default function CandidateLoginPage() {
               className="object-contain"
             />
           </div>
-          <Image
-            src="/images/brand/Workera_Text_logo.png"
-            alt="Workera"
-            width={140}
-            height={40}
-            className="object-contain brightness-0 invert"
-          />
+          <span className="text-3xl font-bold text-white">Workera</span>
         </div>
 
         {/* Content */}
@@ -149,13 +143,9 @@ export default function CandidateLoginPage() {
                   className="object-contain"
                 />
               </div>
-              <Image
-                src="/images/brand/Workera_Text_logo.png"
-                alt="Workera"
-                width={120}
-                height={36}
-                className="object-contain"
-              />
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+                Workera
+              </span>
             </div>
           </div>
 
@@ -173,13 +163,9 @@ export default function CandidateLoginPage() {
                     className="object-contain"
                   />
                 </div>
-                <Image
-                  src="/images/brand/Workera_Text_logo.png"
-                  alt="Workera"
-                  width={140}
-                  height={40}
-                  className="object-contain"
-                />
+                <span className="text-3xl font-bold bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+                  Workera
+                </span>
               </div>
             </div>
             <div className="text-center mb-8">
