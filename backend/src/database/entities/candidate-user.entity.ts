@@ -53,6 +53,9 @@ export class CandidateUser {
   @Column({ default: false })
   isEmailVerified: boolean;
 
+  @Column({ type: 'datetime', nullable: true })
+  emailVerifiedAt: Date;
+
   @Column({ nullable: true })
   emailVerificationToken: string;
 
@@ -64,6 +67,30 @@ export class CandidateUser {
 
   @Column({ nullable: true })
   lastLoginAt: Date;
+
+  // Onboarding status
+  @Column({ default: false })
+  onboardingCompleted: boolean;
+
+  @Column({ type: 'datetime', nullable: true })
+  onboardingCompletedAt: Date;
+
+  // Tutorial dismissed
+  @Column({ default: false })
+  tutorialDismissed: boolean;
+
+  // Additional profile fields
+  @Column({ nullable: true })
+  headline: string;
+
+  @Column({ nullable: true })
+  yearsOfExperience: string;
+
+  @Column({ nullable: true })
+  currentCompany: string;
+
+  @Column({ nullable: true })
+  currentTitle: string;
 
   @OneToMany(() => FormSubmission, submission => submission.candidateUser)
   submissions: FormSubmission[];

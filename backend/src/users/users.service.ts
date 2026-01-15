@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, UserRole } from '../database/entities/user.entity';
+import { User, UserRole, OnboardingStep, CompanySize } from '../database/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OTPService } from '../email/otp.service';
@@ -14,6 +14,20 @@ export interface RegisterUserDto {
   lastName: string;
   role?: UserRole;
   tenantId: string;
+}
+
+export interface OnboardingProfileDto {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  jobTitle?: string;
+}
+
+export interface OnboardingCompanyDto {
+  companyName: string;
+  companyWebsite?: string;
+  companySize?: CompanySize;
+  industry?: string;
 }
 
 export interface LoginUserDto {
@@ -282,7 +296,7 @@ export class UsersService {
     // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Create user
+    // Create user with email verified and onboarding starting
     const user = this.userRepository.create({
       email: dto.email,
       password: hashedPassword,
@@ -290,18 +304,16 @@ export class UsersService {
       lastName: dto.lastName,
       role: dto.role || UserRole.RECRUITER,
       tenantId: dto.tenantId,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
+      onboardingStep: OnboardingStep.PROFILE_INFO, // Start at profile info step
+      onboardingCompleted: false,
+      tutorialDismissed: false,
     });
 
     const savedUser = await this.userRepository.save(user);
 
     this.logger.log(`New user registered via OTP: ${savedUser.email}`);
-
-    // Send welcome email
-    await this.emailService.sendWelcomeRecruiter(
-      savedUser.email,
-      savedUser.firstName || 'there',
-      process.env.FRONTEND_URL || 'http://localhost:3000/dashboard',
-    );
 
     // Generate JWT token
     const accessToken = this.generateToken(savedUser);
@@ -374,6 +386,197 @@ export class UsersService {
     return {
       success: true,
       message: 'Password has been reset successfully',
+    };
+  }
+
+  // ============================================================================
+  // ONBOARDING
+  // ============================================================================
+
+  /**
+   * Update user profile info (onboarding step 1)
+   */
+  async updateOnboardingProfile(
+    userId: string,
+    tenantId: string,
+    dto: OnboardingProfileDto,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update profile fields
+    if (dto.firstName) user.firstName = dto.firstName;
+    if (dto.lastName) user.lastName = dto.lastName;
+    if (dto.phone) user.phone = dto.phone;
+    if (dto.jobTitle) user.jobTitle = dto.jobTitle;
+
+    // Move to next step
+    user.onboardingStep = OnboardingStep.COMPANY_INFO;
+
+    const savedUser = await this.userRepository.save(user);
+    this.logger.log(`User ${userId} completed profile onboarding step`);
+
+    const { password: _, ...userData } = savedUser;
+    return userData as User;
+  }
+
+  /**
+   * Update company info (onboarding step 2)
+   */
+  async updateOnboardingCompany(
+    userId: string,
+    tenantId: string,
+    dto: OnboardingCompanyDto,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update company fields
+    user.companyName = dto.companyName;
+    if (dto.companyWebsite) user.companyWebsite = dto.companyWebsite;
+    if (dto.companySize) user.companySize = dto.companySize;
+    if (dto.industry) user.industry = dto.industry;
+
+    // Move to preferences or complete
+    user.onboardingStep = OnboardingStep.PREFERENCES;
+
+    const savedUser = await this.userRepository.save(user);
+    this.logger.log(`User ${userId} completed company onboarding step`);
+
+    const { password: _, ...userData } = savedUser;
+    return userData as User;
+  }
+
+  /**
+   * Complete onboarding
+   */
+  async completeOnboarding(userId: string, tenantId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.onboardingStep = OnboardingStep.COMPLETED;
+    user.onboardingCompleted = true;
+    user.onboardingCompletedAt = new Date();
+
+    const savedUser = await this.userRepository.save(user);
+    this.logger.log(`User ${userId} completed onboarding`);
+
+    // Send welcome email after onboarding complete
+    await this.emailService.sendWelcomeRecruiter(
+      savedUser.email,
+      savedUser.firstName || 'there',
+      process.env.FRONTEND_URL || 'http://localhost:3000/dashboard',
+    );
+
+    const { password: _, ...userData } = savedUser;
+    return userData as User;
+  }
+
+  /**
+   * Skip onboarding (for users who want to set up later)
+   */
+  async skipOnboarding(userId: string, tenantId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Mark as completed but with minimal info
+    user.onboardingStep = OnboardingStep.COMPLETED;
+    user.onboardingCompleted = true;
+    user.onboardingCompletedAt = new Date();
+
+    const savedUser = await this.userRepository.save(user);
+    this.logger.log(`User ${userId} skipped onboarding`);
+
+    const { password: _, ...userData } = savedUser;
+    return userData as User;
+  }
+
+  /**
+   * Dismiss tutorial
+   */
+  async dismissTutorial(userId: string, tenantId: string): Promise<{ success: boolean }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.tutorialDismissed = true;
+    await this.userRepository.save(user);
+
+    this.logger.log(`User ${userId} dismissed tutorial`);
+
+    return { success: true };
+  }
+
+  /**
+   * Get onboarding status
+   */
+  async getOnboardingStatus(userId: string, tenantId: string): Promise<{
+    step: OnboardingStep;
+    completed: boolean;
+    tutorialDismissed: boolean;
+    profile: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      jobTitle?: string;
+    };
+    company: {
+      companyName?: string;
+      companyWebsite?: string;
+      companySize?: CompanySize;
+      industry?: string;
+    };
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      step: user.onboardingStep,
+      completed: user.onboardingCompleted,
+      tutorialDismissed: user.tutorialDismissed,
+      profile: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        jobTitle: user.jobTitle,
+      },
+      company: {
+        companyName: user.companyName,
+        companyWebsite: user.companyWebsite,
+        companySize: user.companySize,
+        industry: user.industry,
+      },
     };
   }
 }

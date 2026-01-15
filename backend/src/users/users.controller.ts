@@ -1,5 +1,5 @@
-import { Controller, Post, Get, Body, Request, HttpCode, HttpStatus } from '@nestjs/common';
-import { UsersService, RegisterUserDto, LoginUserDto, UserAuthResponse, RequestOTPDto, VerifyOTPDto } from './users.service';
+import { Controller, Post, Get, Put, Body, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { UsersService, RegisterUserDto, LoginUserDto, UserAuthResponse, RequestOTPDto, VerifyOTPDto, OnboardingProfileDto, OnboardingCompanyDto } from './users.service';
 import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('users')
@@ -126,5 +126,72 @@ export class UsersController {
   async findAll(@Request() req: any) {
     const { tenantId } = req.user;
     return this.usersService.findAll(tenantId);
+  }
+
+  // ============================================================================
+  // ONBOARDING
+  // ============================================================================
+
+  /**
+   * Get onboarding status
+   */
+  @Get('onboarding/status')
+  async getOnboardingStatus(@Request() req: any) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.getOnboardingStatus(userId, tenantId);
+  }
+
+  /**
+   * Update profile info (onboarding step 1)
+   */
+  @Put('onboarding/profile')
+  async updateOnboardingProfile(
+    @Request() req: any,
+    @Body() dto: OnboardingProfileDto,
+  ) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.updateOnboardingProfile(userId, tenantId, dto);
+  }
+
+  /**
+   * Update company info (onboarding step 2)
+   */
+  @Put('onboarding/company')
+  async updateOnboardingCompany(
+    @Request() req: any,
+    @Body() dto: OnboardingCompanyDto,
+  ) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.updateOnboardingCompany(userId, tenantId, dto);
+  }
+
+  /**
+   * Complete onboarding
+   */
+  @Post('onboarding/complete')
+  @HttpCode(HttpStatus.OK)
+  async completeOnboarding(@Request() req: any) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.completeOnboarding(userId, tenantId);
+  }
+
+  /**
+   * Skip onboarding
+   */
+  @Post('onboarding/skip')
+  @HttpCode(HttpStatus.OK)
+  async skipOnboarding(@Request() req: any) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.skipOnboarding(userId, tenantId);
+  }
+
+  /**
+   * Dismiss tutorial
+   */
+  @Post('tutorial/dismiss')
+  @HttpCode(HttpStatus.OK)
+  async dismissTutorial(@Request() req: any) {
+    const { sub: userId, tenantId } = req.user;
+    return this.usersService.dismissTutorial(userId, tenantId);
   }
 }

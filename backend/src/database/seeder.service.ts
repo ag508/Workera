@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Tenant } from './entities/tenant.entity';
-import { User, UserRole } from './entities/user.entity';
+import { User, UserRole, OnboardingStep, CompanySize } from './entities/user.entity';
 import { Job, JobStatus } from './entities/job.entity';
 import { Candidate } from './entities/candidate.entity';
 import { CandidateUser } from './entities/candidate-user.entity';
@@ -109,17 +109,38 @@ export class SeederService implements OnModuleInit {
   }
 
   private async createAdminUser(tenantId: string): Promise<User> {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    // Use environment variables with fallbacks
+    const email = this.configService.get<string>('DEMO_ADMIN_EMAIL') || 'admin@workera.ai';
+    const password = this.configService.get<string>('DEMO_ADMIN_PASSWORD') || 'admin123';
+    const firstName = this.configService.get<string>('DEMO_ADMIN_FIRST_NAME') || 'Demo';
+    const lastName = this.configService.get<string>('DEMO_ADMIN_LAST_NAME') || 'Admin';
+
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
-      email: 'admin@workera.ai',
+      email,
       password: hashedPassword,
-      firstName: 'Sarah',
-      lastName: 'Jenkins',
+      firstName,
+      lastName,
       role: UserRole.ADMIN,
       avatar: 'https://i.pravatar.cc/100?img=5',
       tenantId,
+      // Mark demo admin as fully onboarded
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
+      onboardingStep: OnboardingStep.COMPLETED,
+      onboardingCompleted: true,
+      onboardingCompletedAt: new Date(),
+      tutorialDismissed: true, // Don't show tutorial for demo account
+      // Company info for demo
+      companyName: 'Workera Demo',
+      companyWebsite: 'https://workera.ai',
+      companySize: CompanySize.MEDIUM,
+      industry: 'Technology',
+      jobTitle: 'HR Administrator',
     });
+
+    this.logger.log(`Created demo admin user: ${email}`);
 
     return this.userRepository.save(user);
   }

@@ -10,6 +10,11 @@ import { Building2, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const DEFAULT_TENANT_ID = '11111111-1111-1111-1111-111111111111';
 
+// Demo credentials from environment variables
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL;
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+const DEMO_ENABLED = DEMO_EMAIL && DEMO_PASSWORD;
+
 export default function RecruiterLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -58,11 +63,15 @@ export default function RecruiterLoginPage() {
   };
 
   const handleDemoLogin = async () => {
+    if (!DEMO_EMAIL || !DEMO_PASSWORD) {
+      setError('Demo account not configured');
+      return;
+    }
+
     setFormData({
-      email: 'admin@workera.ai',
-      password: 'admin123',
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
     });
-    // Auto-submit after a short delay
     setIsLoading(true);
     setError('');
 
@@ -73,8 +82,8 @@ export default function RecruiterLoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: 'admin@workera.ai',
-          password: 'admin123',
+          email: DEMO_EMAIL,
+          password: DEMO_PASSWORD,
           tenantId: DEFAULT_TENANT_ID,
         }),
       });
@@ -202,19 +211,26 @@ export default function RecruiterLoginPage() {
             </button>
           </form>
 
-          {/* Demo Account */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-center text-sm text-gray-500 mb-4">Try with demo account</p>
-            <button
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Login as Demo Admin
-            </button>
-            <p className="text-center text-xs text-gray-400 mt-2">
-              admin@workera.ai / admin123
-            </p>
+          {/* Demo Account - only shown if configured in env */}
+          {DEMO_ENABLED && (
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <p className="text-center text-sm text-gray-500 mb-4">Try with demo account</p>
+              <button
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Login as Demo Admin
+              </button>
+            </div>
+          )}
+
+          {/* Don't have an account */}
+          <div className="mt-6 text-center">
+            <span className="text-gray-600">Don't have an account? </span>
+            <Link href="/register" className="text-primary font-semibold hover:underline">
+              Register
+            </Link>
           </div>
         </motion.div>
 
