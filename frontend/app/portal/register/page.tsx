@@ -191,11 +191,13 @@ export default function CandidateRegisterPage() {
         body: JSON.stringify({ ...formData, tenantId }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
         // Auto-login after registration
         localStorage.setItem('candidateToken', data.accessToken);
         localStorage.setItem('candidateId', data.candidate.id);
+        localStorage.setItem('candidateUser', JSON.stringify(data.candidate));
 
         // Redirect to job application or dashboard
         if (returnTo) {
@@ -206,36 +208,12 @@ export default function CandidateRegisterPage() {
           router.push('/portal/dashboard');
         }
       } else {
-        // Mock fallback
-        if (formData.email.includes('demo')) {
-          localStorage.setItem('candidateToken', 'mock-token');
-          localStorage.setItem('candidateId', 'mock-id');
-          if (returnTo) {
-            router.push(returnTo);
-          } else if (jobId) {
-            router.push(`/portal/apply/${jobId}`);
-          } else {
-            router.push('/portal/dashboard');
-          }
-          return;
-        }
-        setError('Registration failed. Please try again.');
+        // Show actual error from API
+        setError(data.message || 'Registration failed. Please try again.');
       }
-    } catch (err) {
-      // Mock fallback
-      if (formData.email.includes('demo')) {
-        localStorage.setItem('candidateToken', 'mock-token');
-        localStorage.setItem('candidateId', 'mock-id');
-        if (returnTo) {
-          router.push(returnTo);
-        } else if (jobId) {
-          router.push(`/portal/apply/${jobId}`);
-        } else {
-          router.push('/portal/dashboard');
-        }
-        return;
-      }
-      setError('An error occurred during registration');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'An error occurred during registration. Please check your connection.');
     } finally {
       setLoading(false);
     }
