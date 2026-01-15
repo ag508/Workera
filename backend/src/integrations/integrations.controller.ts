@@ -562,6 +562,34 @@ export class IntegrationsController {
   }
 
   /**
+   * Request OTP for candidate registration (public endpoint)
+   * POST /integrations/candidate/otp/request-register
+   */
+  @Public()
+  @Post('candidate/otp/request-register')
+  async requestCandidateRegistrationOTP(
+    @Body() body: { email: string; firstName: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.requestRegistrationOTP(
+      body.email,
+      body.firstName,
+      body.tenantId,
+    );
+  }
+
+  /**
+   * Verify OTP and complete candidate registration (public endpoint)
+   * POST /integrations/candidate/otp/verify-register
+   */
+  @Public()
+  @Post('candidate/otp/verify-register')
+  async verifyCandidateOTPAndRegister(
+    @Body() dto: RegisterCandidateDto & { otpCode: string },
+  ) {
+    return this.candidatePortalService.verifyOTPAndRegister(dto);
+  }
+
+  /**
    * Login candidate (public endpoint)
    * POST /integrations/candidate/login
    */
@@ -569,6 +597,67 @@ export class IntegrationsController {
   @Post('candidate/login')
   async loginCandidate(@Body() dto: LoginCandidateDto) {
     return this.candidatePortalService.login(dto);
+  }
+
+  /**
+   * Get candidate onboarding status
+   * GET /integrations/candidate/onboarding/status
+   */
+  @Get('candidate/onboarding/status')
+  async getCandidateOnboardingStatus(
+    @Query('candidateId') candidateId: string,
+    @Query('tenantId') tenantId: string,
+  ) {
+    return this.candidatePortalService.getOnboardingStatus(candidateId, tenantId);
+  }
+
+  /**
+   * Complete candidate onboarding
+   * POST /integrations/candidate/onboarding/complete
+   */
+  @Post('candidate/onboarding/complete')
+  async completeCandidateOnboarding(
+    @Body() body: {
+      candidateId: string;
+      tenantId: string;
+      profileData?: {
+        headline?: string;
+        bio?: string;
+        skills?: string[];
+        location?: string;
+        linkedinUrl?: string;
+        githubUrl?: string;
+        portfolioUrl?: string;
+      };
+    },
+  ) {
+    return this.candidatePortalService.completeOnboarding(
+      body.candidateId,
+      body.tenantId,
+      body.profileData,
+    );
+  }
+
+  /**
+   * Skip candidate onboarding
+   * POST /integrations/candidate/onboarding/skip
+   */
+  @Post('candidate/onboarding/skip')
+  async skipCandidateOnboarding(
+    @Body() body: { candidateId: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.skipOnboarding(body.candidateId, body.tenantId);
+  }
+
+  /**
+   * Dismiss candidate tutorial
+   * POST /integrations/candidate/tutorial/dismiss
+   */
+  @Post('candidate/tutorial/dismiss')
+  async dismissCandidateTutorial(
+    @Body() body: { candidateId: string; tenantId: string },
+  ) {
+    return this.candidatePortalService.dismissTutorial(body.candidateId, body.tenantId);
   }
 
   /**

@@ -5,6 +5,7 @@ import { CandidateUser } from '../database/entities/candidate-user.entity';
 import { FormSubmission } from '../database/entities/form-submission.entity';
 import { Job, JobStatus } from '../database/entities/job.entity';
 import { WorkeraEmailService } from '../email/workera-email.service';
+import { OTPService } from '../email/otp.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -55,7 +56,226 @@ export class CandidatePortalService {
     private jobRepository: Repository<Job>,
     private jwtService: JwtService,
     private emailService: WorkeraEmailService,
+    private otpService: OTPService,
   ) {}
+
+  // ============================================================================
+  // OTP REGISTRATION
+  // ============================================================================
+
+  /**
+   * Request OTP for registration
+   */
+  async requestRegistrationOTP(
+    email: string,
+    firstName: string,
+    tenantId: string,
+  ): Promise<{ success: boolean; message: string; expiresIn?: number }> {
+    // Check if already registered
+    const existing = await this.candidateUserRepository.findOne({
+      where: { email, tenantId },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Email already registered');
+    }
+
+    const result = await this.otpService.sendOTP(email, firstName, 'register');
+
+    if (!result.success) {
+      throw new BadRequestException('Failed to send verification code');
+    }
+
+    return {
+      success: true,
+      message: 'Verification code sent',
+      expiresIn: result.expiresIn,
+    };
+  }
+
+  /**
+   * Verify OTP and complete registration
+   */
+  async verifyOTPAndRegister(
+    dto: RegisterCandidateDto & { otpCode: string },
+  ): Promise<CandidateAuthResponse> {
+    // Verify OTP
+    const verification = this.otpService.verifyOTP(dto.email, dto.otpCode, 'register');
+
+    if (!verification.valid) {
+      throw new UnauthorizedException(verification.error || 'Invalid verification code');
+    }
+
+    // Check if already registered
+    const existing = await this.candidateUserRepository.findOne({
+      where: { email: dto.email, tenantId: dto.tenantId },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Email already registered');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    // Create candidate user with email verified
+    const candidate = this.candidateUserRepository.create({
+      email: dto.email,
+      passwordHash,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      phone: dto.phone,
+      tenantId: dto.tenantId,
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
+      onboardingCompleted: false, // Will go through onboarding
+      tutorialDismissed: false,
+    });
+
+    const savedCandidate = await this.candidateUserRepository.save(candidate);
+
+    this.logger.log(`New candidate registered via OTP: ${savedCandidate.email}`);
+
+    // Generate JWT token
+    const accessToken = this.generateToken(savedCandidate);
+
+    // Remove password hash from response
+    const { passwordHash: _, ...candidateData } = savedCandidate;
+
+    return {
+      accessToken,
+      candidate: candidateData as any,
+    };
+  }
+
+  // ============================================================================
+  // ONBOARDING
+  // ============================================================================
+
+  /**
+   * Get onboarding status
+   */
+  async getOnboardingStatus(candidateId: string, tenantId: string): Promise<{
+    completed: boolean;
+    tutorialDismissed: boolean;
+    profile: Partial<CandidateUser>;
+  }> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    return {
+      completed: candidate.onboardingCompleted,
+      tutorialDismissed: candidate.tutorialDismissed,
+      profile: {
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        phone: candidate.phone,
+        headline: candidate.headline,
+        bio: candidate.bio,
+        skills: candidate.skills,
+        location: candidate.location,
+        linkedinUrl: candidate.linkedinUrl,
+        githubUrl: candidate.githubUrl,
+        portfolioUrl: candidate.portfolioUrl,
+      },
+    };
+  }
+
+  /**
+   * Complete onboarding
+   */
+  async completeOnboarding(
+    candidateId: string,
+    tenantId: string,
+    profileData?: {
+      headline?: string;
+      bio?: string;
+      skills?: string[];
+      location?: string;
+      linkedinUrl?: string;
+      githubUrl?: string;
+      portfolioUrl?: string;
+      yearsOfExperience?: string;
+      currentCompany?: string;
+      currentTitle?: string;
+    },
+  ): Promise<CandidateUser> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    // Update profile data if provided
+    if (profileData) {
+      Object.assign(candidate, profileData);
+    }
+
+    candidate.onboardingCompleted = true;
+    candidate.onboardingCompletedAt = new Date();
+
+    const savedCandidate = await this.candidateUserRepository.save(candidate);
+
+    this.logger.log(`Candidate ${candidateId} completed onboarding`);
+
+    // Send welcome email
+    const portalUrl = process.env.FRONTEND_URL || 'http://localhost:3000/portal';
+    try {
+      await this.emailService.sendWelcomeCandidate(
+        savedCandidate.email,
+        savedCandidate.firstName,
+        portalUrl,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to send welcome email: ${error.message}`);
+    }
+
+    return savedCandidate;
+  }
+
+  /**
+   * Skip onboarding
+   */
+  async skipOnboarding(candidateId: string, tenantId: string): Promise<CandidateUser> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    candidate.onboardingCompleted = true;
+    candidate.onboardingCompletedAt = new Date();
+
+    return this.candidateUserRepository.save(candidate);
+  }
+
+  /**
+   * Dismiss tutorial
+   */
+  async dismissTutorial(candidateId: string, tenantId: string): Promise<{ success: boolean }> {
+    const candidate = await this.candidateUserRepository.findOne({
+      where: { id: candidateId, tenantId },
+    });
+
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    candidate.tutorialDismissed = true;
+    await this.candidateUserRepository.save(candidate);
+
+    return { success: true };
+  }
 
   /**
    * Register a new candidate
